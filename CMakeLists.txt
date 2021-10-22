@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 # project name
-project(dledger
+project(mnemosyne
         VERSION 0.1
         DESCRIPTION "A distributed ledger based on NDN")
 
@@ -18,7 +18,7 @@ pkg_check_modules(NDN_CXX REQUIRED libndn-cxx)
 find_package(leveldb REQUIRED)
 
 # files
-set(DLEDGER_LIB_SOURCE_FILES
+set(MNEMOSYNE_LIB_SOURCE_FILES
     ./src/backend.hpp
     ./src/backend.cpp
     ./src/ledger-impl.hpp
@@ -37,34 +37,25 @@ link_directories(${NDN_CXX_LIBRARY_DIRS})
 
 # target
 
-add_library(dledger SHARED "")
-target_sources(dledger PRIVATE ${DLEDGER_LIB_SOURCE_FILES})
-target_include_directories(dledger PUBLIC ./include)
-target_include_directories(dledger PRIVATE ./src)
-target_compile_options(dledger PUBLIC ${NDN_CXX_CFLAGS})
-target_link_libraries(dledger PUBLIC ${NDN_CXX_LIBRARIES} leveldb)
+add_library(mnemosyne SHARED "")
+target_sources(mnemosyne PRIVATE ${MNEMOSYNE_LIB_SOURCE_FILES})
+target_include_directories(mnemosyne PUBLIC ./include)
+target_include_directories(mnemosyne PRIVATE ./src)
+target_compile_options(mnemosyne PUBLIC ${NDN_CXX_CFLAGS})
+target_link_libraries(mnemosyne PUBLIC ${NDN_CXX_LIBRARIES} leveldb)
 
 add_executable(backend-test ./test/backend-test.cpp)
 target_include_directories(backend-test PRIVATE ./src)
-target_link_libraries(backend-test PUBLIC dledger)
+target_link_libraries(backend-test PUBLIC mnemosyne)
 
 add_executable(record-test ./test/record-test.cpp)
-target_link_libraries(record-test PUBLIC dledger)
+target_link_libraries(record-test PUBLIC mnemosyne)
 
 add_executable(ledger-impl-test ./test/ledger-impl-test.cpp)
-target_link_libraries(ledger-impl-test PUBLIC dledger)
+target_link_libraries(ledger-impl-test PUBLIC mnemosyne)
 
 add_executable(ledger-impl-test-anchor ./test/ledger-impl-test-anchor.cpp)
-target_link_libraries(ledger-impl-test-anchor PUBLIC dledger)
-
-if (BUILD_DIGRAPH)
-    add_executable(ledger-impl-test-graph ./test/ledger-impl-test-graph.cpp)
-    target_link_libraries(ledger-impl-test-graph PUBLIC dledger)
-endif (BUILD_DIGRAPH)
-
-if (BUILD_DFI)
-    add_subdirectory(dfi-app)
-endif(BUILD_DFI)
+target_link_libraries(ledger-impl-test-anchor PUBLIC mnemosyne)
 
 #configure
 set(PKG_CONFIG_REQUIRES
@@ -80,11 +71,11 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake-pkgconfig.pc.in"
         "${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}.pc")
 
 include(GNUInstallDirs)
-install(TARGETS dledger
+install(TARGETS mnemosyne
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         )
-install(DIRECTORY include/dledger DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+install(DIRECTORY include/mnemosyne DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN "*.h*")
 
 install(TARGETS ledger-impl-test

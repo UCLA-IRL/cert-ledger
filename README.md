@@ -1,9 +1,12 @@
-# dledger
+# Mnemosyne
+
+Mnemosyne is a distributed logger for storing logs for distributed applications.
 
 ## Dependencies
 
 * ndn-cxx
 * leveldb
+* ndn-svs
 
 * NFD - to forward the NDN network
 
