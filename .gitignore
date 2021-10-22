@@ -1,0 +1,13 @@
+*.DS_Store
+.vscode
+._*
+*.dSYM
+*.o
+backend-test
+dledger-peer
+build
+.idea/
+cmake-build-*/
+dfi-app/wasmtime-c-api
+dfi-app/*/target
+*-build
