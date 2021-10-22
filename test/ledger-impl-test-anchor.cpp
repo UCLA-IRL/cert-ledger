@@ -1,5 +1,5 @@
-#include "dledger/record.hpp"
-#include "dledger/ledger.hpp"
+#include "mnemosyne/record.hpp"
+#include "mnemosyne/mnemosyne.hpp"
 #include <iostream>
 #include <ndn-cxx/security/signature-sha256-with-rsa.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
@@ -9,7 +9,7 @@
 #include <ndn-cxx/util/io.hpp>
 #include <ndn-cxx/security/verification-helpers.hpp>
 
-using namespace dledger;
+using namespace mnemosyne;
 
 std::list<std::string> startingPeerPath({
     "./test-certs/test-a.cert",
@@ -19,12 +19,12 @@ std::list<std::string> startingPeerPath({
 });
 
 std::string peerList[] = {
-        "/dledger/test-e",
+        "/mnemosyne/test-e",
 };
 
-std::string anchorName = "/dledger";
+std::string anchorName = "/mnemosyne";
 
-std::string addCertificateRecord(security::KeyChain& keychain, shared_ptr<Ledger> ledger) {
+std::string addCertificateRecord(security::KeyChain& keychain, shared_ptr<Mnemosyne> ledger) {
     CertificateRecord record(std::to_string(std::rand()));
     const auto& pib = keychain.getPib();
 
@@ -53,7 +53,7 @@ std::string addCertificateRecord(security::KeyChain& keychain, shared_ptr<Ledger
     return result.what();
 }
 
-std::string addRevokeRecord(security::KeyChain& keychain, shared_ptr<Ledger> ledger, std::string certRecordName) {
+std::string addRevokeRecord(security::KeyChain& keychain, shared_ptr<Mnemosyne> ledger, std::string certRecordName) {
     RevocationRecord record(std::to_string(std::rand()));
     auto fetchResult = ledger->getRecord(certRecordName);
     assert(fetchResult.has_value());
@@ -78,17 +78,17 @@ main(int argc, char** argv)
     security::KeyChain keychain;
     std::shared_ptr<Config> config = nullptr;
     try {
-        config = Config::CustomizedConfig("/ndn/broadcast/dledger", anchorName,
-                                          std::string("./dledger-anchor.cert"), std::string("/tmp/dledger-db/test-anchor"),
+        config = Config::CustomizedConfig("/ndn/broadcast/mnemosyne", anchorName,
+                                          std::string("./mnemosyne-anchor.cert"), std::string("/tmp/mnemosyne-db/test-anchor"),
                                           startingPeerPath);
-        mkdir("/tmp/dledger-db/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        mkdir("/tmp/mnemosyne-db/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
     catch(const std::exception& e) {
         std::cout << e.what() << std::endl;
         return 1;
     }
 
-    shared_ptr<Ledger> ledger = std::move(Ledger::initLedger(*config, keychain, face));
+    shared_ptr<Mnemosyne> ledger = std::make_shared<Mnemosyne>(*config, keychain, face);
 
     auto recordName = addCertificateRecord(keychain, ledger);
     Scheduler scheduler(ioService);

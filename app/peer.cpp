@@ -192,7 +192,7 @@ Peer::OnData(const Interest& interest, const Data& data)
       NDN_LOG_INFO("IGNORED " << approvedBlockName);
       continue;
     }
-    if (approvedBlockName.get(1) == dataName.get(1)) { // recordname format: /dledger/node/hash
+    if (approvedBlockName.get(1) == dataName.get(1)) { // recordname format: /mnemosyne/node/hash
       m_recordStack.pop_back();
       NDN_LOG_INFO("INTERLOCK VIOLATION " << approvedBlockName);
       return;
@@ -363,7 +363,7 @@ Peer::GenerateRecord()
   sha.reset();
 
   // generate a new record
-  // Naming: /dledger/nodeX/digest
+  // Naming: /mnemosyne/nodeX/digest
   Name recordName(m_routablePrefix);
   recordName.append(recordDigest);
   auto record = std::make_shared<Data>(recordName);

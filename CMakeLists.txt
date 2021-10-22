@@ -15,14 +15,15 @@ set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointe
 # dependencies
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(NDN_CXX REQUIRED libndn-cxx)
+pkg_check_modules(NDN_SVS REQUIRED libndn-svs)
 find_package(leveldb REQUIRED)
 
 # files
 set(MNEMOSYNE_LIB_SOURCE_FILES
-    ./src/backend.hpp
+        include/mnemosyne/backend.hpp
     ./src/backend.cpp
-    ./src/ledger-impl.hpp
-    ./src/ledger-impl.cpp
+        include/mnemosyne/mnemosyne.hpp
+        src/mnemosyne.cpp
     ./src/record.cpp
     ./src/config.cpp
     ./src/record_name.cpp
@@ -31,9 +32,11 @@ set(MNEMOSYNE_LIB_SOURCE_FILES
     ./src/default-cert-manager.h)
 # include
 include_directories(${NDN_CXX_INCLUDE_DIRS})
+include_directories(${NDN_SVS_INCLUDE_DIRS})
 
 # link
 link_directories(${NDN_CXX_LIBRARY_DIRS})
+link_directories(${NDN_SVS_LIBRARY_DIRS})
 
 # target
 
@@ -41,8 +44,8 @@ add_library(mnemosyne SHARED "")
 target_sources(mnemosyne PRIVATE ${MNEMOSYNE_LIB_SOURCE_FILES})
 target_include_directories(mnemosyne PUBLIC ./include)
 target_include_directories(mnemosyne PRIVATE ./src)
-target_compile_options(mnemosyne PUBLIC ${NDN_CXX_CFLAGS})
-target_link_libraries(mnemosyne PUBLIC ${NDN_CXX_LIBRARIES} leveldb)
+target_compile_options(mnemosyne PUBLIC ${NDN_CXX_CFLAGS} ${NDN_SVS_CFLAGS})
+target_link_libraries(mnemosyne PUBLIC ${NDN_CXX_LIBRARIES} ${NDN_SVS_LIBRARIES} leveldb)
 
 add_executable(backend-test ./test/backend-test.cpp)
 target_include_directories(backend-test PRIVATE ./src)

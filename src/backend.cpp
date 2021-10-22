@@ -1,12 +1,11 @@
-#include "backend.hpp"
+#include "mnemosyne/backend.hpp"
 
 #include <cassert>
 #include <iostream>
 
-namespace dledger {
+namespace mnemosyne {
 
-Backend::Backend(const std::string& dbDir)
-{
+Backend::Backend(const std::string &dbDir) {
     leveldb::Options options;
     options.create_if_missing = true;
     leveldb::Status status = leveldb::DB::Open(options, dbDir, &m_db);
@@ -17,58 +16,52 @@ Backend::Backend(const std::string& dbDir)
     }
 }
 
-Backend::~Backend()
-{
-  delete m_db;
+Backend::~Backend() {
+    delete m_db;
 }
 
 shared_ptr<Data>
-Backend::getRecord(const Name& recordName) const
-{
-  const auto& nameStr = recordName.toUri();
-  leveldb::Slice key = nameStr;
-  std::string value;
-  leveldb::Status s = m_db->Get(leveldb::ReadOptions(), key, &value);
-  if (!s.ok()) {
-    return nullptr;
-  }
-  else {
-    ndn::Block block((const uint8_t*)value.c_str(), value.size());
-    return make_shared<Data>(block);
-  }
+Backend::getRecord(const Name &recordName) const {
+    const auto &nameStr = recordName.toUri();
+    leveldb::Slice key = nameStr;
+    std::string value;
+    leveldb::Status s = m_db->Get(leveldb::ReadOptions(), key, &value);
+    if (!s.ok()) {
+        return nullptr;
+    } else {
+        ndn::Block block((const uint8_t *) value.c_str(), value.size());
+        return make_shared<Data>(block);
+    }
 }
 
 bool
-Backend::putRecord(const shared_ptr<const Data>& recordData)
-{
-  const auto& nameStr = recordData->getFullName().toUri();
-  leveldb::Slice key = nameStr;
-  auto recordBytes = recordData->wireEncode();
-  leveldb::Slice value((const char*)recordBytes.wire(), recordBytes.size());
-  leveldb::Status s = m_db->Put(leveldb::WriteOptions(), key, value);
-  if (!s.ok()) {
-    return false;
-  }
-  return true;
+Backend::putRecord(const shared_ptr<const Data> &recordData) {
+    const auto &nameStr = recordData->getFullName().toUri();
+    leveldb::Slice key = nameStr;
+    auto recordBytes = recordData->wireEncode();
+    leveldb::Slice value((const char *) recordBytes.wire(), recordBytes.size());
+    leveldb::Status s = m_db->Put(leveldb::WriteOptions(), key, value);
+    if (!s.ok()) {
+        return false;
+    }
+    return true;
 }
 
 void
-Backend::deleteRecord(const Name& recordName)
-{
-  const auto& nameStr = recordName.toUri();
-  leveldb::Slice key = nameStr;
-  leveldb::Status s = m_db->Delete(leveldb::WriteOptions(), key);
-  if (!s.ok()) {
-    std::cerr << "Unable to delete value from database, key: " << nameStr << std::endl;
-    std::cerr << s.ToString() << std::endl;
-  }
+Backend::deleteRecord(const Name &recordName) {
+    const auto &nameStr = recordName.toUri();
+    leveldb::Slice key = nameStr;
+    leveldb::Status s = m_db->Delete(leveldb::WriteOptions(), key);
+    if (!s.ok()) {
+        std::cerr << "Unable to delete value from database, key: " << nameStr << std::endl;
+        std::cerr << s.ToString() << std::endl;
+    }
 }
 
 std::list<Name>
-Backend::listRecord(const Name& prefix) const
-{
+Backend::listRecord(const Name &prefix) const {
     std::list<Name> names;
-    leveldb::Iterator* it = m_db->NewIterator(leveldb::ReadOptions());
+    leveldb::Iterator *it = m_db->NewIterator(leveldb::ReadOptions());
     for (it->Seek(prefix.toUri()); it->Valid() && prefix.isPrefixOf(Name(it->key().ToString())); it->Next()) {
         names.emplace_back(it->key().ToString());
     }
@@ -77,4 +70,4 @@ Backend::listRecord(const Name& prefix) const
     return std::move(names);
 }
 
-}  // namespace dledger
+}  // namespace mnemosyne

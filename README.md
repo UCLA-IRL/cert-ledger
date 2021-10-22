@@ -26,14 +26,14 @@ To run the test files
 nfd-start
 
 # generate keys and certificates
-ndnsec key-gen /dledger | ndnsec cert-gen -s /dledger - > dledger-anchor.cert 
+ndnsec key-gen /mnemosyne | ndnsec cert-gen -s /mnemosyne - > mnemosyne-anchor.cert 
 
 mkdir test-certs
-ndnsec key-gen /dledger/test-a | ndnsec cert-gen -s /dledger - > test-certs/test-a.cert
-ndnsec key-gen /dledger/test-b | ndnsec cert-gen -s /dledger - > test-certs/test-b.cert
-ndnsec key-gen /dledger/test-c | ndnsec cert-gen -s /dledger - > test-certs/test-c.cert
-ndnsec key-gen /dledger/test-d | ndnsec cert-gen -s /dledger - > test-certs/test-d.cert
-ndnsec key-gen /dledger/test-e | ndnsec cert-gen -s /dledger - > test-certs/test-e.cert
+ndnsec key-gen /mnemosyne/test-a | ndnsec cert-gen -s /mnemosyne - > test-certs/test-a.cert
+ndnsec key-gen /mnemosyne/test-b | ndnsec cert-gen -s /mnemosyne - > test-certs/test-b.cert
+ndnsec key-gen /mnemosyne/test-c | ndnsec cert-gen -s /mnemosyne - > test-certs/test-c.cert
+ndnsec key-gen /mnemosyne/test-d | ndnsec cert-gen -s /mnemosyne - > test-certs/test-d.cert
+ndnsec key-gen /mnemosyne/test-e | ndnsec cert-gen -s /mnemosyne - > test-certs/test-e.cert
 
 
 # run each of the following as a peer

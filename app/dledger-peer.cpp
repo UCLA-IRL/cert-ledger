@@ -23,8 +23,8 @@ class Options
 {
 public:
   Options()
-    : mcPrefix("/ndn/multicast/dledger")
-    , routablePrefix("/ndn/multicast/dledger/node")
+    : mcPrefix("/ndn/multicast/mnemosyne")
+    , routablePrefix("/ndn/multicast/mnemosyne/node")
   {
     routablePrefix.append(std::to_string(ndn::random::generateWord64()));
   }

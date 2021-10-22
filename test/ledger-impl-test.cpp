@@ -1,5 +1,5 @@
-#include "dledger/record.hpp"
-#include "dledger/ledger.hpp"
+#include "mnemosyne/record.hpp"
+#include "mnemosyne/mnemosyne.hpp"
 #include <iostream>
 #include <ndn-cxx/security/signature-sha256-with-rsa.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
@@ -9,7 +9,7 @@
 #include <ndn-cxx/util/io.hpp>
 #include <random>
 
-using namespace dledger;
+using namespace mnemosyne;
 
 std::random_device rd;  //Will be used to obtain a seed for the random number engine
 std::mt19937 random_gen(rd()); //Standard mersenne_twister_engine seeded with rd()
@@ -37,7 +37,7 @@ makeData(const std::string& name, const std::string& content)
   return data;
 }
 
-void periodicAddRecord(shared_ptr<Ledger> ledger, Scheduler& scheduler) {
+void periodicAddRecord(shared_ptr<Mnemosyne> ledger, Scheduler& scheduler) {
     std::uniform_int_distribution<> distrib(1, 1000000);
     Record record(RecordType::GENERIC_RECORD, std::to_string(distrib(random_gen)));
     record.addRecordItem(makeStringBlock(255, std::to_string(distrib(random_gen))));
@@ -66,17 +66,17 @@ main(int argc, char** argv)
   security::KeyChain keychain;
   std::shared_ptr<Config> config = nullptr;
   try {
-    config = Config::CustomizedConfig("/ndn/broadcast/dledger", "/dledger/" + idName,
-            std::string("./dledger-anchor.cert"), std::string("/tmp/dledger-db/" + idName),
+    config = Config::CustomizedConfig("/ndn/broadcast/mnemosyne", "/mnemosyne/" + idName,
+            std::string("./mnemosyne-anchor.cert"), std::string("/tmp/mnemosyne-db/" + idName),
                                       startingPeerPath);
-    mkdir("/tmp/dledger-db/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir("/tmp/mnemosyne-db/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
   }
   catch(const std::exception& e) {
     std::cout << e.what() << std::endl;
     return 1;
   }
 
-  shared_ptr<Ledger> ledger = std::move(Ledger::initLedger(*config, keychain, face));
+  shared_ptr<Mnemosyne> ledger = std::make_shared<Mnemosyne>(*config, keychain, face);
 
   Scheduler scheduler(ioService);
   scheduler.schedule(time::seconds(2), [ledger, &scheduler]{periodicAddRecord(ledger, scheduler);});

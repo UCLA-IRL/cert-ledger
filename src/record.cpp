@@ -1,110 +1,97 @@
-#include "dledger/record.hpp"
+#include "mnemosyne/record.hpp"
 #include "record_name.hpp"
 
 #include <sstream>
 #include <utility>
 
-namespace dledger {
+namespace mnemosyne {
 
-Record::Record(RecordType type, const std::string& identifer)
-    : m_data(nullptr),
-      m_type(type),
-      m_uniqueIdentifier(identifer)
-{
+Record::Record(RecordType type, const std::string &identifer)
+        : m_data(nullptr),
+          m_type(type),
+          m_uniqueIdentifier(identifer) {
 }
 
-Record::Record(const std::shared_ptr<Data>& data)
-    : m_data(data)
-{
-  RecordName name(m_data->getName());
-  m_type = name.getRecordType();
-  m_uniqueIdentifier = name.getRecordUniqueIdentifier();
-  headerWireDecode(m_data->getContent());
-  bodyWireDecode(m_data->getContent());
+Record::Record(const std::shared_ptr<Data> &data)
+        : m_data(data) {
+    RecordName name(m_data->getName());
+    m_type = name.getRecordType();
+    m_uniqueIdentifier = name.getRecordUniqueIdentifier();
+    headerWireDecode(m_data->getContent());
+    bodyWireDecode(m_data->getContent());
 }
 
 Record::Record(ndn::Data data)
-    : Record(std::make_shared<ndn::Data>(std::move(data)))
-{
+        : Record(std::make_shared<ndn::Data>(std::move(data))) {
 }
 
 Name
-Record::getRecordName() const
-{
-  if (m_data != nullptr)
-    return m_data->getFullName();
-  return Name();
+Record::getRecordName() const {
+    if (m_data != nullptr)
+        return m_data->getFullName();
+    return Name();
 }
 
-const std::list<Name>&
-Record::getPointersFromHeader() const
-{
-  return m_recordPointers;
+const std::list<Name> &
+Record::getPointersFromHeader() const {
+    return m_recordPointers;
 }
 
 void
-Record::addRecordItem(const Block& recordItem)
-{
-  if (m_data != nullptr) {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Cannot modify built record"));
-  }
-  m_contentItems.push_back(recordItem);
+Record::addRecordItem(const Block &recordItem) {
+    if (m_data != nullptr) {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot modify built record"));
+    }
+    m_contentItems.push_back(recordItem);
 }
 
-const std::list<Block>&
-Record::getRecordItems() const
-{
-  return m_contentItems;
+const std::list<Block> &
+Record::getRecordItems() const {
+    return m_contentItems;
 }
 
 bool
-Record::isEmpty() const
-{
-  return m_data == nullptr && m_recordPointers.empty() && m_contentItems.empty();
+Record::isEmpty() const {
+    return m_data == nullptr && m_recordPointers.empty() && m_contentItems.empty();
 }
 
 void
-Record::addPointer(const Name& pointer)
-{
-  if (m_data != nullptr) {
-      BOOST_THROW_EXCEPTION(std::runtime_error("Cannot modify built record"));
-  }
-  m_recordPointers.push_back(pointer);
+Record::addPointer(const Name &pointer) {
+    if (m_data != nullptr) {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot modify built record"));
+    }
+    m_recordPointers.push_back(pointer);
 }
 
 void
-Record::wireEncode(Block& block) const
-{
-  headerWireEncode(block);
-  bodyWireEncode(block);
+Record::wireEncode(Block &block) const {
+    headerWireEncode(block);
+    bodyWireEncode(block);
 }
 
 Name
-Record::getProducerPrefix() const
-{
-  return RecordName(m_data->getName()).getProducerPrefix();
+Record::getProducerPrefix() const {
+    return RecordName(m_data->getName()).getProducerPrefix();
 }
 
 time::system_clock::TimePoint
-Record::getGenerationTimestamp() const
-{
-  return RecordName(m_data->getName()).getGenerationTimestamp();
+Record::getGenerationTimestamp() const {
+    return RecordName(m_data->getName()).getGenerationTimestamp();
 }
 
 void
-Record::headerWireEncode(Block& block) const
-{
-  auto header = makeEmptyBlock(T_RecordHeader);
-  for (const auto& pointer : m_recordPointers) {
-    header.push_back(pointer.wireEncode());
-  }
-  header.parse();
-  block.push_back(header);
-  block.parse();
+Record::headerWireEncode(Block &block) const {
+    auto header = makeEmptyBlock(T_RecordHeader);
+    for (const auto &pointer : m_recordPointers) {
+        header.push_back(pointer.wireEncode());
+    }
+    header.parse();
+    block.push_back(header);
+    block.parse();
 };
 
 void
-Record::headerWireDecode(const Block& dataContent) {
+Record::headerWireDecode(const Block &dataContent) {
     m_recordPointers.clear();
     dataContent.parse();
     const auto &headerBlock = dataContent.get(T_RecordHeader);
@@ -126,19 +113,18 @@ Record::headerWireDecode(const Block& dataContent) {
 }
 
 void
-Record::bodyWireEncode(Block& block) const
-{
-  auto body = makeEmptyBlock(T_RecordContent);
-  for (const auto& item : m_contentItems) {
-    body.push_back(item);
-  }
-  body.parse();
-  block.push_back(body);
-  block.parse();
+Record::bodyWireEncode(Block &block) const {
+    auto body = makeEmptyBlock(T_RecordContent);
+    for (const auto &item : m_contentItems) {
+        body.push_back(item);
+    }
+    body.parse();
+    block.push_back(body);
+    block.parse();
 };
 
 void
-Record::bodyWireDecode(const Block& dataContent) {
+Record::bodyWireDecode(const Block &dataContent) {
     m_contentItems.clear();
     dataContent.parse();
     const auto &contentBlock = dataContent.get(T_RecordContent);
@@ -149,13 +135,13 @@ Record::bodyWireDecode(const Block& dataContent) {
 }
 
 void
-Record::checkPointerCount(int numPointers) const{
+Record::checkPointerCount(int numPointers) const {
     if (getPointersFromHeader().size() != numPointers) {
         throw std::runtime_error("Less preceding record than expected");
     }
 
     std::set<Name> nameSet;
-    for (const auto& pointer: getPointersFromHeader()) {
+    for (const auto &pointer: getPointersFromHeader()) {
         nameSet.insert(pointer);
     }
     if (nameSet.size() != numPointers) {
@@ -163,24 +149,21 @@ Record::checkPointerCount(int numPointers) const{
     }
 }
 
-GenericRecord::GenericRecord(const std::string& identifer)
-    : Record(RecordType::GENERIC_RECORD, identifer)
-{
+GenericRecord::GenericRecord(const std::string &identifer)
+        : Record(RecordType::GENERIC_RECORD, identifer) {
 }
 
-CertificateRecord::CertificateRecord(const std::string& identifer)
-    : Record(RecordType::CERTIFICATE_RECORD, identifer)
-{
+CertificateRecord::CertificateRecord(const std::string &identifer)
+        : Record(RecordType::CERTIFICATE_RECORD, identifer) {
 }
 
 CertificateRecord::CertificateRecord(Record record)
-    : Record(std::move(record))
-{
+        : Record(std::move(record)) {
     if (this->getType() != RecordType::CERTIFICATE_RECORD) {
         BOOST_THROW_EXCEPTION(std::runtime_error("incorrect record type"));
     }
 
-    for (const Block& block : this->getRecordItems()) {
+    for (const Block &block : this->getRecordItems()) {
         if (block.type() == tlv::KeyLocator) {
             Name recordName = KeyLocator(block).getName();
             if (!recordName.empty()) {
@@ -194,55 +177,53 @@ CertificateRecord::CertificateRecord(Record record)
 }
 
 void
-CertificateRecord::addCertificateItem(const security::Certificate& certificate)
-{
+CertificateRecord::addCertificateItem(const security::Certificate &certificate) {
     m_cert_list.emplace_back(certificate);
     addRecordItem(certificate.wireEncode());
 }
 
 const std::list<security::Certificate> &
-CertificateRecord::getCertificates() const
-{
+CertificateRecord::getCertificates() const {
     return m_cert_list;
 }
 
 void
-CertificateRecord::addPrevCertPointer(const Name& recordName){
+CertificateRecord::addPrevCertPointer(const Name &recordName) {
     m_prev_cert.emplace_back(recordName);
     addRecordItem(KeyLocator(recordName).wireEncode());
 }
 
 const std::list<Name> &
-CertificateRecord::getPrevCertificates() const{
+CertificateRecord::getPrevCertificates() const {
     return m_prev_cert;
 }
 
-RevocationRecord::RevocationRecord(const std::string &identifer):
-    Record(RecordType::REVOCATION_RECORD, identifer) {
+RevocationRecord::RevocationRecord(const std::string &identifer) :
+        Record(RecordType::REVOCATION_RECORD, identifer) {
 }
 
-RevocationRecord::RevocationRecord(Record record):
-    Record(std::move(record)){
+RevocationRecord::RevocationRecord(Record record) :
+        Record(std::move(record)) {
     if (this->getType() != RecordType::REVOCATION_RECORD) {
         BOOST_THROW_EXCEPTION(std::runtime_error("incorrect record type"));
     }
-    for (const Block& block : this->getRecordItems()) {
+    for (const Block &block : this->getRecordItems()) {
         m_revoked_cert_list.emplace_back(block);
     }
 }
 
 void
-RevocationRecord::addCertificateNameItem(const Name &certificateName){
+RevocationRecord::addCertificateNameItem(const Name &certificateName) {
     m_revoked_cert_list.emplace_back(certificateName);
     addRecordItem(certificateName.wireEncode());
 }
 
 const std::list<Name> &
-RevocationRecord::getRevokedCertificates() const{
+RevocationRecord::getRevokedCertificates() const {
     return m_revoked_cert_list;
 }
 
 GenesisRecord::GenesisRecord(const std::string &identifier) :
-    Record(RecordType::GENESIS_RECORD, identifier) {}
+        Record(RecordType::GENESIS_RECORD, identifier) {}
 
-}  // namespace dledger
+}  // namespace mnemosyne

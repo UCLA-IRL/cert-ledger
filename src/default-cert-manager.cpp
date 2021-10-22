@@ -8,9 +8,9 @@
 #include "default-cert-manager.h"
 #include "record_name.hpp"
 
-dledger::DefaultCertificateManager::DefaultCertificateManager(const Name &peerPrefix,
-                                                              shared_ptr<security::Certificate> anchorCert,
-                                                              const std::list<security::Certificate> &startingPeers)
+mnemosyne::DefaultCertificateManager::DefaultCertificateManager(const Name &peerPrefix,
+                                                                shared_ptr<security::Certificate> anchorCert,
+                                                                const std::list<security::Certificate> &startingPeers)
         :
         m_peerPrefix(peerPrefix), m_anchorCert(std::move(anchorCert)) {
     if (!m_anchorCert->isValid()) {
@@ -22,7 +22,7 @@ dledger::DefaultCertificateManager::DefaultCertificateManager(const Name &peerPr
     }
 }
 
-bool dledger::DefaultCertificateManager::verifySignature(const Data &data) const {
+bool mnemosyne::DefaultCertificateManager::verifySignature(const Data &data) const {
     auto identity = RecordName(data.getName()).getProducerPrefix();
     auto iterator = m_peerCertificates.find(identity);
     if (iterator == m_peerCertificates.cend()) return false;
@@ -34,7 +34,7 @@ bool dledger::DefaultCertificateManager::verifySignature(const Data &data) const
     return false;
 }
 
-bool dledger::DefaultCertificateManager::verifyRecordFormat(const dledger::Record &record) const {
+bool mnemosyne::DefaultCertificateManager::verifyRecordFormat(const mnemosyne::Record &record) const {
 
     if (record.getType() == RecordType::CERTIFICATE_RECORD) {
         if (!m_anchorCert->getIdentity().isPrefixOf(record.getRecordName())) {
@@ -80,7 +80,7 @@ bool dledger::DefaultCertificateManager::verifyRecordFormat(const dledger::Recor
     return true;
 }
 
-bool dledger::DefaultCertificateManager::endorseSignature(const Data &data) const {
+bool mnemosyne::DefaultCertificateManager::endorseSignature(const Data &data) const {
     auto identity = RecordName(data.getName()).getProducerPrefix();
     auto iterator = m_peerCertificates.find(identity);
     if (iterator == m_peerCertificates.cend()) return false;
@@ -93,7 +93,7 @@ bool dledger::DefaultCertificateManager::endorseSignature(const Data &data) cons
     return false;
 }
 
-bool dledger::DefaultCertificateManager::verifySignature(const Interest &interest) const {
+bool mnemosyne::DefaultCertificateManager::verifySignature(const Interest &interest) const {
     SignatureInfo info(interest.getName().get(-2).blockFromValue());
     auto identity = info.getKeyLocator().getName().getPrefix(-2);
     auto iterator = m_peerCertificates.find(identity);
@@ -107,7 +107,7 @@ bool dledger::DefaultCertificateManager::verifySignature(const Interest &interes
     return false;
 }
 
-void dledger::DefaultCertificateManager::acceptRecord(const dledger::Record &record) {
+void mnemosyne::DefaultCertificateManager::acceptRecord(const mnemosyne::Record &record) {
     if (record.getType() == RecordType::CERTIFICATE_RECORD) {
         try {
             auto certRecord = CertificateRecord(record);
@@ -135,7 +135,7 @@ void dledger::DefaultCertificateManager::acceptRecord(const dledger::Record &rec
     }
 }
 
-Name dledger::DefaultCertificateManager::getCertificateNameIdentity(const Name &certificateName) const {
+Name mnemosyne::DefaultCertificateManager::getCertificateNameIdentity(const Name &certificateName) const {
     if (certificateName.get(-1).isImplicitSha256Digest())
         return certificateName.getPrefix(-1)
                 .getPrefix(security::Certificate::KEY_COMPONENT_OFFSET); // remove another component from back
@@ -143,7 +143,7 @@ Name dledger::DefaultCertificateManager::getCertificateNameIdentity(const Name &
         return certificateName.getPrefix(security::Certificate::KEY_COMPONENT_OFFSET);
 }
 
-bool dledger::DefaultCertificateManager::authorizedToGenerate() const {
+bool mnemosyne::DefaultCertificateManager::authorizedToGenerate() const {
     auto iterator = m_peerCertificates.find(m_peerPrefix);
     if (iterator == m_peerCertificates.cend()) return false;
     return !iterator->second.empty();

@@ -5,7 +5,7 @@
 #include "record_name.hpp"
 
 using namespace ndn;
-namespace dledger {
+namespace mnemosyne {
 // record Name: /<producer-prefix>/<record-type>/<record-name>/<timestamp>
 RecordName::RecordName(const Name &name) : Name(name) {
     if (this->size() < 4 || (hasImplicitDigest() && this->size() < 5))
