@@ -67,12 +67,10 @@ class MnemosyneDagSync {
   protected:
     Config m_config;
     Face &m_network;
-    Scheduler m_scheduler;
     Backend m_backend;
     security::KeyChain &m_keychain;
     svs::SVSync m_dagSync;
 
-    ndn::scheduler::EventId m_syncEventID;
     std::vector<Name> m_lastNames;
     unsigned int m_lastNameTops;
 

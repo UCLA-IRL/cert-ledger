@@ -19,7 +19,7 @@ namespace mnemosyne {
 MnemosyneDagSync::MnemosyneDagSync(const Config &config,
                      security::KeyChain &keychain,
                      Face &network)
-        : m_config(config), m_keychain(keychain), m_network(network), m_scheduler(network.getIoService()),
+        : m_config(config), m_keychain(keychain), m_network(network),
           m_backend(config.databasePath),
           m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);}),
           m_randomEngine(std::random_device()()),
@@ -34,23 +34,21 @@ MnemosyneDagSync::MnemosyneDagSync(const Config &config,
     // Make the genesis data
     for (int i = 0; i < m_config.numGenesisBlock; i++) {
         GenesisRecord genesisRecord(i);
-        auto data = make_shared<Data>(genesisRecord.m_recordName);
+        auto data = make_shared<Data>(genesisRecord.getRecordName());
         auto contentBlock = makeEmptyBlock(tlv::Content);
         genesisRecord.wireEncode(contentBlock);
         data->setContent(contentBlock);
         m_keychain.sign(*data, signingWithSha256());
         genesisRecord.m_data = data;
         m_backend.putRecord(data);
-        m_lastNames.push_back(genesisRecord.getRecordName());
+        m_lastNames.push_back(genesisRecord.getRecordFullName());
     }
     NDN_LOG_INFO("STEP 2" << std::endl
                           << "- " << m_config.numGenesisBlock << " genesis records have been added to the DLedger");
     NDN_LOG_INFO("DLedger Initialization Succeed");
 }
 
-MnemosyneDagSync::~MnemosyneDagSync() {
-    if (m_syncEventID) m_syncEventID.cancel();
-}
+MnemosyneDagSync::~MnemosyneDagSync() = default;
 
 ReturnCode MnemosyneDagSync::createRecord(Record &record) {
     NDN_LOG_INFO("[Mnemosyne::addRecord] Add new record");
@@ -65,7 +63,7 @@ ReturnCode MnemosyneDagSync::createRecord(Record &record) {
             break;
     }
 
-    auto data = make_shared<Data>(record.m_recordName);
+    auto data = make_shared<Data>(record.getRecordName());
     auto contentBlock = makeEmptyBlock(tlv::Content);
     record.wireEncode(contentBlock);
     data->setContent(contentBlock);

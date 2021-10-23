@@ -42,7 +42,7 @@ Record::Record(ndn::Data data)
 }
 
 Name
-Record::getRecordName() const {
+Record::getRecordFullName() const {
     if (m_data != nullptr)
         return m_data->getFullName();
     return Name();
@@ -179,73 +179,8 @@ bool Record::isGenesisRecord() const {
     return false;
 }
 
-CertificateRecord::CertificateRecord(const std::string& identifer)
-    : Record(RecordType::CERTIFICATE_RECORD, identifer)
-{
-}
-
-CertificateRecord::CertificateRecord(Record record)
-    : Record(std::move(record))
-{
-    if (this->getType() != RecordType::CERTIFICATE_RECORD) {
-        BOOST_THROW_EXCEPTION(std::runtime_error("incorrect record type"));
-    }
-
-   const Block& block = this->getContentItem();
-    if (block.type() == tlv::KeyLocator) {
-        Name recordName = KeyLocator(block).getName();
-        m_prev_cert.emplace_back(recordName);
-    } else {
-        m_cert_list.emplace_back(block);
-    }
-}
-
-void
-CertificateRecord::addCertificateItem(const security::Certificate& certificate)
-{
-    m_cert_list.emplace_back(certificate);
-    setContentItem(certificate.wireEncode());
-}
-
-const std::list<security::Certificate> &
-CertificateRecord::getCertificates() const
-{
-    return m_cert_list;
-}
-
-void
-CertificateRecord::addPrevCertPointer(const Name& recordName){
-    m_prev_cert.emplace_back(recordName);
-    setContentItem(KeyLocator(recordName).wireEncode());
-}
-
-const std::list<Name> &
-CertificateRecord::getPrevCertificates() const{
-    return m_prev_cert;
-}
-
-RevocationRecord::RevocationRecord(const std::string &identifer):
-    Record(RecordType::REVOCATION_RECORD, identifer) {
-}
-
-RevocationRecord::RevocationRecord(Record record):
-    Record(std::move(record)){
-    if (this->getType() != RecordType::REVOCATION_RECORD) {
-        BOOST_THROW_EXCEPTION(std::runtime_error("incorrect record type"));
-    }
-    const Block& block = this->getContentItem();
-    m_revoked_cert_list.emplace_back(block);
-}
-
-void
-RevocationRecord::addCertificateNameItem(const Name &certificateName){
-    m_revoked_cert_list.emplace_back(certificateName);
-    setContentItem(certificateName.wireEncode());
-}
-
-const std::list<Name> &
-RevocationRecord::getRevokedCertificates() const{
-    return m_revoked_cert_list;
+const Name &Record::getRecordName() const {
+    return m_recordName;
 }
 
 GenesisRecord::GenesisRecord(int number) :
