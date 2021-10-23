@@ -1,3 +1,6 @@
+
+#!/bin/bash
+
 # generate keys and certificates
 ndnsec delete /mnemosyne
 ndnsec key-gen /mnemosyne | ndnsec cert-gen -s /mnemosyne - > mnemosyne-anchor.cert
@@ -11,5 +14,4 @@ ndnsec key-gen /mnemosyne | ndnsec cert-gen -s /mnemosyne - > mnemosyne-anchor.c
 cp ca.conf.example /usr/local/etc/ndncert/ca.conf
 
 export NDN_LOG="ndncert.*=TRACE"
-nohup ndncert-ca-server
-./build/ledger-impl-test-anchor
+ndncert-ca-server
