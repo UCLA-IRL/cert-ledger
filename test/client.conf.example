@@ -1,0 +1,16 @@
+{
+  "ca-list":
+  [
+    {
+      "ca-prefix": "/mnemosyne",
+      "ca-info": "An example NDNCERT CA for Mnemosyne",
+        "probe-parameters":
+        [
+          { "probe-parameter-key": "common-name" },
+	      { "probe-parameter-key": "site" }
+        ],
+      "certificate": "Bv0C3gdACANlZHUIBHVjbGEIAmNzCAZicnVpbnMICGh5ZHJhX29wCANLRVkICE1xtneqQb0oCARzZWxmIwgAAAF8cTyz3hQJGAECGQQANu6AFf0BJjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANZqdircGV34rGklsbP6vGTERw/Ad+GyAaDwtnOqWoSRif1rggfCxqdZhmVAadUwUlpcAjza77ZVz16eQPN+UGttkMmhi7vHfkrKA6MpaAQR+OkBZXOXh3QodGGkxAvHXM31sfhZ8rwbmTVHfSIH1r19d4v9uZxCAnu7wOOQk2zggnQ4Z2HuvwIJphFP06tKNx//7xxdRvBjJt7vZ8ohsjfINmG1WhB7WMgdUqGnvyNQzP2KTjVjoUgvPfaNnRtHn36VB0T7C/EiK6BBDziThETLRH8YtuMc8/XoMj00EKQTkPZ6Sz4kZ3TWIB4fcoQLMlaTu6pxMUem3hTJM55z2FcCAwEAARZhGwEBHDIHMAgDZWR1CAR1Y2xhCAJjcwgGYnJ1aW5zCAhoeWRyYV9vcAgDS0VZCAhNcbZ3qkG9KP0A/Sb9AP4PMTk3MDAxMDFUMDAwMDAw/QD/DzIwMjExMDExVDIxMjI1Nhf9AQApg/g0daj5LdOnJgMG+fzhvZuq2/XpDmGK8TJ50thXWsU/NanbvGuDptcWl+eL5snvJt6Z/CMxkSG6K/ArPNnOrPnUirug+QN/pjxL0OqRVODReAHHnQe7Q6elWlTIW2vfE0/OVmIGROYkaHc93DPnjp9JErGVvNLq2PJwIM0iyRV/FIkgtUO71XixcWXqGMS6lQS9ZkbFXzBJzPJ9+bQ1POxdDPEX0gTExNgak017XWBIP9UjwwQDgZvFFRIU5n6F0Bi9TcwwYq8yZPdZDegTciiLo/Ug51nv8c10/NNzIUwcdNeRnRfFD/p83eB8azliv0bcKGUeMHlHIFi6i0Vz"
+    }
+  ],
+  "local-ndncert-anchor": "/usr/local/etc/ndncert/anchor.key"
+}

@@ -6,6 +6,13 @@
 
 namespace mnemosyne {
 
+Record::Record(RecordType type, const std::string& identifer)
+    : m_data(nullptr),
+      m_type(type),
+      m_recordName(identifer)
+{
+}
+
 Record::Record(Name recordName)
         : m_data(nullptr),
           m_recordName(std::move(recordName)) {
@@ -57,6 +64,11 @@ Record::setContentItem(const Block &contentItem) {
 const Block &
 Record::getContentItem() const {
     return m_contentItem;
+}
+
+const RecordType &
+Record::getType() const {
+    return m_type;
 }
 
 bool
@@ -165,6 +177,75 @@ bool Record::isGenesisRecord() const {
         if (readString(m_recordName.get(i)) == "GENESIS_RECORD") return true;
     }
     return false;
+}
+
+CertificateRecord::CertificateRecord(const std::string& identifer)
+    : Record(RecordType::CERTIFICATE_RECORD, identifer)
+{
+}
+
+CertificateRecord::CertificateRecord(Record record)
+    : Record(std::move(record))
+{
+    if (this->getType() != RecordType::CERTIFICATE_RECORD) {
+        BOOST_THROW_EXCEPTION(std::runtime_error("incorrect record type"));
+    }
+
+   const Block& block = this->getContentItem();
+    if (block.type() == tlv::KeyLocator) {
+        Name recordName = KeyLocator(block).getName();
+        m_prev_cert.emplace_back(recordName);
+    } else {
+        m_cert_list.emplace_back(block);
+    }
+}
+
+void
+CertificateRecord::addCertificateItem(const security::Certificate& certificate)
+{
+    m_cert_list.emplace_back(certificate);
+    setContentItem(certificate.wireEncode());
+}
+
+const std::list<security::Certificate> &
+CertificateRecord::getCertificates() const
+{
+    return m_cert_list;
+}
+
+void
+CertificateRecord::addPrevCertPointer(const Name& recordName){
+    m_prev_cert.emplace_back(recordName);
+    setContentItem(KeyLocator(recordName).wireEncode());
+}
+
+const std::list<Name> &
+CertificateRecord::getPrevCertificates() const{
+    return m_prev_cert;
+}
+
+RevocationRecord::RevocationRecord(const std::string &identifer):
+    Record(RecordType::REVOCATION_RECORD, identifer) {
+}
+
+RevocationRecord::RevocationRecord(Record record):
+    Record(std::move(record)){
+    if (this->getType() != RecordType::REVOCATION_RECORD) {
+        BOOST_THROW_EXCEPTION(std::runtime_error("incorrect record type"));
+    }
+    const Block& block = this->getContentItem();
+    m_revoked_cert_list.emplace_back(block);
+}
+
+void
+RevocationRecord::addCertificateNameItem(const Name &certificateName){
+    m_revoked_cert_list.emplace_back(certificateName);
+    setContentItem(certificateName.wireEncode());
+}
+
+const std::list<Name> &
+RevocationRecord::getRevokedCertificates() const{
+    return m_revoked_cert_list;
 }
 
 GenesisRecord::GenesisRecord(int number) :
