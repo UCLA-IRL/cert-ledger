@@ -8,7 +8,7 @@ ndnsec key-gen /mnemosyne | ndnsec cert-gen -s /mnemosyne - > mnemosyne-anchor.c
 # cd ndncert && git checkout v0.3
 # ./waf configure
 # sudo ./waf install && cd ..
-sudo cp ca.conf.example /usr/local/etc/ndncert/ca.conf
+cp ca.conf.example /usr/local/etc/ndncert/ca.conf
 
 export NDN_LOG="ndncert.*=TRACE"
 nohup ndncert-ca-server

@@ -16,8 +16,20 @@ echo "Your private key path is - $ssl_prv\n"
 
 echo "Input your name component after /mnemosyne:"
 read comp
-echo "Your private key path is - $comp\n"
+echo "Your name component - $comp\n"
 
+python3 json-writter.py
 python3 auto.py -c $ssl_cert -p $ssl_prv -n "/mnemosyne/$comp"
-ndnsec-cert-dump -i "/mnemosyne/$comp"- > test-certs/$comp.cert
-./build/ledger-impl-test $comp
+
+if [ ! -d "test-certs" ] 
+then
+    mkdir test-certs
+fi
+
+if [ -f "test-certs/$comp.cert" ] 
+then
+    rm test-certs/$comp.cert
+fi
+
+ndnsec-cert-dump -i "/mnemosyne/$comp" > test-certs/$comp.cert
+./../build/ledger-impl-test $comp
