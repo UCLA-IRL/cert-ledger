@@ -53,6 +53,9 @@ target_link_libraries(record-test PUBLIC mnemosyne)
 add_executable(ledger-impl-test ./test/ledger-impl-test.cpp)
 target_link_libraries(ledger-impl-test PUBLIC mnemosyne)
 
+add_executable(mnemosyne-logger ./app/mnemosyne-logger.cpp)
+target_link_libraries(mnemosyne-logger PUBLIC mnemosyne)
+
 #configure
 set(PKG_CONFIG_REQUIRES
         "libndn-cxx >= ${NDN_CXX_VERSION}"

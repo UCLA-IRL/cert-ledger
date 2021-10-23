@@ -2,6 +2,7 @@
 #define MNEMOSYNE_MNEMOSYNE_H_
 
 #include "mnemosyne/mnemosyne-dag-sync.hpp"
+#include <ndn-svs/svspubsub.hpp>
 
 using namespace ndn;
 namespace mnemosyne {
@@ -10,7 +11,7 @@ class Mnemosyne : public MnemosyneDagSync {
   public:
     /**
    * Initialize a Mnemosyne instance from the config.
-   * @p config, input, the configuration of multicast prefix, peer prefix, and settings of Dledger behavior
+   * @p config, input, the configuration of multicast prefix, peer prefix, and settings of Mnemosyne behavior
    * @p keychain, input, the local NDN keychain instance
    * @p face, input, the localhost NDN face to send/receive NDN packets.
    */
@@ -18,9 +19,12 @@ class Mnemosyne : public MnemosyneDagSync {
 
     virtual ~Mnemosyne();
 
-
   private:
+    void onInterfaceUpdate(const std::vector<ndn::svs::MissingDataInfo>& info);
 
+
+  protected:
+    svs::SVSPubSub m_interfacePS;
   };
 
 } // namespace mnemosyne

@@ -44,14 +44,14 @@ MnemosyneDagSync::MnemosyneDagSync(const Config &config,
         m_lastNames.push_back(genesisRecord.getRecordFullName());
     }
     NDN_LOG_INFO("STEP 2" << std::endl
-                          << "- " << m_config.numGenesisBlock << " genesis records have been added to the DLedger");
-    NDN_LOG_INFO("DLedger Initialization Succeed");
+                          << "- " << m_config.numGenesisBlock << " genesis records have been added to the Mnemosyne");
+    NDN_LOG_INFO("Mnemosyne Initialization Succeed");
 }
 
 MnemosyneDagSync::~MnemosyneDagSync() = default;
 
 ReturnCode MnemosyneDagSync::createRecord(Record &record) {
-    NDN_LOG_INFO("[Mnemosyne::addRecord] Add new record");
+    NDN_LOG_INFO("[MnemosyneDagSync::createRecord] Add new record");
 
     // randomly shuffle the tailing record list
     std::vector<Name> recordList = m_lastNames;
@@ -77,7 +77,7 @@ ReturnCode MnemosyneDagSync::createRecord(Record &record) {
         return ReturnCode::signingError(e.what());
     }
     record.m_data = data;
-    NDN_LOG_INFO("[Mnemosyne::addRecord] Added a new record:" << data->getFullName().toUri());
+    NDN_LOG_INFO("[MnemosyneDagSync::createRecord] Added a new record:" << data->getFullName().toUri());
 
     // add new record into the ledger
     addRecord(data);

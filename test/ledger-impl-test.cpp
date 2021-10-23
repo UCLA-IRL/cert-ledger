@@ -12,7 +12,7 @@ using namespace mnemosyne;
 std::random_device rd;  //Will be used to obtain a seed for the random number engine
 std::mt19937 random_gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 
-void periodicAddRecord(KeyChain& keychain, shared_ptr<Mnemosyne> ledger, Scheduler &scheduler) {
+void periodicAddRecord(KeyChain& keychain, shared_ptr<MnemosyneDagSync> ledger, Scheduler &scheduler) {
     std::uniform_int_distribution<int> distribution(0, INT_MAX);
     Data data("/a/b/" + std::to_string(distribution(random_gen)));
     data.setContent(makeStringBlock(tlv::Content, std::to_string(distribution(random_gen))));
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     security::KeyChain keychain;
     std::shared_ptr<Config> config = nullptr;
     try {
-        config = Config::CustomizedConfig("/ndn/broadcast/mnemosyne", identity,
+        config = Config::CustomizedConfig("/ndn/broadcast/mnemosyne-dag", "/ndn/broadcast/mnemosyne", identity,
                                           std::string("./mnemosyne-anchor.cert"),
                                           std::string("/tmp/mnemosyne-db/" + identity.substr(identity.rfind('/'))));
         mkdir("/tmp/mnemosyne-db/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    shared_ptr<Mnemosyne> ledger = std::make_shared<Mnemosyne>(*config, keychain, face);
+    auto ledger = std::make_shared<MnemosyneDagSync>(*config, keychain, face);
 
     Scheduler scheduler(ioService);
     periodicAddRecord(keychain, ledger, scheduler);

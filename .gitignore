@@ -4,7 +4,6 @@
 *.dSYM
 *.o
 backend-test
-dledger-peer
 build
 .idea/
 cmake-build-*/

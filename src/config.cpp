@@ -2,34 +2,12 @@
 #include "default-cert-manager.h"
 
 #include <ndn-cxx/util/io.hpp>
-#include <cstdlib>
-#include <ctime>
 #include <utility>
 
 namespace mnemosyne {
 
-static const std::string DEFAULT_ANCHOR_CERT_PATH = "/mnemosyne/mnemosyne-anchor.cert";
-static const std::string DEFAULT_MULTICAST_PREFIX = "/mnemosyne-multicast";
-static const std::string DEFAULT_PEER_PREFIX = "/mnemosyne";
-
 shared_ptr<Config>
-Config::DefaultConfig() {
-    std::srand(std::time(nullptr));
-    auto peerPrefix = DEFAULT_PEER_PREFIX + "/" + std::to_string(std::rand());
-    std::string homePath = std::getenv("HOME");
-    auto trustAnchorCert = io::load<security::Certificate>(homePath + DEFAULT_ANCHOR_CERT_PATH);
-    if (trustAnchorCert == nullptr) {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot load anchor certificate from the default path."));
-    }
-    auto config = std::make_shared<Config>(DEFAULT_MULTICAST_PREFIX, peerPrefix,
-                                           make_shared<DefaultCertificateManager>(peerPrefix, trustAnchorCert,
-                                                                                  std::list<security::Certificate>()));
-    config->databasePath = "/tmp/mnemosyne-db/" + readString(config->peerPrefix.get(-1));
-    return config;
-}
-
-shared_ptr<Config>
-Config::CustomizedConfig(const std::string &multicastPrefix, const std::string &producerPrefix,
+Config::CustomizedConfig(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &producerPrefix,
                          const std::string &anchorCertPath, const std::string &databasePath) {
     auto trustAnchorCert = io::load<security::Certificate>(anchorCertPath);
     if (trustAnchorCert == nullptr) {
@@ -39,16 +17,17 @@ Config::CustomizedConfig(const std::string &multicastPrefix, const std::string &
 
     //starting peers
     std::list<security::Certificate> startingPeerCerts;
-    auto config = std::make_shared<Config>(multicastPrefix, producerPrefix,
+    auto config = std::make_shared<Config>(multicastPrefix, interfacePrefix, producerPrefix,
                                            make_shared<DefaultCertificateManager>(producerPrefix, trustAnchorCert,
                                                                                   startingPeerCerts));
     config->databasePath = databasePath;
     return config;
 }
 
-Config::Config(const std::string &syncPrefix, const std::string &peerPrefix,
+Config::Config(const std::string &syncPrefix, const std::string &interfacePrefix, const std::string &peerPrefix,
                shared_ptr<CertificateManager> certificateManager_)
         : syncPrefix(syncPrefix),
+          interfacePrefix(interfacePrefix),
           peerPrefix(peerPrefix),
           certificateManager(std::move(certificateManager_)) {}
 

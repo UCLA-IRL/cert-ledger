@@ -10,17 +10,16 @@ namespace mnemosyne {
 
 class Config {
   public:
-    static shared_ptr<Config> DefaultConfig();
 
-    static shared_ptr<Config> CustomizedConfig(const std::string &multicastPrefix, const std::string &peerPrefix,
+    static shared_ptr<Config> CustomizedConfig(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &peerPrefix,
                                                const std::string &anchorCertPath, const std::string &databasePath);
 
     /**
-     * Construct a Config instance used for DLedger initialization.
+     * Construct a Config instance used for Mnemosyne initialization.
      * @p multicastPrefix, input, the distributed ledger system's multicast prefix.
      * @p peerPrefix, input, the unique prefix of the peer.
      */
-    Config(const std::string &multicastPrefix, const std::string &peerPrefix,
+    Config(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &peerPrefix,
            shared_ptr<CertificateManager> certificateManager_);
 
   public:
@@ -43,6 +42,10 @@ class Config {
      * The multicast prefix, under which an Interest can reach to all the peers in the same multicast group.
      */
     Name syncPrefix;
+    /**
+     * The interface pub/sub prefix, under which an publication can reach all Mnemosyne loggers.
+     */
+    Name interfacePrefix;
     /**
      * Producer's unique name prefix, under which an Interest can reach to the producer.
      */
