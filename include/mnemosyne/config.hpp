@@ -14,8 +14,7 @@ class Config {
     static shared_ptr<Config> DefaultConfig();
 
     static shared_ptr<Config> CustomizedConfig(const std::string &multicastPrefix, const std::string &peerPrefix,
-                                               const std::string &anchorCertPath, const std::string &databasePath,
-                                               const std::list<std::string> &startingPeerPaths);
+                                               const std::string &anchorCertPath, const std::string &databasePath);
 
     /**
      * Construct a Config instance used for DLedger initialization.

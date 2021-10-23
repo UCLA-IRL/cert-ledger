@@ -55,9 +55,6 @@ target_link_libraries(record-test PUBLIC mnemosyne)
 add_executable(ledger-impl-test ./test/ledger-impl-test.cpp)
 target_link_libraries(ledger-impl-test PUBLIC mnemosyne)
 
-add_executable(ledger-impl-test-anchor ./test/ledger-impl-test-anchor.cpp)
-target_link_libraries(ledger-impl-test-anchor PUBLIC mnemosyne)
-
 #configure
 set(PKG_CONFIG_REQUIRES
         "libndn-cxx >= ${NDN_CXX_VERSION}"
@@ -80,9 +77,6 @@ install(DIRECTORY include/mnemosyne DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN "*.h*")
 
 install(TARGETS ledger-impl-test
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-install(TARGETS ledger-impl-test-anchor
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}.pc"

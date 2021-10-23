@@ -61,6 +61,10 @@ class Mnemosyne {
     virtual std::list<Name>
     listRecord(const std::string &prefix) const;
 
+    const Name& getPeerPrefix() const {
+        return m_config.peerPrefix;
+    }
+
   private:
     void onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info);
 
@@ -72,11 +76,11 @@ class Mnemosyne {
     Scheduler m_scheduler;
     Backend m_backend;
     security::KeyChain &m_keychain;
-    svs::SVSync m_sync;
+    svs::SVSync m_dagSync;
 
     ndn::scheduler::EventId m_syncEventID;
     std::vector<Name> m_lastNames;
-    int m_lastNameTops;
+    unsigned int m_lastNameTops;
 
     std::mt19937_64 m_randomEngine;
   };
