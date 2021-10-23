@@ -6,6 +6,7 @@
 #include "mnemosyne/config.hpp"
 #include "mnemosyne/return-code.hpp"
 #include "backend.hpp"
+#include <ndn-svs/svsync.hpp>
 #include <ndn-cxx/security/certificate.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/face.hpp>
@@ -61,81 +62,9 @@ class Mnemosyne {
     listRecord(const std::string &prefix) const;
 
   private:
-    optional<Record>
-    getRecord(const Name &recordName) const;
+    void onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info);
 
-    bool
-    seenRecord(const Name &recordName) const;
-
-    void
-    onNack(const Interest &, const lp::Nack &nack);
-
-    void
-    onTimeout(const Interest &interest);
-
-    // the function to generate a sync Interest and send it out
-    // should be invoked periodically or on solicit request
-    ReturnCode
-    sendSyncInterest();
-
-    bool
-    checkSyntaxValidityOfRecord(const Data &data);
-
-    bool
-    checkEndorseValidityOfRecord(const Data &data);
-
-    // Interest format:
-    // /<multicast_prefix>/SYNC
-    // Parameters: A list of tailing record names
-    void
-    onLedgerSyncRequest(const Interest &interest);
-
-    // Interest format:
-    // record full name
-    void
-    onRecordRequest(const Interest &interest);
-
-    // Zhiyi's temp function
-    void
-    fetchRecord(const Name &dataName);
-
-    void
-    onFetchedRecord(const Interest &interest, const Data &data);
-
-    /**
-     * Adds the record to backend and the tailing record map
-     * @param record
-     */
-    void
-    addToTailingRecord(const Record &record, bool endorseVerified);
-
-    //Siqi's temp function
-    struct TailingRecordState {
-        bool parentEndorseVerified;
-        std::set<Name> refSet;
-        bool recordEndorseVerified;
-        Record record;
-        time::system_clock::TimePoint addedTime;
-    };
-
-    static void dumpList(const std::map<Name, TailingRecordState> &weight);
-
-    /**
-     * Check if the ancestor of the record is OK
-     * @param record the record to be checked
-     * @return true if the record is resolved; it is added or set as bad Record
-     */
-    bool checkRecordAncestor(const Record &record);
-
-    /**
-     * handles the information when a record is accepted.
-     */
-    void onRecordConfirmed(const Record &record);
-
-    /**
-     * handles removal of timeout records
-     */
-    void removeTimeoutRecords();
+    void addRecord(const shared_ptr<Data>& recordData);
 
   private:
     Config m_config;
@@ -143,18 +72,14 @@ class Mnemosyne {
     Scheduler m_scheduler;
     Backend m_backend;
     security::KeyChain &m_keychain;
+    svs::SVSync m_sync;
 
-    std::map<Name, TailingRecordState> m_tailRecords;
+    ndn::scheduler::EventId m_syncEventID;
+    std::vector<Name> m_lastNames;
+    int m_lastNameTops;
 
-    // Zhiyi's temp member variable
-    std::list<std::pair<Record, time::system_clock::TimePoint>> m_syncStack;
-
-    // Siqi's temp member variable
-    scheduler::EventId m_syncEventID;
-    scheduler::EventId m_replySyncEventID;
-    std::mt19937_64 m_randomEngine{std::random_device{}()};
-    std::list<Name> m_lastCertRecords; // for certificate chains
-};
+    std::mt19937_64 m_randomEngine;
+  };
 
 } // namespace mnemosyne
 

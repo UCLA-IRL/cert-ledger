@@ -55,9 +55,9 @@ Config::CustomizedConfig(const std::string &multicastPrefix, const std::string &
     return config;
 }
 
-Config::Config(const std::string &multicastPrefix, const std::string &peerPrefix,
+Config::Config(const std::string &syncPrefix, const std::string &peerPrefix,
                shared_ptr<CertificateManager> certificateManager_)
-        : multicastPrefix(multicastPrefix),
+        : syncPrefix(syncPrefix),
           peerPrefix(peerPrefix),
           certificateManager(std::move(certificateManager_)) {}
 

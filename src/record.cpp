@@ -1,22 +1,30 @@
 #include "mnemosyne/record.hpp"
-#include "record_name.hpp"
 
 #include <sstream>
 #include <utility>
+#include <iostream>
 
 namespace mnemosyne {
 
-Record::Record(RecordType type, const std::string &identifer)
+Record::Record(Name recordName)
         : m_data(nullptr),
-          m_type(type),
-          m_uniqueIdentifier(identifer) {
+          m_recordName(std::move(recordName)) {
+    for (int i = 0; i < m_recordName.size(); i ++) {
+        if (readString(m_recordName.get(i)) == "RECORD") return;
+        if (readString(m_recordName.get(i)) == "GENESIS_RECORD") return;
+    }
+    NDN_THROW(std::runtime_error("Bad record name"));
+}
+
+Record::Record(const Name &producerName, const Data &event)
+        : m_data(nullptr),
+          m_recordName(Name(producerName).append("RECORD").append(event.getName())) {
+    setContentItem(event.wireEncode());
 }
 
 Record::Record(const std::shared_ptr<Data> &data)
         : m_data(data) {
-    RecordName name(m_data->getName());
-    m_type = name.getRecordType();
-    m_uniqueIdentifier = name.getRecordUniqueIdentifier();
+    m_recordName = data->getName();
     headerWireDecode(m_data->getContent());
     bodyWireDecode(m_data->getContent());
 }
@@ -38,21 +46,21 @@ Record::getPointersFromHeader() const {
 }
 
 void
-Record::addRecordItem(const Block &recordItem) {
+Record::setContentItem(const Block &contentItem) {
     if (m_data != nullptr) {
         BOOST_THROW_EXCEPTION(std::runtime_error("Cannot modify built record"));
     }
-    m_contentItems.push_back(recordItem);
+    m_contentItem = contentItem;
 }
 
-const std::list<Block> &
-Record::getRecordItems() const {
-    return m_contentItems;
+const Block &
+Record::getContentItem() const {
+    return m_contentItem;
 }
 
 bool
 Record::isEmpty() const {
-    return m_data == nullptr && m_recordPointers.empty() && m_contentItems.empty();
+    return m_data == nullptr && m_recordPointers.empty() && !m_contentItem.isValid();
 }
 
 void
@@ -71,12 +79,11 @@ Record::wireEncode(Block &block) const {
 
 Name
 Record::getProducerPrefix() const {
-    return RecordName(m_data->getName()).getProducerPrefix();
-}
-
-time::system_clock::TimePoint
-Record::getGenerationTimestamp() const {
-    return RecordName(m_data->getName()).getGenerationTimestamp();
+    for (int i = 0; i < m_recordName.size(); i ++) {
+        if (readString(m_recordName.get(i)) == "RECORD" || readString(m_recordName.get(i)) == "GENESIS_RECORD")
+            return m_recordName.getPrefix(i);
+    }
+    return Name();
 }
 
 void
@@ -88,7 +95,7 @@ Record::headerWireEncode(Block &block) const {
     header.parse();
     block.push_back(header);
     block.parse();
-};
+}
 
 void
 Record::headerWireDecode(const Block &dataContent) {
@@ -115,9 +122,7 @@ Record::headerWireDecode(const Block &dataContent) {
 void
 Record::bodyWireEncode(Block &block) const {
     auto body = makeEmptyBlock(T_RecordContent);
-    for (const auto &item : m_contentItems) {
-        body.push_back(item);
-    }
+    body.push_back(m_contentItem);
     body.parse();
     block.push_back(body);
     block.parse();
@@ -125,13 +130,9 @@ Record::bodyWireEncode(Block &block) const {
 
 void
 Record::bodyWireDecode(const Block &dataContent) {
-    m_contentItems.clear();
     dataContent.parse();
     const auto &contentBlock = dataContent.get(T_RecordContent);
-    contentBlock.parse();
-    for (const auto &item : contentBlock.elements()) {
-        m_contentItems.push_back(item);
-    }
+    m_contentItem = contentBlock.blockFromValue();
 }
 
 void
@@ -149,81 +150,26 @@ Record::checkPointerCount(int numPointers) const {
     }
 }
 
-GenericRecord::GenericRecord(const std::string &identifer)
-        : Record(RecordType::GENERIC_RECORD, identifer) {
-}
-
-CertificateRecord::CertificateRecord(const std::string &identifer)
-        : Record(RecordType::CERTIFICATE_RECORD, identifer) {
-}
-
-CertificateRecord::CertificateRecord(Record record)
-        : Record(std::move(record)) {
-    if (this->getType() != RecordType::CERTIFICATE_RECORD) {
-        BOOST_THROW_EXCEPTION(std::runtime_error("incorrect record type"));
+Name Record::getEventName() const {
+    for (int i = 0; i < m_recordName.size(); i ++) {
+        if (readString(m_recordName.get(i)) == "RECORD" || readString(m_recordName.get(i)) == "GENESIS_RECORD")
+            return m_recordName.getSubName(i + 1);
     }
+    return Name();
+}
 
-    for (const Block &block : this->getRecordItems()) {
-        if (block.type() == tlv::KeyLocator) {
-            Name recordName = KeyLocator(block).getName();
-            if (!recordName.empty()) {
-                RecordName r(recordName); // to check record name format
-            }
-            m_prev_cert.emplace_back(recordName);
-        } else {
-            m_cert_list.emplace_back(block);
-        }
+bool Record::isGenesisRecord() const {
+    for (int i = 0; i < m_recordName.size(); i ++) {
+        if (readString(m_recordName.get(i)) == "RECORD") return false;
+        if (readString(m_recordName.get(i)) == "GENESIS_RECORD") return false;
     }
+    return false;
 }
 
-void
-CertificateRecord::addCertificateItem(const security::Certificate &certificate) {
-    m_cert_list.emplace_back(certificate);
-    addRecordItem(certificate.wireEncode());
+GenesisRecord::GenesisRecord(int number) :
+    Record(Name("/mnemosyne/GENESIS_RECORD/").append(std::to_string(number)))
+{
+    setContentItem(makeEmptyBlock(tlv::Name));
 }
-
-const std::list<security::Certificate> &
-CertificateRecord::getCertificates() const {
-    return m_cert_list;
-}
-
-void
-CertificateRecord::addPrevCertPointer(const Name &recordName) {
-    m_prev_cert.emplace_back(recordName);
-    addRecordItem(KeyLocator(recordName).wireEncode());
-}
-
-const std::list<Name> &
-CertificateRecord::getPrevCertificates() const {
-    return m_prev_cert;
-}
-
-RevocationRecord::RevocationRecord(const std::string &identifer) :
-        Record(RecordType::REVOCATION_RECORD, identifer) {
-}
-
-RevocationRecord::RevocationRecord(Record record) :
-        Record(std::move(record)) {
-    if (this->getType() != RecordType::REVOCATION_RECORD) {
-        BOOST_THROW_EXCEPTION(std::runtime_error("incorrect record type"));
-    }
-    for (const Block &block : this->getRecordItems()) {
-        m_revoked_cert_list.emplace_back(block);
-    }
-}
-
-void
-RevocationRecord::addCertificateNameItem(const Name &certificateName) {
-    m_revoked_cert_list.emplace_back(certificateName);
-    addRecordItem(certificateName.wireEncode());
-}
-
-const std::list<Name> &
-RevocationRecord::getRevokedCertificates() const {
-    return m_revoked_cert_list;
-}
-
-GenesisRecord::GenesisRecord(const std::string &identifier) :
-        Record(RecordType::GENESIS_RECORD, identifier) {}
 
 }  // namespace mnemosyne

@@ -10,17 +10,9 @@
 using namespace ndn;
 namespace mnemosyne {
 
-enum RecordType {
-    BASE_RECORD = 0,
-    GENERIC_RECORD = 1,
-    CERTIFICATE_RECORD = 2,
-    REVOCATION_RECORD = 3,
-    GENESIS_RECORD = 4,
-};
-
 /**
  * The record.
- * Record Name: /<application-common-prefix>/<producer-name>/<record-type>/<record-identifier>/<timestamp>
+ * Record Name: /<producer-prefix>/RECORD/<event-name>
  */
 class Record {
   public: // used for preparing a new record before appending it into the DLedger
@@ -28,10 +20,10 @@ class Record {
 
     /**
      * Construct a new record.
-     * @p type, input, the type of the record.
      * @p identifier, input, the unique identifer of the record.
      */
-    Record(RecordType type, const std::string &identifer);
+    Record(Name recordName);
+    Record(const Name &producerName, const Data &eventItem);
 
     /**
      * Add a new record payload item into the record.
@@ -39,7 +31,7 @@ class Record {
      * @p recordItem, input, the record payload to add.
      */
     void
-    addRecordItem(const Block &recordItem);
+    setContentItem(const Block &contentItem);
 
     /**
      * Get the NDN Data full name of the record.
@@ -53,26 +45,16 @@ class Record {
     getRecordName() const;
 
     /**
-     * Get the record type of the record.
-     */
-    RecordType
-    getType() const {
-        return m_type;
-    }
-
-    /**
       * Get the record unique identifier of the record.
       */
-    std::string
-    getUniqueIdentifier() const {
-        return m_uniqueIdentifier;
-    }
+    Name
+    getEventName() const;
 
     /**
-     * Get record payload items.
+     * Get record payload.
      */
-    const std::list<Block> &
-    getRecordItems() const;
+    const Block &
+    getContentItem() const;
 
     /**
      * Check whether the record body is empty or not.
@@ -80,7 +62,7 @@ class Record {
     bool
     isEmpty() const;
 
-  public: // used for generating a new record before appending it into the DLedger
+  public: // used for generating a new record before appending it into the Mnemosyne
     /**
      * @note This constructor is supposed to be used by the Mnemosyne class only
      */
@@ -123,8 +105,8 @@ class Record {
     Name
     getProducerPrefix() const;
 
-    time::system_clock::TimePoint
-    getGenerationTimestamp() const;
+    bool
+    isGenesisRecord() const;
 
     /**
      * Data packet with name
@@ -157,15 +139,10 @@ class Record {
 
   private:
     /**
-     * The record-type in
-     * /<application-common-prefix>/<producer-name>/<record-type>/<record-name>/<timestamp>
+     * The record-name as
+     * /<producer-prefix>/RECORD/<event-name>
      */
-    RecordType m_type;
-    /**
-     * The record-name in
-     * /<application-common-prefix>/<producer-name>/<record-type>/<record-name>/<timestamp>
-     */
-    std::string m_uniqueIdentifier;
+    Name m_recordName;
 
   protected:
     /**
@@ -175,99 +152,16 @@ class Record {
     /**
      * The data structure to carry the record body payloads.
      */
-    std::list<Block> m_contentItems;
+    Block m_contentItem;
 
     friend class Mnemosyne;
 };
 
-class GenericRecord : public Record {
-  public:
-    GenericRecord(const std::string &identifer);
-};
-
-class CertificateRecord : public Record {
-  public:
-    CertificateRecord(const std::string &identifer);
-
-    /**
-     * Construct Revocation record from received record
-     * May throw exception if the format is incorrect
-     * @param record
-     */
-    CertificateRecord(Record record);
-
-    void
-    addCertificateItem(const security::Certificate &certificate);
-
-    const std::list<security::Certificate> &
-    getCertificates() const;
-
-    void
-    addPrevCertPointer(const Name &recordName);
-
-    const std::list<Name> &
-    getPrevCertificates() const;
-
-  private:
-    std::list<security::Certificate> m_cert_list;
-    std::list<Name> m_prev_cert;
-};
-
-class RevocationRecord : public Record {
-  public:
-    RevocationRecord(const std::string &identifer);
-
-    /**
-     * Construct Revocation record from received record
-     * May throw exception if the format is incorrect
-     * @param record
-     */
-    RevocationRecord(Record
-                     record);
-
-    void
-    addCertificateNameItem(const Name &certificateName);
-
-    const std::list<Name> &
-    getRevokedCertificates() const;
-
-  private:
-    std::list<Name> m_revoked_cert_list;
-};
-
+// name: /mnemosyne/GENESIS_RECORD/number
 class GenesisRecord : public Record {
   public:
-    GenesisRecord(const std::string &identifier);
+    GenesisRecord(int number);
 };
-
-inline std::string
-recordTypeToString(const RecordType &type) {
-    switch (type) {
-        case RecordType::GENERIC_RECORD:
-            return "Generic";
-
-        case RecordType::CERTIFICATE_RECORD:
-            return "Cert";
-
-        case RecordType::REVOCATION_RECORD:
-            return "Revocation";
-
-        case RecordType::GENESIS_RECORD:
-            return "Genesis";
-
-        default:
-            return "Undefined";
-    }
-}
-
-inline RecordType
-stringToRecordType(const std::string &type) {
-    if (type == "Generic") return RecordType::GENERIC_RECORD;
-    else if (type == "Cert") return RecordType::CERTIFICATE_RECORD;
-    else if (type == "Revocation") return RecordType::REVOCATION_RECORD;
-    else if (type == "Genesis") return RecordType::GENESIS_RECORD;
-    else return RecordType::BASE_RECORD;
-}
 
 } // namespace mnemosyne
 

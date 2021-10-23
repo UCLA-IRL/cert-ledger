@@ -6,7 +6,7 @@ Mnemosyne is a distributed logger for storing logs for distributed applications.
 
 * ndn-cxx
 * leveldb
-* ndn-svs
+* ndn-svs (develop branch)
 
 * NFD - to forward the NDN network
 
