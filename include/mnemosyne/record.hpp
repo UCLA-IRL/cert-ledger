@@ -1,11 +1,11 @@
 #ifndef MNEMOSYNE_INCLUDE_RECORD_H_
 #define MNEMOSYNE_INCLUDE_RECORD_H_
 
+#include <ndn-cxx/data.hpp>
+#include <ndn-cxx/security/certificate.hpp>
 #include <set>
 #include <vector>
 #include <list>
-#include <ndn-cxx/data.hpp>
-#include <ndn-cxx/security/certificate.hpp>
 
 using namespace ndn;
 namespace mnemosyne {

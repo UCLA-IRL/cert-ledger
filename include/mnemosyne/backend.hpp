@@ -1,9 +1,8 @@
 #ifndef MNEMOSYNE_BACKEND_H_
 #define MNEMOSYNE_BACKEND_H_
 
-#include <leveldb/db.h>
-
 #include <ndn-cxx/data.hpp>
+#include <leveldb/db.h>
 
 using namespace ndn;
 namespace mnemosyne {

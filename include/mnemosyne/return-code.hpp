@@ -1,8 +1,8 @@
 #ifndef MNEMOSYNE_INCLUDE_RETURN_CODE_H_
 #define MNEMOSYNE_INCLUDE_RETURN_CODE_H_
 
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <string>
 #include <utility>
 
