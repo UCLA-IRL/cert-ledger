@@ -1,9 +1,9 @@
 #include "mnemosyne/config.hpp"
 #include "default-cert-manager.h"
 
+#include <ndn-cxx/util/io.hpp>
 #include <cstdlib>
 #include <ctime>
-#include <ndn-cxx/util/io.hpp>
 #include <utility>
 
 namespace mnemosyne {

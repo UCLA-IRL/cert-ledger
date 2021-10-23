@@ -2,10 +2,10 @@
 // Created by Tyler on 8/8/20.
 //
 
+#include "default-cert-manager.h"
+#include <ndn-cxx/security/verification-helpers.hpp>
 #include <iostream>
 #include <utility>
-#include <ndn-cxx/security/verification-helpers.hpp>
-#include "default-cert-manager.h"
 
 mnemosyne::DefaultCertificateManager::DefaultCertificateManager(const Name &peerPrefix,
                                                                 shared_ptr<security::Certificate> anchorCert,

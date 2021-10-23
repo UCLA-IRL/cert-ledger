@@ -20,14 +20,12 @@ find_package(leveldb REQUIRED)
 
 # files
 set(MNEMOSYNE_LIB_SOURCE_FILES
-        include/mnemosyne/backend.hpp
-    ./src/backend.cpp
-        include/mnemosyne/mnemosyne.hpp
+        src/backend.cpp
+        src/mnemosyne-dag-sync.cpp
         src/mnemosyne.cpp
-    ./src/record.cpp
-    ./src/config.cpp
-        ./src/default-cert-manager.cpp
-    ./src/default-cert-manager.h)
+        src/record.cpp
+        src/config.cpp
+        src/default-cert-manager.cpp)
 # include
 include_directories(${NDN_CXX_INCLUDE_DIRS})
 include_directories(${NDN_SVS_INCLUDE_DIRS})
@@ -81,8 +79,3 @@ install(TARGETS ledger-impl-test
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}.pc"
         DESTINATION lib/pkgconfig)
-
-if (BUILD_DIGRAPH)
-    install(TARGETS ledger-impl-test-graph
-            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif (BUILD_DIGRAPH)

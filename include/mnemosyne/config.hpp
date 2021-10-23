@@ -1,10 +1,9 @@
 #ifndef MNEMOSYNE_INCLUDE_CONFIG_H_
 #define MNEMOSYNE_INCLUDE_CONFIG_H_
 
-#include <iostream>
-#include <ndn-cxx/face.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
 #include "cert-manager.hpp"
+#include <ndn-cxx/face.hpp>
+#include <iostream>
 
 using namespace ndn;
 namespace mnemosyne {
