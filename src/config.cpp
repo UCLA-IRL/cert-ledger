@@ -30,8 +30,7 @@ Config::DefaultConfig() {
 
 shared_ptr<Config>
 Config::CustomizedConfig(const std::string &multicastPrefix, const std::string &producerPrefix,
-                         const std::string &anchorCertPath, const std::string &databasePath,
-                         const std::list<std::string> &startingPeerPaths) {
+                         const std::string &anchorCertPath, const std::string &databasePath) {
     auto trustAnchorCert = io::load<security::Certificate>(anchorCertPath);
     if (trustAnchorCert == nullptr) {
         BOOST_THROW_EXCEPTION(std::runtime_error("Cannot load anchor certificate from the designated path."));
@@ -40,14 +39,6 @@ Config::CustomizedConfig(const std::string &multicastPrefix, const std::string &
 
     //starting peers
     std::list<security::Certificate> startingPeerCerts;
-    for (const auto &path : startingPeerPaths) {
-        auto cert = io::load<security::Certificate>(path);
-        if (cert == nullptr) {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Cannot load starting certificate from the designated path."));
-        }
-        std::cout << "Starting Peer: " << cert->getName().toUri() << std::endl;
-        startingPeerCerts.push_back(*cert);
-    }
     auto config = std::make_shared<Config>(multicastPrefix, producerPrefix,
                                            make_shared<DefaultCertificateManager>(producerPrefix, trustAnchorCert,
                                                                                   startingPeerCerts));

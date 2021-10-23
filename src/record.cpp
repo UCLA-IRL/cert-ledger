@@ -26,7 +26,8 @@ Record::Record(const std::shared_ptr<Data> &data)
         : m_data(data) {
     m_recordName = data->getName();
     headerWireDecode(m_data->getContent());
-    bodyWireDecode(m_data->getContent());
+    if (!isGenesisRecord())
+        bodyWireDecode(m_data->getContent());
 }
 
 Record::Record(ndn::Data data)
@@ -161,7 +162,7 @@ Name Record::getEventName() const {
 bool Record::isGenesisRecord() const {
     for (int i = 0; i < m_recordName.size(); i ++) {
         if (readString(m_recordName.get(i)) == "RECORD") return false;
-        if (readString(m_recordName.get(i)) == "GENESIS_RECORD") return false;
+        if (readString(m_recordName.get(i)) == "GENESIS_RECORD") return true;
     }
     return false;
 }

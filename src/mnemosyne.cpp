@@ -21,7 +21,9 @@ Mnemosyne::Mnemosyne(const Config &config,
                      Face &network)
         : m_config(config), m_keychain(keychain), m_network(network), m_scheduler(network.getIoService()),
           m_backend(config.databasePath),
-          m_sync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);}) {
+          m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);}),
+          m_randomEngine(std::random_device()()),
+          m_lastNameTops(0){
     NDN_LOG_INFO("Mnemosyne Initialization Start");
 
     if (config.numGenesisBlock < config.precedingRecordNum) {
@@ -50,8 +52,7 @@ Mnemosyne::~Mnemosyne() {
     if (m_syncEventID) m_syncEventID.cancel();
 }
 
-ReturnCode
-Mnemosyne::createRecord(Record &record) {
+ReturnCode Mnemosyne::createRecord(Record &record) {
     NDN_LOG_INFO("[Mnemosyne::addRecord] Add new record");
 
     // randomly shuffle the tailing record list
@@ -84,32 +85,42 @@ Mnemosyne::createRecord(Record &record) {
     addRecord(data);
 
     //send sync interest
-    auto rc = m_sync.publishData(data->wireEncode(), time::seconds(60));
+    m_dagSync.publishData(data->wireEncode(), data->getFreshnessPeriod(), m_config.peerPrefix, tlv::Data);
     return ReturnCode::noError(data->getFullName().toUri());
 }
 
-optional<Record>
-Mnemosyne::getRecord(const std::string &recordName) const {
+optional<Record> Mnemosyne::getRecord(const std::string &recordName) const {
     NDN_LOG_DEBUG("getRecord Called on " << recordName);
     return m_backend.getRecord(recordName);
 }
 
-bool
-Mnemosyne::hasRecord(const std::string &recordName) const {
+bool Mnemosyne::hasRecord(const std::string &recordName) const {
     auto dataPtr = m_backend.getRecord(Name(recordName));
     return dataPtr != nullptr;
 }
 
-std::list<Name>
-Mnemosyne::listRecord(const std::string &prefix) const {
+std::list<Name> Mnemosyne::listRecord(const std::string &prefix) const {
     return m_backend.listRecord(Name(prefix));
 }
 
 void Mnemosyne::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info) {
-
+    for (const auto& stream : info) {
+        for (svs::SeqNo i = stream.low; i <= stream.high; i++)
+        {
+            m_dagSync.fetchData(stream.nodeId, i, [&](const Data& syncData){
+                if (syncData.getContentType() == tlv::Data) {
+                    auto receivedData = std::make_shared<Data>(syncData.getContent().blockFromValue());
+                    // TODO validation of received Data
+                    NDN_LOG_INFO("Received record " << receivedData->getFullName());
+                    addRecord(receivedData);
+                }
+            });
+        }
+    }
 }
 
 void Mnemosyne::addRecord(const shared_ptr<Data>& recordData) {
+    NDN_LOG_INFO("Add record " << recordData->getFullName());
     m_backend.putRecord(recordData);
     m_lastNames[m_lastNameTops] = recordData->getFullName();
     m_lastNameTops ++;
