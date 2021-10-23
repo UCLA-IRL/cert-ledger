@@ -1,35 +1,44 @@
+#!/bin/bash
+
 # install customized ndncert
 # mkdir dep && cd mkdir dep
 # git clone https://github.com/tianyuan129/ndncert.git
 # cd ndncert && git checkout v0.3
 # ./waf configure
 # sudo ./waf install && cd ..
-sudo cp client.conf.example /usr/local/etc/ndncert/client.conf
 
-echo "Input your SSL Certificate:"
-read ssl_cert
-echo "Your SSL Certificate path is - $ssl_cert\n"
+help()
+{
+   echo "Usage: $0 -c ssl_cert -p ssl_prv -d name_component"
+   echo -c "\t SSL Certificate"
+   echo -p "\t Private key for the supplied SSL Certificate"
+   echo -d "\t Name Component wish to have under /mnemosyne"
+   exit 1 # Exit script after printing help
+}
 
-echo "Input your corresponding private key for SSL Certificate:"
-read ssl_prv
-echo "Your private key path is - $ssl_prv\n"
+python3 test/json-writter.py
+sudo cp test/client.conf.example /usr/local/etc/ndncert/client.conf
 
-echo "Input your name component after /mnemosyne:"
-read comp
-echo "Your name component - $comp\n"
+while getopts c:p:d: flag
+do
+    case "${flag}" in
+        c) ssl_cert=${OPTARG};;
+        p) ssl_prv=${OPTARG};;
+        d) name_comp=${OPTARG};;
+        ?) help;;
+    esac
+done
 
-python3 json-writter.py
-python3 auto.py -c $ssl_cert -p $ssl_prv -n "/mnemosyne/$comp"
-
-if [ ! -d "test-certs" ] 
+if [ -c "$ssl_cert" ] || [ -p "$ssl_prv" ] || [ -d "$name_comp" ]
 then
-    mkdir test-certs
+   help
+   exit 1
 fi
 
-if [ -f "test-certs/$comp.cert" ] 
-then
-    rm test-certs/$comp.cert
-fi
+echo "SSL Certificate path: $ssl_cert"
+echo "Private key for SSL Certificate: $ssl_prv"
+python3 test/auto.py -c $ssl_cert -p $ssl_prv -n "/mnemosyne/${name_comp}"
+sleep 1
 
-ndnsec-cert-dump -i "/mnemosyne/$comp" > test-certs/$comp.cert
-./../build/ledger-impl-test $comp
+echo "Now begin the ledger part..."
+./build/ledger-impl-test "/mnemosyne/${name_comp}"

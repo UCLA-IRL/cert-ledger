@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     std::shared_ptr<Config> config = nullptr;
     try {
         config = Config::CustomizedConfig("/ndn/broadcast/mnemosyne", identity,
-                                          std::string("./mnemosyne-anchor.cert"),
+                                          std::string("./test/mnemosyne-anchor.cert"),
                                           std::string("/tmp/mnemosyne-db/" + identity.substr(identity.rfind('/'))));
         mkdir("/tmp/mnemosyne-db/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
