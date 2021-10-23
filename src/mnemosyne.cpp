@@ -84,7 +84,8 @@ Mnemosyne::createRecord(Record &record) {
     addRecord(data);
 
     //send sync interest
-    auto rc = m_sync.publishData(data->wireEncode(), time::seconds(60));
+    // auto rc = 
+    m_sync.publishData(data->wireEncode(), time::seconds(60));
     return ReturnCode::noError(data->getFullName().toUri());
 }
 
