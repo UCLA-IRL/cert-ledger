@@ -40,5 +40,6 @@ echo "Private key for SSL Certificate: $ssl_prv"
 python3 test/auto.py -c $ssl_cert -p $ssl_prv -n "/mnemosyne/${name_comp}"
 sleep 1
 
-echo "Now begin the ledger part..."
+echo "\nNow begin the ledger part..."
+sudo env NDN_LOG=INFO
 ./build/ledger-impl-test "/mnemosyne/${name_comp}"

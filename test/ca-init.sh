@@ -3,7 +3,7 @@
 
 # generate keys and certificates
 ndnsec delete /mnemosyne
-ndnsec key-gen /mnemosyne | ndnsec cert-gen -s /mnemosyne - > mnemosyne-anchor.cert
+ndnsec key-gen /mnemosyne | ndnsec cert-gen -s /mnemosyne - > ../mnemosyne-anchor.cert
 
 # deploy customized ndncert ca
 # mkdir dep && cd mkdir dep
