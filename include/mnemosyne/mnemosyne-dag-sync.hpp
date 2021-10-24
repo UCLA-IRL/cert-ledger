@@ -59,6 +59,8 @@ class MnemosyneDagSync {
 
     const Name& getPeerPrefix() const;
 
+    bool seenEvent(const Name& name) const;
+
   private:
     void onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info);
 
@@ -66,7 +68,6 @@ class MnemosyneDagSync {
 
   protected:
     Config m_config;
-    Face &m_network;
     Backend m_backend;
     security::KeyChain &m_keychain;
     svs::SVSync m_dagSync;
@@ -75,6 +76,8 @@ class MnemosyneDagSync {
     unsigned int m_lastNameTops;
 
     std::mt19937_64 m_randomEngine;
+
+    std::set<Name> m_eventSet;
   };
 
 } // namespace mnemosyne

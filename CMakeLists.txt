@@ -43,18 +43,8 @@ target_include_directories(mnemosyne PRIVATE ./src)
 target_compile_options(mnemosyne PUBLIC ${NDN_CXX_CFLAGS} ${NDN_SVS_CFLAGS})
 target_link_libraries(mnemosyne PUBLIC ${NDN_CXX_LIBRARIES} ${NDN_SVS_LIBRARIES} leveldb)
 
-add_executable(backend-test ./test/backend-test.cpp)
-target_include_directories(backend-test PRIVATE ./src)
-target_link_libraries(backend-test PUBLIC mnemosyne)
-
-add_executable(record-test ./test/record-test.cpp)
-target_link_libraries(record-test PUBLIC mnemosyne)
-
-add_executable(ledger-impl-test ./test/ledger-impl-test.cpp)
-target_link_libraries(ledger-impl-test PUBLIC mnemosyne)
-
-add_executable(mnemosyne-logger ./app/mnemosyne-logger.cpp)
-target_link_libraries(mnemosyne-logger PUBLIC mnemosyne)
+add_subdirectory(test)
+add_subdirectory(app)
 
 #configure
 set(PKG_CONFIG_REQUIRES
@@ -76,9 +66,6 @@ install(TARGETS mnemosyne
         )
 install(DIRECTORY include/mnemosyne DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN "*.h*")
-
-install(TARGETS ledger-impl-test
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}.pc"
         DESTINATION lib/pkgconfig)

@@ -2,6 +2,7 @@
 
 #include <ndn-cxx/encoding/block-helpers.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
+#include <utility>
 #include <ndn-cxx/security/verification-helpers.hpp>
 #include <ndn-cxx/util/time.hpp>
 #include <ndn-cxx/util/logger.hpp>
@@ -19,11 +20,13 @@ namespace mnemosyne {
 MnemosyneDagSync::MnemosyneDagSync(const Config &config,
                      security::KeyChain &keychain,
                      Face &network)
-        : m_config(config), m_keychain(keychain), m_network(network),
-          m_backend(config.databasePath),
-          m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);}),
-          m_randomEngine(std::random_device()()),
-          m_lastNameTops(0){
+        : m_config(config)
+        , m_keychain(keychain)
+        , m_backend(config.databasePath)
+        , m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);})
+        , m_randomEngine(std::random_device()())
+        , m_lastNameTops(0)
+{
     NDN_LOG_INFO("Mnemosyne Initialization Start");
 
     if (config.numGenesisBlock < config.precedingRecordNum) {
@@ -111,6 +114,9 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
                     // TODO validation of received Data
                     NDN_LOG_INFO("Received record " << receivedData->getFullName());
                     addRecord(receivedData);
+                    Record record(receivedData);
+                    auto eventFullName = Data(record.getContentItem()).getFullName();
+                    m_eventSet.insert(eventFullName);
                 }
             });
         }
@@ -127,6 +133,10 @@ void MnemosyneDagSync::addRecord(const shared_ptr<Data>& recordData) {
 
 const Name &MnemosyneDagSync::getPeerPrefix() const {
     return m_config.peerPrefix;
+}
+
+bool MnemosyneDagSync::seenEvent(const Name& name) const{
+    return m_eventSet.count(name);
 }
 
 }  // namespace mnemosyne

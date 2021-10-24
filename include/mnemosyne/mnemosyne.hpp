@@ -20,11 +20,11 @@ class Mnemosyne : public MnemosyneDagSync {
     virtual ~Mnemosyne();
 
   private:
-    void onInterfaceUpdate(const std::vector<ndn::svs::MissingDataInfo>& info);
-
+    void onSubscriptionData(const svs::SVSPubSub::SubscriptionData& subData);
 
   protected:
     svs::SVSPubSub m_interfacePS;
+    Scheduler m_scheduler;
   };
 
 } // namespace mnemosyne
