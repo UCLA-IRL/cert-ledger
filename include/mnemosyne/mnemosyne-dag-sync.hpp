@@ -64,7 +64,7 @@ class MnemosyneDagSync {
   private:
     void onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info);
 
-    void addRecord(const shared_ptr<Data>& recordData);
+    void addReceivedRecord(const shared_ptr<Data>& recordData);
 
   protected:
     Config m_config;
@@ -74,11 +74,15 @@ class MnemosyneDagSync {
 
     std::vector<Name> m_lastNames;
     unsigned int m_lastNameTops;
+    Name m_selfLastName;
 
     std::mt19937_64 m_randomEngine;
 
+    //TODO convert to a database structure
     std::set<Name> m_eventSet;
-  };
+
+    void addSelfRecord(const shared_ptr<Data> &data);
+};
 
 } // namespace mnemosyne
 

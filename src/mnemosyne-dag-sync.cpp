@@ -29,7 +29,7 @@ MnemosyneDagSync::MnemosyneDagSync(const Config &config,
 {
     NDN_LOG_INFO("Mnemosyne Initialization Start");
 
-    if (config.numGenesisBlock < config.precedingRecordNum) {
+    if (config.numGenesisBlock < config.precedingRecordNum || config.precedingRecordNum <= 1) {
         NDN_THROW(std::runtime_error("Bad config"));
     }
 
@@ -55,6 +55,8 @@ MnemosyneDagSync::~MnemosyneDagSync() = default;
 
 ReturnCode MnemosyneDagSync::createRecord(Record &record) {
     NDN_LOG_INFO("[MnemosyneDagSync::createRecord] Add new record");
+
+    if (!m_selfLastName.empty()) record.addPointer(m_selfLastName);
 
     // randomly shuffle the tailing record list
     std::vector<Name> recordList = m_lastNames;
@@ -83,7 +85,7 @@ ReturnCode MnemosyneDagSync::createRecord(Record &record) {
     NDN_LOG_INFO("[MnemosyneDagSync::createRecord] Added a new record:" << data->getFullName().toUri());
 
     // add new record into the ledger
-    addRecord(data);
+    addSelfRecord(data);
 
     //send sync interest
     m_dagSync.publishData(data->wireEncode(), data->getFreshnessPeriod(), m_config.peerPrefix, tlv::Data);
@@ -112,8 +114,10 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
                 if (syncData.getContentType() == tlv::Data) {
                     auto receivedData = std::make_shared<Data>(syncData.getContent().blockFromValue());
                     // TODO validation of received Data
+
                     NDN_LOG_INFO("Received record " << receivedData->getFullName());
-                    addRecord(receivedData);
+                    addReceivedRecord(receivedData);
+
                     Record record(receivedData);
                     auto eventFullName = Data(record.getContentItem()).getFullName();
                     m_eventSet.insert(eventFullName);
@@ -123,12 +127,17 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
     }
 }
 
-void MnemosyneDagSync::addRecord(const shared_ptr<Data>& recordData) {
-    NDN_LOG_INFO("Add record " << recordData->getFullName());
+void MnemosyneDagSync::addSelfRecord(const shared_ptr<Data> &data) {
+    NDN_LOG_INFO("Add self record " << data->getFullName());
+    m_backend.putRecord(data);
+    m_selfLastName = data->getFullName();
+}
+
+void MnemosyneDagSync::addReceivedRecord(const shared_ptr<Data>& recordData) {
+    NDN_LOG_INFO("Add received record " << recordData->getFullName());
     m_backend.putRecord(recordData);
     m_lastNames[m_lastNameTops] = recordData->getFullName();
-    m_lastNameTops ++;
-    m_lastNameTops = m_lastNameTops % m_lastNames.size();
+    m_lastNameTops = (m_lastNameTops + 1) % m_lastNames.size();
 }
 
 const Name &MnemosyneDagSync::getPeerPrefix() const {
