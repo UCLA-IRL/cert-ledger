@@ -26,6 +26,8 @@ class Mnemosyne : public MnemosyneDagSync {
   private:
     void onSubscriptionData(const svs::SVSPubSub::SubscriptionData& subData);
 
+    ndn::svs::SecurityOptions getSecurityOption();
+
   protected:
     svs::SVSPubSub m_interfacePS;
     Scheduler m_scheduler;

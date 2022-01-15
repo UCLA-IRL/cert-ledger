@@ -66,6 +66,8 @@ class MnemosyneDagSync {
 
     void addReceivedRecord(const shared_ptr<Data>& recordData);
 
+    ndn::svs::SecurityOptions getSecurityOption();
+
   protected:
     Config m_config;
     Backend m_backend;

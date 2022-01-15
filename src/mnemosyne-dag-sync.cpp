@@ -1,4 +1,5 @@
 #include "mnemosyne/mnemosyne-dag-sync.hpp"
+#include "util.hpp"
 
 #include <ndn-cxx/encoding/block-helpers.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
@@ -7,7 +8,6 @@
 #include <ndn-cxx/util/time.hpp>
 #include <ndn-cxx/util/logger.hpp>
 #include <ndn-cxx/util/logging.hpp>
-#include <utility>
 #include <algorithm>
 #include <random>
 #include <sstream>
@@ -25,7 +25,7 @@ MnemosyneDagSync::MnemosyneDagSync(const Config &config,
         , m_keychain(keychain)
         , m_backend(config.databasePath)
         , m_recordValidator(std::move(recordValidator))
-        , m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);})
+        , m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);}, getSecurityOption())
         , m_randomEngine(std::random_device()())
         , m_lastNameTops(0)
 {
@@ -120,7 +120,7 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
                         addReceivedRecord(receivedData);
 
                         Record record(receivedData);
-                        auto eventFullName = Data(record.getContentItem()).getFullName();
+                        auto eventFullName = Data(record.getContentItem()).getFullName(); // TODO verify?
                         m_eventSet.insert(eventFullName);
                     }, [](const auto& data, const auto& error){
                         NDN_LOG_INFO("Verification error on Received record " << data.getFullName() << ": " << error);
@@ -151,5 +151,16 @@ const Name &MnemosyneDagSync::getPeerPrefix() const {
 bool MnemosyneDagSync::seenEvent(const Name& name) const{
     return m_eventSet.count(name);
 }
+
+ndn::svs::SecurityOptions MnemosyneDagSync::getSecurityOption() {
+    ndn::svs::SecurityOptions option(m_keychain);
+    option.validator = make_shared<::util::cxxValidator>(m_recordValidator);
+    option.encapsulatedDataValidator = make_shared<::util::alwaysFailValidator>();
+    option.dataSigner = std::make_shared<::util::KeyChainOptionSigner>(m_keychain, security::signingByIdentity(m_config.peerPrefix));
+    option.interestSigner = option.dataSigner;
+    option.pubSigner = std::make_shared<ndn::svs::BaseSigner>();
+    return option;
+}
+
 
 }  // namespace mnemosyne
