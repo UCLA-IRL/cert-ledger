@@ -25,7 +25,7 @@ class MnemosyneDagSync {
    * @p keychain, input, the local NDN keychain instance
    * @p face, input, the localhost NDN face to send/receive NDN packets.
    */
-    MnemosyneDagSync(const Config &config, security::KeyChain &keychain, Face &network);
+    MnemosyneDagSync(const Config &config, security::KeyChain &keychain, Face &network, std::shared_ptr<ndn::security::Validator> m_recordValidator);
 
     virtual ~MnemosyneDagSync();
 
@@ -71,6 +71,7 @@ class MnemosyneDagSync {
     Backend m_backend;
     security::KeyChain &m_keychain;
     svs::SVSync m_dagSync;
+    std::shared_ptr<ndn::security::Validator> m_recordValidator;
 
     std::vector<Name> m_lastNames;
     unsigned int m_lastNameTops;

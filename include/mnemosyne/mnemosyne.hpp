@@ -10,12 +10,16 @@ namespace mnemosyne {
 class Mnemosyne : public MnemosyneDagSync {
   public:
     /**
-   * Initialize a Mnemosyne instance from the config.
-   * @p config, input, the configuration of multicast prefix, peer prefix, and settings of Mnemosyne behavior
-   * @p keychain, input, the local NDN keychain instance
-   * @p face, input, the localhost NDN face to send/receive NDN packets.
-   */
-    Mnemosyne(const Config &config, security::KeyChain &keychain, Face &network);
+     * Initialize a Mnemosyne instance from the config.
+     * @p config, input, the configuration of multicast prefix, peer prefix, and settings of Mnemosyne behavior
+     * @p keychain, input, the local NDN keychain instance
+     * @p face, input, the localhost NDN face to send/receive NDN packets.
+     * @p recordValidator, a validator that validates records from other nodes
+     * @p eventValidator, a validator that validates events from clients
+     */
+    Mnemosyne(const Config &config, security::KeyChain &keychain, Face &network,
+              std::shared_ptr<ndn::security::Validator> recordValidator,
+              std::shared_ptr<ndn::security::Validator> eventValidator);
 
     virtual ~Mnemosyne();
 
@@ -25,6 +29,7 @@ class Mnemosyne : public MnemosyneDagSync {
   protected:
     svs::SVSPubSub m_interfacePS;
     Scheduler m_scheduler;
+    std::shared_ptr<ndn::security::Validator> m_eventValidator;
   };
 
 } // namespace mnemosyne

@@ -19,10 +19,12 @@ namespace mnemosyne {
 
 MnemosyneDagSync::MnemosyneDagSync(const Config &config,
                      security::KeyChain &keychain,
-                     Face &network)
+                     Face &network,
+                     std::shared_ptr<ndn::security::Validator> recordValidator)
         : m_config(config)
         , m_keychain(keychain)
         , m_backend(config.databasePath)
+        , m_recordValidator(std::move(recordValidator))
         , m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);})
         , m_randomEngine(std::random_device()())
         , m_lastNameTops(0)
@@ -112,15 +114,17 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
         {
             m_dagSync.fetchData(stream.nodeId, i, [&](const Data& syncData){
                 if (syncData.getContentType() == tlv::Data) {
-                    auto receivedData = std::make_shared<Data>(syncData.getContent().blockFromValue());
-                    // TODO validation of received Data
+                    m_recordValidator->validate(Data(syncData.getContent().blockFromValue()), [this](const Data& data){
+                        auto receivedData = std::make_shared<Data>(data);
+                        NDN_LOG_INFO("Received record " << receivedData->getFullName());
+                        addReceivedRecord(receivedData);
 
-                    NDN_LOG_INFO("Received record " << receivedData->getFullName());
-                    addReceivedRecord(receivedData);
-
-                    Record record(receivedData);
-                    auto eventFullName = Data(record.getContentItem()).getFullName();
-                    m_eventSet.insert(eventFullName);
+                        Record record(receivedData);
+                        auto eventFullName = Data(record.getContentItem()).getFullName();
+                        m_eventSet.insert(eventFullName);
+                    }, [](const auto& data, const auto& error){
+                        NDN_LOG_INFO("Verification error on Received record " << data.getFullName() << ": " << error);
+                    });
                 }
             });
         }
