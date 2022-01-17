@@ -25,7 +25,8 @@ set(MNEMOSYNE_LIB_SOURCE_FILES
         src/mnemosyne.cpp
         src/record.cpp
         src/config.cpp
-        src/default-cert-manager.cpp)
+        src/default-cert-manager.cpp
+        src/util.cpp)
 # include
 include_directories(${NDN_CXX_INCLUDE_DIRS})
 include_directories(${NDN_SVS_INCLUDE_DIRS})
