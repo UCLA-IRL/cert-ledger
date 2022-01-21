@@ -13,12 +13,15 @@ namespace mnemosyne {
 
 
 Mnemosyne::Mnemosyne(const Config &config, KeyChain &keychain, Face &network, std::shared_ptr<ndn::security::Validator> recordValidator, std::shared_ptr<ndn::security::Validator> eventValidator) :
-        MnemosyneDagSync(config, keychain, network, std::move(recordValidator)),
+        m_config(config),
+        m_keychain(keychain),
+        m_dagSync(m_config, keychain, network, std::move(recordValidator)),
         m_scheduler(network.getIoService()),
         m_interfacePS(config.interfacePrefix, config.peerPrefix, network, [](const auto& i){}, getSecurityOption()),
         m_eventValidator(std::move(eventValidator))
 {
     m_interfacePS.subscribeToPrefix(Name("/"), [&](const auto& d){ onSubscriptionData(d);});
+    m_dagSync.setOnRecordCallback([&](const auto& record) {onRecordUpdate(record);});
 }
 
 void Mnemosyne::onSubscriptionData(const svs::SVSPubSub::SubscriptionData& subData) {
@@ -32,8 +35,8 @@ void Mnemosyne::onSubscriptionData(const svs::SVSPubSub::SubscriptionData& subDa
             } else {
                 NDN_LOG_INFO("Event data " << eventData.getFullName() << " not found in DAG. Publishing...");
             }
-            Record record(getPeerPrefix(), eventData);
-            createRecord(record);
+            Record record(m_dagSync.getPeerPrefix(), eventData);
+            m_dagSync.createRecord(record);
         });
     }, [](auto&& eventData, auto&& error){
         NDN_LOG_ERROR("Event data " << eventData.getFullName() << " verification error: " << error);
@@ -49,6 +52,19 @@ ndn::svs::SecurityOptions Mnemosyne::getSecurityOption() {
     option.interestSigner = option.dataSigner;
     option.pubSigner = option.dataSigner;
     return option;
+}
+
+void Mnemosyne::onRecordUpdate(Record record) {
+    m_eventValidator->validate(Data(record.getContentItem()), [&](const auto& eventData){
+        const auto& eventFullName = eventData.getFullName();
+        m_eventSet.insert(eventFullName);
+    }, [](const auto& data, const auto& error){
+        NDN_LOG_INFO("Verification error on event record " << data.getFullName() << ": " << error);
+    });
+}
+
+bool Mnemosyne::seenEvent(const Name& name) const{
+    return m_eventSet.count(name);
 }
 
 Mnemosyne::~Mnemosyne() = default;

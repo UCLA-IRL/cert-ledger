@@ -64,7 +64,7 @@ ReturnCode MnemosyneDagSync::createRecord(Record &record) {
     std::vector<Name> recordList = m_lastNames;
     std::shuffle(std::begin(recordList), std::end(recordList), m_randomEngine);
 
-    for (const auto &tailRecord : recordList) {
+    for (const auto &tailRecord : recordList) { // TODO add verification: preceding record need to exist
         record.addPointer(tailRecord);
         if (record.getPointersFromHeader().size() >= m_config.precedingRecordNum)
             break;
@@ -119,9 +119,13 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
                         NDN_LOG_INFO("Received record " << receivedData->getFullName());
                         addReceivedRecord(receivedData);
 
-                        Record record(receivedData);
-                        auto eventFullName = Data(record.getContentItem()).getFullName(); // TODO verify?
-                        m_eventSet.insert(eventFullName);
+                        try {
+                            if (m_onRecordCallback) {
+                                m_onRecordCallback(Record(receivedData));
+                            }
+                        } catch (const std::exception& e) {
+                            NDN_LOG_ERROR("bad record received" << receivedData->getFullName() << ": " << e);
+                        }
                     }, [](const auto& data, const auto& error){
                         NDN_LOG_INFO("Verification error on Received record " << data.getFullName() << ": " << error);
                     });
@@ -146,10 +150,6 @@ void MnemosyneDagSync::addReceivedRecord(const shared_ptr<Data>& recordData) {
 
 const Name &MnemosyneDagSync::getPeerPrefix() const {
     return m_config.peerPrefix;
-}
-
-bool MnemosyneDagSync::seenEvent(const Name& name) const{
-    return m_eventSet.count(name);
 }
 
 ndn::svs::SecurityOptions MnemosyneDagSync::getSecurityOption() {

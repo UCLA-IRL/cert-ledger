@@ -7,7 +7,7 @@
 using namespace ndn;
 namespace mnemosyne {
 
-class Mnemosyne : public MnemosyneDagSync {
+class Mnemosyne {
   public:
     /**
      * Initialize a Mnemosyne instance from the config.
@@ -28,10 +28,22 @@ class Mnemosyne : public MnemosyneDagSync {
 
     ndn::svs::SecurityOptions getSecurityOption();
 
+    void onRecordUpdate(Record record);
+
+    bool seenEvent(const Name& name) const;
+
   protected:
+    const Config m_config;
+    security::KeyChain &m_keychain;
+    MnemosyneDagSync m_dagSync;
     svs::SVSPubSub m_interfacePS;
     Scheduler m_scheduler;
     std::shared_ptr<ndn::security::Validator> m_eventValidator;
+
+    //TODO convert to a database structure
+    std::set<Name> m_eventSet;
+
+    std::mt19937_64 m_randomEngine;
   };
 
 } // namespace mnemosyne

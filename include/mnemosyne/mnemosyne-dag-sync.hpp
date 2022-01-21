@@ -12,6 +12,7 @@
 #include <ndn-cxx/util/io.hpp>
 #include <stack>
 #include <random>
+#include <utility>
 
 
 using namespace ndn;
@@ -59,7 +60,9 @@ class MnemosyneDagSync {
 
     const Name& getPeerPrefix() const;
 
-    bool seenEvent(const Name& name) const;
+    void setOnRecordCallback(std::function<void(const Record&)> callback) {
+        m_onRecordCallback = std::move(callback);
+    }
 
   private:
     void onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info);
@@ -69,20 +72,18 @@ class MnemosyneDagSync {
     ndn::svs::SecurityOptions getSecurityOption();
 
   protected:
-    Config m_config;
+    const Config m_config;
     Backend m_backend;
     security::KeyChain &m_keychain;
     svs::SVSync m_dagSync;
     std::shared_ptr<ndn::security::Validator> m_recordValidator;
+    std::function<void(const Record&)> m_onRecordCallback;
 
     std::vector<Name> m_lastNames;
     unsigned int m_lastNameTops;
     Name m_selfLastName;
 
     std::mt19937_64 m_randomEngine;
-
-    //TODO convert to a database structure
-    std::set<Name> m_eventSet;
 
     void addSelfRecord(const shared_ptr<Data> &data);
 };
