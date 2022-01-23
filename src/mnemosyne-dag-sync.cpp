@@ -61,10 +61,11 @@ ReturnCode MnemosyneDagSync::createRecord(Record &record) {
     if (!m_selfLastName.empty()) record.addPointer(m_selfLastName);
 
     // randomly shuffle the tailing record list
-    std::vector<Name> recordList = m_lastNames;
+    std::list<Name> recordList;
+    for (const auto& i : m_lastNames) if (m_noPrevRecords.count(i) == 0) recordList.push_back(i);
     std::shuffle(std::begin(recordList), std::end(recordList), m_randomEngine);
 
-    for (const auto &tailRecord : recordList) { // TODO add verification: preceding record need to exist
+    for (const auto &tailRecord : recordList) {
         record.addPointer(tailRecord);
         if (record.getPointersFromHeader().size() >= m_config.precedingRecordNum)
             break;
@@ -110,18 +111,21 @@ std::list<Name> MnemosyneDagSync::listRecord(const std::string &prefix) const {
 
 void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info) {
     for (const auto& stream : info) {
-        for (svs::SeqNo i = stream.low; i <= stream.high; i++)
-        {
+        for (svs::SeqNo i = stream.low; i <= stream.high; i++) {
             m_dagSync.fetchData(stream.nodeId, i, [&](const Data& syncData){
                 if (syncData.getContentType() == tlv::Data) {
                     m_recordValidator->validate(Data(syncData.getContent().blockFromValue()), [this](const Data& data){
                         auto receivedData = std::make_shared<Data>(data);
-                        NDN_LOG_INFO("Received record " << receivedData->getFullName());
-                        addReceivedRecord(receivedData);
-
                         try {
+                            Record receivedRecord(receivedData);
+                            receivedRecord.checkPointerCount(2);
+                            verifyPreviousRecord(receivedRecord);
+
+                            NDN_LOG_INFO("Received record " << receivedData->getFullName());
+                            addReceivedRecord(receivedData);
+
                             if (m_onRecordCallback) {
-                                m_onRecordCallback(Record(receivedData));
+                                m_onRecordCallback(receivedRecord);
                             }
                         } catch (const std::exception& e) {
                             NDN_LOG_ERROR("bad record received" << receivedData->getFullName() << ": " << e);
@@ -160,6 +164,29 @@ ndn::svs::SecurityOptions MnemosyneDagSync::getSecurityOption() {
     option.interestSigner = option.dataSigner;
     option.pubSigner = std::make_shared<ndn::svs::BaseSigner>();
     return option;
+}
+
+void MnemosyneDagSync::verifyPreviousRecord(const Record& record) {
+    for (const auto& i : record.getPointersFromHeader()) {
+        if (m_noPrevRecords.count(i) || !m_backend.getRecord(i)) {
+            m_waitingRecords.emplace(i, record.getRecordFullName());
+            m_noPrevRecords.emplace(record.getRecordFullName());
+            return;
+        }
+    }
+
+    std::list<Name> waitingList;
+    if (m_waitingRecords.count(record.getRecordFullName()) > 0) {
+        for (auto it = m_waitingRecords.find(record.getRecordFullName()); it->first == record.getRecordFullName(); m_waitingRecords.erase(it ++)) {
+            waitingList.push_back(it->second);
+            m_noPrevRecords.erase(it->second);
+
+        }
+    }
+
+    for (const auto& i : waitingList) {
+        verifyPreviousRecord(m_backend.getRecord(i));
+    }
 }
 
 

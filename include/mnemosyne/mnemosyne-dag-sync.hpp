@@ -71,6 +71,8 @@ class MnemosyneDagSync {
 
     ndn::svs::SecurityOptions getSecurityOption();
 
+    void MnemosyneDagSync::verifyPreviousRecord(const Record& record);
+
   protected:
     const Config m_config;
     Backend m_backend;
@@ -82,6 +84,9 @@ class MnemosyneDagSync {
     std::vector<Name> m_lastNames;
     unsigned int m_lastNameTops;
     Name m_selfLastName;
+
+    std::set<Name> m_noPrevRecords; // TODO persistence at node failure
+    std::multimap<Name, Name> m_waitingRecords;
 
     std::mt19937_64 m_randomEngine;
 
