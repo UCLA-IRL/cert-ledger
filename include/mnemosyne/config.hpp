@@ -12,15 +12,14 @@ class Config {
   public:
 
     static shared_ptr<Config> CustomizedConfig(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &peerPrefix,
-                                               const std::string &anchorCertPath, const std::string &databasePath);
+                                               const std::string &databasePath);
 
     /**
      * Construct a Config instance used for Mnemosyne initialization.
      * @p multicastPrefix, input, the distributed ledger system's multicast prefix.
      * @p peerPrefix, input, the unique prefix of the peer.
      */
-    Config(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &peerPrefix,
-           shared_ptr<CertificateManager> certificateManager_);
+    Config(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &peerPrefix);
 
   public:
     /**
@@ -54,10 +53,6 @@ class Config {
      * The path to the Database;
      */
     std::string databasePath;
-    /**
-     * The Certificate manager
-     */
-    shared_ptr<CertificateManager> certificateManager;
 };
 
 } // namespace mnemosyne

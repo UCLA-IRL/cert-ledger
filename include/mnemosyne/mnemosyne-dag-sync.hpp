@@ -69,9 +69,9 @@ class MnemosyneDagSync {
 
     void addReceivedRecord(const shared_ptr<Data>& recordData);
 
-    ndn::svs::SecurityOptions getSecurityOption();
+    static ndn::svs::SecurityOptions getSecurityOption(KeyChain& keychain, shared_ptr<ndn::security::Validator> recordValidator, Name peerPrefix);
 
-    void MnemosyneDagSync::verifyPreviousRecord(const Record& record);
+    void verifyPreviousRecord(const Record& record);
 
   protected:
     const Config m_config;
@@ -86,7 +86,7 @@ class MnemosyneDagSync {
     Name m_selfLastName;
 
     std::set<Name> m_noPrevRecords; // TODO persistence at node failure
-    std::multimap<Name, Name> m_waitingRecords;
+    std::multimap<Name, Name> m_waitingReferencedRecords;
 
     std::mt19937_64 m_randomEngine;
 

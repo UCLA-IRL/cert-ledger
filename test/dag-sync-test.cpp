@@ -2,6 +2,8 @@
 #include "mnemosyne/mnemosyne.hpp"
 #include <iostream>
 #include <ndn-cxx/security/signing-helpers.hpp>
+#include <ndn-cxx/security/validator-config.hpp>
+#include <ndn-cxx/security/validator.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <boost/asio/io_service.hpp>
 #include <ndn-cxx/util/io.hpp>
@@ -35,18 +37,20 @@ int main(int argc, char **argv) {
     Face face(ioService);
     security::KeyChain keychain;
     std::shared_ptr<Config> config = nullptr;
+    std::shared_ptr<ndn::security::Validator> validator;
     try {
         config = Config::CustomizedConfig("/ndn/broadcast/mnemosyne-dag", "/ndn/broadcast/mnemosyne", identity,
-                                          std::string("./mnemosyne-anchor.cert"),
                                           std::string("/tmp/mnemosyne-db/" + identity.substr(identity.rfind('/'))));
+        auto configValidator = std::make_shared<ndn::security::ValidatorConfig>(face);
+        configValidator->load("./test/loggers.schema");
+        validator = configValidator;
         mkdir("/tmp/mnemosyne-db/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
     catch (const std::exception &e) {
         std::cout << e.what() << std::endl;
         return 1;
     }
-
-    auto ledger = std::make_shared<MnemosyneDagSync>(*config, keychain, face);
+    auto ledger = std::make_shared<MnemosyneDagSync>(*config, keychain, face, validator);
 
     Scheduler scheduler(ioService);
     periodicAddRecord(keychain, ledger, scheduler);

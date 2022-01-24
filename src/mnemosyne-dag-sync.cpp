@@ -24,12 +24,13 @@ MnemosyneDagSync::MnemosyneDagSync(const Config &config,
         : m_config(config)
         , m_keychain(keychain)
         , m_backend(config.databasePath)
-        , m_recordValidator(std::move(recordValidator))
-        , m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);}, getSecurityOption())
+        , m_recordValidator(recordValidator)
+        , m_dagSync(config.syncPrefix, config.peerPrefix, network, [&](const auto& i){onUpdate(i);}, getSecurityOption(keychain, recordValidator, config.peerPrefix))
         , m_randomEngine(std::random_device()())
         , m_lastNameTops(0)
 {
     NDN_LOG_INFO("Mnemosyne Initialization Start");
+
 
     if (config.numGenesisBlock < config.precedingRecordNum || config.precedingRecordNum <= 1) {
         NDN_THROW(std::runtime_error("Bad config"));
@@ -61,9 +62,9 @@ ReturnCode MnemosyneDagSync::createRecord(Record &record) {
     if (!m_selfLastName.empty()) record.addPointer(m_selfLastName);
 
     // randomly shuffle the tailing record list
-    std::list<Name> recordList;
+    std::vector<Name> recordList;
     for (const auto& i : m_lastNames) if (m_noPrevRecords.count(i) == 0) recordList.push_back(i);
-    std::shuffle(std::begin(recordList), std::end(recordList), m_randomEngine);
+    std::shuffle(recordList.begin(), recordList.end(), m_randomEngine);
 
     for (const auto &tailRecord : recordList) {
         record.addPointer(tailRecord);
@@ -118,7 +119,7 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
                         auto receivedData = std::make_shared<Data>(data);
                         try {
                             Record receivedRecord(receivedData);
-                            receivedRecord.checkPointerCount(2);
+                            receivedRecord.checkPointerCount(m_config.precedingRecordNum);
                             verifyPreviousRecord(receivedRecord);
 
                             NDN_LOG_INFO("Received record " << receivedData->getFullName());
@@ -128,10 +129,10 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
                                 m_onRecordCallback(receivedRecord);
                             }
                         } catch (const std::exception& e) {
-                            NDN_LOG_ERROR("bad record received" << receivedData->getFullName() << ": " << e);
+                            NDN_LOG_ERROR("bad record received" << receivedData->getFullName() << ": " << e.what());
                         }
-                    }, [](const auto& data, const auto& error){
-                        NDN_LOG_INFO("Verification error on Received record " << data.getFullName() << ": " << error);
+                    }, [](const Data& data, const ndn::security::ValidationError& error){
+                        NDN_LOG_ERROR("Verification error on Received record " << data.getFullName() << ": " << error.getInfo());
                     });
                 }
             });
@@ -156,11 +157,11 @@ const Name &MnemosyneDagSync::getPeerPrefix() const {
     return m_config.peerPrefix;
 }
 
-ndn::svs::SecurityOptions MnemosyneDagSync::getSecurityOption() {
-    ndn::svs::SecurityOptions option(m_keychain);
-    option.validator = make_shared<::util::cxxValidator>(m_recordValidator);
+ndn::svs::SecurityOptions MnemosyneDagSync::getSecurityOption(KeyChain& keychain, shared_ptr<ndn::security::Validator> recordValidator, Name peerPrefix) {
+    ndn::svs::SecurityOptions option(keychain);
+    option.validator = make_shared<::util::cxxValidator>(recordValidator);
     option.encapsulatedDataValidator = make_shared<::util::alwaysFailValidator>();
-    option.dataSigner = std::make_shared<::util::KeyChainOptionSigner>(m_keychain, security::signingByIdentity(m_config.peerPrefix));
+    option.dataSigner = std::make_shared<::util::KeyChainOptionSigner>(keychain, security::signingByIdentity(peerPrefix));
     option.interestSigner = option.dataSigner;
     option.pubSigner = std::make_shared<ndn::svs::BaseSigner>();
     return option;
@@ -169,15 +170,15 @@ ndn::svs::SecurityOptions MnemosyneDagSync::getSecurityOption() {
 void MnemosyneDagSync::verifyPreviousRecord(const Record& record) {
     for (const auto& i : record.getPointersFromHeader()) {
         if (m_noPrevRecords.count(i) || !m_backend.getRecord(i)) {
-            m_waitingRecords.emplace(i, record.getRecordFullName());
+            m_waitingReferencedRecords.emplace(i, record.getRecordFullName());
             m_noPrevRecords.emplace(record.getRecordFullName());
             return;
         }
     }
 
     std::list<Name> waitingList;
-    if (m_waitingRecords.count(record.getRecordFullName()) > 0) {
-        for (auto it = m_waitingRecords.find(record.getRecordFullName()); it->first == record.getRecordFullName(); m_waitingRecords.erase(it ++)) {
+    if (m_waitingReferencedRecords.count(record.getRecordFullName()) > 0) {
+        for (auto it = m_waitingReferencedRecords.find(record.getRecordFullName()); it->first == record.getRecordFullName(); m_waitingReferencedRecords.erase(it ++)) {
             waitingList.push_back(it->second);
             m_noPrevRecords.erase(it->second);
 

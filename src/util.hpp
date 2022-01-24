@@ -19,7 +19,7 @@ class cxxValidator : public ndn::svs::BaseValidator {
   public:
 
     cxxValidator(std::shared_ptr<ndn::security::Validator> validator) :
-    m_validator(std::move(validator)){
+    m_validator(std::move(validator)) {
 
     }
 
@@ -93,7 +93,7 @@ class alwaysFailValidator : public ndn::svs::BaseValidator {
 /**
  * A signer using an ndn-cxx keychain instance
  */
-class KeyChainOptionSigner : public BaseSigner {
+  class KeyChainOptionSigner : public ndn::svs::BaseSigner {
   public:
     KeyChainOptionSigner(ndn::KeyChain& keyChain, ndn::security::SigningInfo params) : m_keyChain(keyChain), m_params(std::move(params)) {}
 

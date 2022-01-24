@@ -1,0 +1,39 @@
+rule
+{
+  id "logger-verification"
+  for data
+  filter
+  {
+    type name
+    name /mnemosyne
+    relation is-strict-prefix-of
+  }
+  checker
+  {
+    type hierarchical
+    sig-type rsa-sha256
+  }
+}
+
+rule
+{
+  id "logger-interest-verification"
+  for interest
+  filter
+  {
+    type name
+    name /mnemosyne
+    relation is-strict-prefix-of
+  }
+  checker
+  {
+    type hierarchical
+    sig-type rsa-sha256
+  }
+}
+
+trust-anchor
+{
+  type file
+  file-name "mnemosyne-anchor.cert"
+}
