@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 # project name
-project(mnemosyne
+project(cert-ledger
         VERSION 0.1
         DESCRIPTION "A distributed ledger based on NDN")
 
@@ -19,13 +19,12 @@ pkg_check_modules(NDN_SVS REQUIRED libndn-svs)
 find_package(leveldb REQUIRED)
 
 # files
-set(MNEMOSYNE_LIB_SOURCE_FILES
+set(CERT_LEDGER_LIB_SOURCE_FILES
         src/backend.cpp
-        src/mnemosyne-dag-sync.cpp
-        src/mnemosyne.cpp
+        src/cert-ledger-dag-sync.cpp
+        src/cert-ledger.cpp
         src/record.cpp
         src/config.cpp
-        src/default-cert-manager.cpp
         src/util.cpp)
 # include
 include_directories(${NDN_CXX_INCLUDE_DIRS})
@@ -37,12 +36,12 @@ link_directories(${NDN_SVS_LIBRARY_DIRS})
 
 # target
 
-add_library(mnemosyne SHARED "")
-target_sources(mnemosyne PRIVATE ${MNEMOSYNE_LIB_SOURCE_FILES})
-target_include_directories(mnemosyne PUBLIC ./include)
-target_include_directories(mnemosyne PRIVATE ./src)
-target_compile_options(mnemosyne PUBLIC ${NDN_CXX_CFLAGS} ${NDN_SVS_CFLAGS})
-target_link_libraries(mnemosyne PUBLIC ${NDN_CXX_LIBRARIES} ${NDN_SVS_LIBRARIES} leveldb)
+add_library(cert-ledger SHARED "")
+target_sources(cert-ledger PRIVATE ${CERT_LEDGER_LIB_SOURCE_FILES})
+target_include_directories(cert-ledger PUBLIC ./include)
+target_include_directories(cert-ledger PRIVATE ./src)
+target_compile_options(cert-ledger PUBLIC ${NDN_CXX_CFLAGS} ${NDN_SVS_CFLAGS})
+target_link_libraries(cert-ledger PUBLIC ${NDN_CXX_LIBRARIES} ${NDN_SVS_LIBRARIES} leveldb)
 
 add_subdirectory(test)
 add_subdirectory(app)
@@ -61,11 +60,11 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake-pkgconfig.pc.in"
         "${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}.pc")
 
 include(GNUInstallDirs)
-install(TARGETS mnemosyne
+install(TARGETS cert-ledger
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         )
-install(DIRECTORY include/mnemosyne DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+install(DIRECTORY include/cert-ledger DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN "*.h*")
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}.pc"

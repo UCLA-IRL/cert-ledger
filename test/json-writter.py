@@ -9,7 +9,7 @@ from typing import Dict
 
 ca_cert = ""
 
-with open("test/mnemosyne-anchor.cert", "r", encoding='utf-8') as ca_encoded:
+with open("test/cert-ledger-anchor.cert", "r", encoding='utf-8') as ca_encoded:
     ca_cert = ca_encoded.read()
 
 with open("test/client.conf.example", "r+", encoding='utf-8') as client_conf:

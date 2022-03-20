@@ -1,11 +1,11 @@
-#ifndef MNEMOSYNE_BACKEND_H_
-#define MNEMOSYNE_BACKEND_H_
+#ifndef CERT_LEDGER_BACKEND_H_
+#define CERT_LEDGER_BACKEND_H_
 
 #include <ndn-cxx/data.hpp>
 #include <leveldb/db.h>
 
 using namespace ndn;
-namespace mnemosyne {
+namespace cert_ledger {
 
 class Backend {
   public:
@@ -31,6 +31,6 @@ class Backend {
     leveldb::DB *m_db;
 };
 
-}  // namespace mnemosyne
+}  // namespace cert-ledger
 
-#endif  // MNEMOSYNE_BACKEND_H_
+#endif  // CERT_LEDGER_BACKEND_H_

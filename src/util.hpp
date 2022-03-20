@@ -2,8 +2,8 @@
 // Created by Tyler on 1/15/22.
 //
 
-#ifndef MNEMOSYNE_UTIL_HPP
-#define MNEMOSYNE_UTIL_HPP
+#ifndef CERT_LEDGER_UTIL_HPP
+#define CERT_LEDGER_UTIL_HPP
 
 
 #include <ndn-svs/security-options.hpp>
@@ -112,4 +112,4 @@ class alwaysFailValidator : public ndn::svs::BaseValidator {
 }
 
 
-#endif //MNEMOSYNE_UTIL_HPP
+#endif //CERT_LEDGER_UTIL_HPP

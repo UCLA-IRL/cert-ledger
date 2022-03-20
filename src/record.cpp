@@ -1,10 +1,10 @@
-#include "mnemosyne/record.hpp"
+#include "cert-ledger/record.hpp"
 
 #include <sstream>
 #include <utility>
 #include <iostream>
 
-namespace mnemosyne {
+namespace cert_ledger {
 
 Record::Record(RecordType type, const std::string& identifer)
     : m_data(nullptr),
@@ -184,9 +184,9 @@ const Name &Record::getRecordName() const {
 }
 
 GenesisRecord::GenesisRecord(int number) :
-    Record(Name("/mnemosyne/GENESIS_RECORD/").append(std::to_string(number)))
+    Record(Name("/cert-ledger/GENESIS_RECORD/").append(std::to_string(number)))
 {
     setContentItem(makeEmptyBlock(tlv::Name));
 }
 
-}  // namespace mnemosyne
+}  // namespace cert-ledger

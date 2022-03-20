@@ -2,8 +2,8 @@
 #!/bin/bash
 
 # generate keys and certificates
-ndnsec delete /mnemosyne
-ndnsec key-gen /mnemosyne | ndnsec cert-gen -s /mnemosyne - > ../mnemosyne-anchor.cert
+ndnsec delete /cert_ledger
+ndnsec key-gen /cert_ledger | ndnsec cert-gen -s /cert_ledger - > ../cert_ledger-anchor.cert
 
 # deploy customized ndncert ca
 # mkdir dep && cd mkdir dep

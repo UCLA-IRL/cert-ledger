@@ -33,11 +33,11 @@ void periodicAddRecord(KeyChain& keychain, shared_ptr<svs::SVSPubSub> pubSub, co
 }
 
 int main(int argc, char **argv) {
-    po::options_description description("Usage for Mnemosyne Test Client");
+    po::options_description description("Usage for Cert_ledger Test Client");
 
     description.add_options()
             ("help,h", "Display this help message")
-            ("interface-ps-prefix,i", po::value<std::string>()->default_value("/ndn/broadcast/mnemosyne"), "The prefix for Interface Pub/Sub")
+            ("interface-ps-prefix,i", po::value<std::string>()->default_value("/ndn/broadcast/cert-ledger"), "The prefix for Interface Pub/Sub")
             ("client-prefix,c", po::value<std::string>(), "The prefix for the client");
 
     po::variables_map vm;

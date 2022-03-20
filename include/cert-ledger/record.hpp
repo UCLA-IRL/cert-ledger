@@ -1,5 +1,5 @@
-#ifndef MNEMOSYNE_INCLUDE_RECORD_H_
-#define MNEMOSYNE_INCLUDE_RECORD_H_
+#ifndef CERT_LEDGER_INCLUDE_RECORD_H_
+#define CERT_LEDGER_INCLUDE_RECORD_H_
 
 #include <ndn-cxx/data.hpp>
 #include <ndn-cxx/security/certificate.hpp>
@@ -8,7 +8,7 @@
 #include <list>
 
 using namespace ndn;
-namespace mnemosyne {
+namespace cert_ledger {
 enum RecordType {
   BASE_RECORD = 0,
   GENERIC_RECORD = 1,
@@ -81,14 +81,14 @@ class Record {
     bool
     isEmpty() const;
 
-  public: // used for generating a new record before appending it into the Mnemosyne
+  public: // used for generating a new record before appending it into the Cert_ledger
     /**
-     * @note This constructor is supposed to be used by the Mnemosyne class only
+     * @note This constructor is supposed to be used by the Cert_ledger class only
      */
     Record(const std::shared_ptr<Data> &data);
 
     /**
-     * @note This constructor is supposed to be used by the Mnemosyne class only
+     * @note This constructor is supposed to be used by the Cert_ledger class only
      */
     Record(Data data);
 
@@ -182,7 +182,7 @@ class GenesisRecord : public Record {
     GenesisRecord(int number);
 };
 
-} // namespace mnemosyne
+} // namespace cert-ledger
 
-#endif // define MNEMOSYNE_INCLUDE_RECORD_H_
+#endif // define CERT_LEDGER_INCLUDE_RECORD_H_
 

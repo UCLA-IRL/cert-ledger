@@ -1,12 +1,12 @@
-#ifndef MNEMOSYNE_INCLUDE_RETURN_CODE_H_
-#define MNEMOSYNE_INCLUDE_RETURN_CODE_H_
+#ifndef CERT_LEDGER_INCLUDE_RETURN_CODE_H_
+#define CERT_LEDGER_INCLUDE_RETURN_CODE_H_
 
 #include <cstdint>
 #include <cstdio>
 #include <string>
 #include <utility>
 
-namespace mnemosyne {
+namespace cert_ledger {
 
 enum ErrorCode {
     EC_OK = 0,
@@ -48,6 +48,6 @@ class ReturnCode {
     std::string m_status;
 };
 
-} // namespace mnemosyne
+} // namespace cert-ledger
 
-#endif // define MNEMOSYNE_INCLUDE_RETURN_CODE_H_
+#endif // define CERT_LEDGER_INCLUDE_RETURN_CODE_H_

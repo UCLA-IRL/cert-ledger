@@ -1,4 +1,4 @@
-#include "mnemosyne/mnemosyne-dag-sync.hpp"
+#include "cert-ledger/cert-ledger-dag-sync.hpp"
 #include "util.hpp"
 
 #include <ndn-cxx/encoding/block-helpers.hpp>
@@ -12,12 +12,12 @@
 #include <random>
 #include <sstream>
 
-NDN_LOG_INIT(mnemosyne.dagsync.impl);
+NDN_LOG_INIT(cert_ledger.dagsync.impl);
 
 using namespace ndn;
-namespace mnemosyne {
+namespace cert_ledger {
 
-MnemosyneDagSync::MnemosyneDagSync(const Config &config,
+Cert_ledgerDagSync::Cert_ledgerDagSync(const Config &config,
                      security::KeyChain &keychain,
                      Face &network,
                      std::shared_ptr<ndn::security::Validator> recordValidator)
@@ -29,7 +29,7 @@ MnemosyneDagSync::MnemosyneDagSync(const Config &config,
         , m_randomEngine(std::random_device()())
         , m_lastNameTops(0)
 {
-    NDN_LOG_INFO("Mnemosyne Initialization Start");
+    NDN_LOG_INFO("Cert_ledger Initialization Start");
 
 
     if (config.numGenesisBlock < config.precedingRecordNum || config.precedingRecordNum <= 1) {
@@ -50,14 +50,14 @@ MnemosyneDagSync::MnemosyneDagSync(const Config &config,
         m_lastNames.push_back(genesisRecord.getRecordFullName());
     }
     NDN_LOG_INFO("STEP 2" << std::endl
-                          << "- " << m_config.numGenesisBlock << " genesis records have been added to the Mnemosyne");
-    NDN_LOG_INFO("Mnemosyne Initialization Succeed");
+                          << "- " << m_config.numGenesisBlock << " genesis records have been added to the Cert_ledger");
+    NDN_LOG_INFO("Cert_ledger Initialization Succeed");
 }
 
-MnemosyneDagSync::~MnemosyneDagSync() = default;
+Cert_ledgerDagSync::~Cert_ledgerDagSync() = default;
 
-ReturnCode MnemosyneDagSync::createRecord(Record &record) {
-    NDN_LOG_INFO("[MnemosyneDagSync::createRecord] Add new record");
+ReturnCode Cert_ledgerDagSync::createRecord(Record &record) {
+    NDN_LOG_INFO("[Cert_ledgerDagSync::createRecord] Add new record");
 
     if (!m_selfLastName.empty()) record.addPointer(m_selfLastName);
 
@@ -86,7 +86,7 @@ ReturnCode MnemosyneDagSync::createRecord(Record &record) {
         return ReturnCode::signingError(e.what());
     }
     record.m_data = data;
-    NDN_LOG_INFO("[MnemosyneDagSync::createRecord] Added a new record:" << data->getFullName().toUri());
+    NDN_LOG_INFO("[Cert_ledgerDagSync::createRecord] Added a new record:" << data->getFullName().toUri());
 
     // add new record into the ledger
     addSelfRecord(data);
@@ -96,21 +96,21 @@ ReturnCode MnemosyneDagSync::createRecord(Record &record) {
     return ReturnCode::noError(data->getFullName().toUri());
 }
 
-optional<Record> MnemosyneDagSync::getRecord(const std::string &recordName) const {
+optional<Record> Cert_ledgerDagSync::getRecord(const std::string &recordName) const {
     NDN_LOG_DEBUG("getRecord Called on " << recordName);
     return m_backend.getRecord(recordName);
 }
 
-bool MnemosyneDagSync::hasRecord(const std::string &recordName) const {
+bool Cert_ledgerDagSync::hasRecord(const std::string &recordName) const {
     auto dataPtr = m_backend.getRecord(Name(recordName));
     return dataPtr != nullptr;
 }
 
-std::list<Name> MnemosyneDagSync::listRecord(const std::string &prefix) const {
+std::list<Name> Cert_ledgerDagSync::listRecord(const std::string &prefix) const {
     return m_backend.listRecord(Name(prefix));
 }
 
-void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info) {
+void Cert_ledgerDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info) {
     for (const auto& stream : info) {
         for (svs::SeqNo i = stream.low; i <= stream.high; i++) {
             m_dagSync.fetchData(stream.nodeId, i, [&](const Data& syncData){
@@ -140,24 +140,24 @@ void MnemosyneDagSync::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& in
     }
 }
 
-void MnemosyneDagSync::addSelfRecord(const shared_ptr<Data> &data) {
+void Cert_ledgerDagSync::addSelfRecord(const shared_ptr<Data> &data) {
     NDN_LOG_INFO("Add self record " << data->getFullName());
     m_backend.putRecord(data);
     m_selfLastName = data->getFullName();
 }
 
-void MnemosyneDagSync::addReceivedRecord(const shared_ptr<Data>& recordData) {
+void Cert_ledgerDagSync::addReceivedRecord(const shared_ptr<Data>& recordData) {
     NDN_LOG_INFO("Add received record " << recordData->getFullName());
     m_backend.putRecord(recordData);
     m_lastNames[m_lastNameTops] = recordData->getFullName();
     m_lastNameTops = (m_lastNameTops + 1) % m_lastNames.size();
 }
 
-const Name &MnemosyneDagSync::getPeerPrefix() const {
+const Name &Cert_ledgerDagSync::getPeerPrefix() const {
     return m_config.peerPrefix;
 }
 
-ndn::svs::SecurityOptions MnemosyneDagSync::getSecurityOption(KeyChain& keychain, shared_ptr<ndn::security::Validator> recordValidator, Name peerPrefix) {
+ndn::svs::SecurityOptions Cert_ledgerDagSync::getSecurityOption(KeyChain& keychain, shared_ptr<ndn::security::Validator> recordValidator, Name peerPrefix) {
     ndn::svs::SecurityOptions option(keychain);
     option.validator = make_shared<::util::cxxValidator>(recordValidator);
     option.encapsulatedDataValidator = make_shared<::util::alwaysFailValidator>();
@@ -167,7 +167,7 @@ ndn::svs::SecurityOptions MnemosyneDagSync::getSecurityOption(KeyChain& keychain
     return option;
 }
 
-void MnemosyneDagSync::verifyPreviousRecord(const Record& record) {
+void Cert_ledgerDagSync::verifyPreviousRecord(const Record& record) {
     for (const auto& i : record.getPointersFromHeader()) {
         if (m_noPrevRecords.count(i) || !m_backend.getRecord(i)) {
             m_waitingReferencedRecords.emplace(i, record.getRecordFullName());
@@ -191,4 +191,4 @@ void MnemosyneDagSync::verifyPreviousRecord(const Record& record) {
 }
 
 
-}  // namespace mnemosyne
+}  // namespace cert-ledger

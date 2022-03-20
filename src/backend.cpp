@@ -1,9 +1,9 @@
-#include "mnemosyne/backend.hpp"
+#include "cert-ledger/backend.hpp"
 
 #include <cassert>
 #include <iostream>
 
-namespace mnemosyne {
+namespace cert_ledger {
 
 Backend::Backend(const std::string &dbDir) {
     leveldb::Options options;
@@ -70,4 +70,4 @@ Backend::listRecord(const Name &prefix) const {
     return std::move(names);
 }
 
-}  // namespace mnemosyne
+}  // namespace cert-ledger

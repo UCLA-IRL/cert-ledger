@@ -12,7 +12,7 @@ help()
    echo "Usage: $0 -c ssl_cert -p ssl_prv -d name_component"
    echo -c "\t SSL Certificate"
    echo -p "\t Private key for the supplied SSL Certificate"
-   echo -d "\t Name Component wish to have under /mnemosyne"
+   echo -d "\t Name Component wish to have under /cert_ledger"
    exit 1 # Exit script after printing help
 }
 
@@ -37,9 +37,9 @@ fi
 
 echo "SSL Certificate path: $ssl_cert"
 echo "Private key for SSL Certificate: $ssl_prv"
-python3 test/auto.py -c $ssl_cert -p $ssl_prv -n "/mnemosyne/${name_comp}"
+python3 test/auto.py -c $ssl_cert -p $ssl_prv -n "/cert_ledger/${name_comp}"
 sleep 1
 
 echo "\nNow begin the ledger part..."
 sudo env NDN_LOG=INFO
-./build/ledger-impl-test "/mnemosyne/${name_comp}"
+./build/ledger-impl-test "/cert_ledger/${name_comp}"

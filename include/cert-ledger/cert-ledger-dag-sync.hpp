@@ -1,5 +1,5 @@
-#ifndef MNEMOSYNE_MNEMOSYNE_DAG_SYNC_H_
-#define MNEMOSYNE_MNEMOSYNE_DAG_SYNC_H_
+#ifndef CERT_LEDGER_CERT_LEDGER_DAG_SYNC_H_
+#define CERT_LEDGER_CERT_LEDGER_DAG_SYNC_H_
 
 #include <ndn-svs/svsync.hpp>
 #include "record.hpp"
@@ -16,43 +16,43 @@
 
 
 using namespace ndn;
-namespace mnemosyne {
+namespace cert_ledger {
 
-class MnemosyneDagSync {
+class Cert_ledgerDagSync {
   public:
     /**
-   * Initialize a MnemosyneDagSync instance from the config.
+   * Initialize a Cert_ledgerDagSync instance from the config.
    * @p config, input, the configuration of multicast prefix, peer prefix, and settings of Dledger behavior
    * @p keychain, input, the local NDN keychain instance
    * @p face, input, the localhost NDN face to send/receive NDN packets.
    */
-    MnemosyneDagSync(const Config &config, security::KeyChain &keychain, Face &network, std::shared_ptr<ndn::security::Validator> m_recordValidator);
+    Cert_ledgerDagSync(const Config &config, security::KeyChain &keychain, Face &network, std::shared_ptr<ndn::security::Validator> m_recordValidator);
 
-    virtual ~MnemosyneDagSync();
+    virtual ~Cert_ledgerDagSync();
 
     /**
-     * Create a new record to the MnemosyneDagSync.
+     * Create a new record to the Cert_ledgerDagSync.
      * @p record, input, a record instance which contains the record payload
      */
     virtual ReturnCode
     createRecord(Record &record);
 
     /**
-     * Get an existing record from the MnemosyneDagSync.
+     * Get an existing record from the Cert_ledgerDagSync.
      * @p recordName, input, the name of the record, which is an NDN full name (i.e., containing ImplicitSha256DigestComponent component)
      */
     virtual optional<Record>
     getRecord(const std::string &recordName) const;
 
     /**
-     * Check whether the record exists in the MnemosyneDagSync.
+     * Check whether the record exists in the Cert_ledgerDagSync.
      * @p recordName, input, the name of the record, which is an NDN full name (i.e., containing ImplicitSha256DigestComponent component)
      */
     virtual bool
     hasRecord(const std::string &recordName) const;
 
     /**
-      * list the record exists in the MnemosyneDagSync.
+      * list the record exists in the Cert_ledgerDagSync.
       * @p recordName, input, the name of the record, which is an NDN name prefix.
       */
     virtual std::list<Name>
@@ -93,6 +93,6 @@ class MnemosyneDagSync {
     void addSelfRecord(const shared_ptr<Data> &data);
 };
 
-} // namespace mnemosyne
+} // namespace cert-ledger
 
-#endif // MNEMOSYNE_MNEMOSYNE_DAG_SYNC_H_
+#endif // CERT_LEDGER_CERT_LEDGER_DAG_SYNC_H_

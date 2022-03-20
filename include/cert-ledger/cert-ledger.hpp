@@ -1,27 +1,27 @@
-#ifndef MNEMOSYNE_MNEMOSYNE_H_
-#define MNEMOSYNE_MNEMOSYNE_H_
+#ifndef CERT_LEDGER_CERT_LEDGER_H_
+#define CERT_LEDGER_CERT_LEDGER_H_
 
-#include "mnemosyne/mnemosyne-dag-sync.hpp"
+#include "cert-ledger/cert-ledger-dag-sync.hpp"
 #include <ndn-svs/svspubsub.hpp>
 
 using namespace ndn;
-namespace mnemosyne {
+namespace cert_ledger {
 
-class Mnemosyne {
+class Cert_ledger {
   public:
     /**
-     * Initialize a Mnemosyne instance from the config.
-     * @p config, input, the configuration of multicast prefix, peer prefix, and settings of Mnemosyne behavior
+     * Initialize a Cert_ledger instance from the config.
+     * @p config, input, the configuration of multicast prefix, peer prefix, and settings of Cert_ledger behavior
      * @p keychain, input, the local NDN keychain instance
      * @p face, input, the localhost NDN face to send/receive NDN packets.
      * @p recordValidator, a validator that validates records from other nodes
      * @p eventValidator, a validator that validates events from clients
      */
-    Mnemosyne(const Config &config, security::KeyChain &keychain, Face &network,
+    Cert_ledger(const Config &config, security::KeyChain &keychain, Face &network,
               std::shared_ptr<ndn::security::Validator> recordValidator,
               std::shared_ptr<ndn::security::Validator> eventValidator);
 
-    virtual ~Mnemosyne();
+    virtual ~Cert_ledger();
 
   private:
     void onSubscriptionData(const svs::SVSPubSub::SubscriptionData& subData);
@@ -35,7 +35,7 @@ class Mnemosyne {
   protected:
     const Config m_config;
     security::KeyChain &m_keychain;
-    MnemosyneDagSync m_dagSync;
+    Cert_ledgerDagSync m_dagSync;
     svs::SVSPubSub m_interfacePS;
     Scheduler m_scheduler;
     std::shared_ptr<ndn::security::Validator> m_eventValidator;
@@ -46,6 +46,6 @@ class Mnemosyne {
     std::mt19937_64 m_randomEngine;
   };
 
-} // namespace mnemosyne
+} // namespace cert-ledger
 
-#endif // MNEMOSYNE_MNEMOSYNE_H_
+#endif // CERT_LEDGER_CERT_LEDGER_H_

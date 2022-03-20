@@ -1,12 +1,11 @@
-#ifndef MNEMOSYNE_INCLUDE_CONFIG_H_
-#define MNEMOSYNE_INCLUDE_CONFIG_H_
+#ifndef CERT_LEDGER_INCLUDE_CONFIG_H_
+#define CERT_LEDGER_INCLUDE_CONFIG_H_
 
-#include "cert-manager.hpp"
 #include <ndn-cxx/face.hpp>
 #include <iostream>
 
 using namespace ndn;
-namespace mnemosyne {
+namespace cert_ledger {
 
 class Config {
   public:
@@ -15,7 +14,7 @@ class Config {
                                                const std::string &databasePath);
 
     /**
-     * Construct a Config instance used for Mnemosyne initialization.
+     * Construct a Config instance used for Cert_ledger initialization.
      * @p multicastPrefix, input, the distributed ledger system's multicast prefix.
      * @p peerPrefix, input, the unique prefix of the peer.
      */
@@ -42,7 +41,7 @@ class Config {
      */
     Name syncPrefix;
     /**
-     * The interface pub/sub prefix, under which an publication can reach all Mnemosyne loggers.
+     * The interface pub/sub prefix, under which an publication can reach all Cert_ledger loggers.
      */
     Name interfacePrefix;
     /**
@@ -55,6 +54,6 @@ class Config {
     std::string databasePath;
 };
 
-} // namespace mnemosyne
+} // namespace cert-ledger
 
-#endif // define MNEMOSYNE_INCLUDE_CONFIG_H_
+#endif // define CERT_LEDGER_INCLUDE_CONFIG_H_

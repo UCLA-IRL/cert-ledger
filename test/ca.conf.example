@@ -1,6 +1,6 @@
 {
-  "ca-prefix": "/mnemosyne",
-  "ca-info": "An example NDNCERT CA for Mnemosyne",
+  "ca-prefix": "/cert_ledger",
+  "ca-info": "An example NDNCERT CA for Cert_ledger",
   "max-validity-period": "1296000",
   "max-suffix-length": "2",
   "probe-parameters":

@@ -5,7 +5,7 @@ rule
   filter
   {
     type name
-    name /mnemosyne
+    name /cert_ledger
     relation is-strict-prefix-of
   }
   checker
@@ -22,7 +22,7 @@ rule
   filter
   {
     type name
-    name /mnemosyne
+    name /cert_ledger
     relation is-strict-prefix-of
   }
   checker
@@ -35,5 +35,5 @@ rule
 trust-anchor
 {
   type file
-  file-name "mnemosyne-anchor.cert"
+  file-name "cert_ledger-anchor.cert"
 }

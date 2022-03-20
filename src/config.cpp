@@ -1,10 +1,9 @@
-#include "mnemosyne/config.hpp"
-#include "default-cert-manager.h"
+#include "cert-ledger/config.hpp"
 
 #include <ndn-cxx/util/io.hpp>
 #include <utility>
 
-namespace mnemosyne {
+namespace cert_ledger {
 
 shared_ptr<Config>
 Config::CustomizedConfig(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &producerPrefix,
@@ -22,4 +21,4 @@ Config::Config(const std::string &syncPrefix, const std::string &interfacePrefix
           interfacePrefix(interfacePrefix),
           peerPrefix(peerPrefix) {}
 
-}  // namespace mnemosyne
+}  // namespace cert-ledger

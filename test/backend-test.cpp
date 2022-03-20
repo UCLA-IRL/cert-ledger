@@ -1,9 +1,8 @@
-#include "mnemosyne/backend.hpp"
+#include "cert-ledger/backend.hpp"
 #include <ndn-cxx/name.hpp>
 #include <iostream>
-#include <ndn-cxx/security/signature-sha256-with-rsa.hpp>
 
-using namespace mnemosyne;
+using namespace cert_ledger;
 
 std::shared_ptr<ndn::Data>
 makeData(const std::string& name, const std::string& content)
@@ -12,9 +11,8 @@ makeData(const std::string& name, const std::string& content)
   using namespace std;
   auto data = make_shared<Data>(ndn::Name(name));
   data->setContent((const uint8_t*)content.c_str(), content.size());
-  ndn::SignatureSha256WithRsa fakeSignature;
-  fakeSignature.setValue(ndn::encoding::makeEmptyBlock(tlv::SignatureValue));
-  data->setSignature(fakeSignature);
+  data->setSignatureInfo(SignatureInfo(ndn::tlv::SignatureSha256WithEcdsa));
+  data->setSignatureValue(ConstBufferPtr());
   data->wireEncode();
   return data;
 }
@@ -26,7 +24,7 @@ testBackEnd()
   for (const auto &name : backend.listRecord("")) {
       backend.deleteRecord(name);
   }
-  auto data = makeData("/mnemosyne/12345", "content is 12345");
+  auto data = makeData("/cert-ledger/12345", "content is 12345");
   auto fullName = data->getFullName();
 
   backend.putRecord(data);
@@ -35,7 +33,7 @@ testBackEnd()
   if (data == nullptr || anotherRecord == nullptr) {
       return false;
   }
-  return backend.listRecord(Name("/mnemosyne")).size() == 1 && data->wireEncode() == anotherRecord->wireEncode();
+  return backend.listRecord(Name("/cert-ledger")).size() == 1 && data->wireEncode() == anotherRecord->wireEncode();
 }
 
 bool
@@ -45,25 +43,25 @@ testBackEndList() {
         backend.deleteRecord(name);
     }
     for (int i = 0; i < 10; i++) {
-        backend.putRecord(makeData("/mnemosyne/a/" + std::to_string(i), "content is " + std::to_string(i)));
-        backend.putRecord(makeData("/mnemosyne/ab/" + std::to_string(i), "content is " + std::to_string(i)));
-        backend.putRecord(makeData("/mnemosyne/b/" + std::to_string(i), "content is " + std::to_string(i)));
+        backend.putRecord(makeData("/cert-ledger/a/" + std::to_string(i), "content is " + std::to_string(i)));
+        backend.putRecord(makeData("/cert-ledger/ab/" + std::to_string(i), "content is " + std::to_string(i)));
+        backend.putRecord(makeData("/cert-ledger/b/" + std::to_string(i), "content is " + std::to_string(i)));
     }
 
-    backend.putRecord(makeData("/mnemosyne/a", "content is "));
-    backend.putRecord(makeData("/mnemosyne/ab", "content is "));
-    backend.putRecord(makeData("/mnemosyne/b", "content is "));
+    backend.putRecord(makeData("/cert-ledger/a", "content is "));
+    backend.putRecord(makeData("/cert-ledger/ab", "content is "));
+    backend.putRecord(makeData("/cert-ledger/b", "content is "));
 
-    assert(backend.listRecord(Name("/mnemosyne")).size() == 33);
-    assert(backend.listRecord(Name("/mnemosyne/a")).size() == 11);
-    assert(backend.listRecord(Name("/mnemosyne/ab")).size() == 11);
-    assert(backend.listRecord(Name("/mnemosyne/b")).size() == 11);
-    assert(backend.listRecord(Name("/mnemosyne/a/5")).size() == 1);
-    assert(backend.listRecord(Name("/mnemosyne/ab/5")).size() == 1);
-    assert(backend.listRecord(Name("/mnemosyne/b/5")).size() == 1);
-    assert(backend.listRecord(Name("/mnemosyne/a/55")).empty());
-    assert(backend.listRecord(Name("/mnemosyne/ab/55")).empty());
-    assert(backend.listRecord(Name("/mnemosyne/b/55")).empty());
+    assert(backend.listRecord(Name("/cert-ledger")).size() == 33);
+    assert(backend.listRecord(Name("/cert-ledger/a")).size() == 11);
+    assert(backend.listRecord(Name("/cert-ledger/ab")).size() == 11);
+    assert(backend.listRecord(Name("/cert-ledger/b")).size() == 11);
+    assert(backend.listRecord(Name("/cert-ledger/a/5")).size() == 1);
+    assert(backend.listRecord(Name("/cert-ledger/ab/5")).size() == 1);
+    assert(backend.listRecord(Name("/cert-ledger/b/5")).size() == 1);
+    assert(backend.listRecord(Name("/cert-ledger/a/55")).empty());
+    assert(backend.listRecord(Name("/cert-ledger/ab/55")).empty());
+    assert(backend.listRecord(Name("/cert-ledger/b/55")).empty());
     return true;
 }
 
@@ -71,7 +69,7 @@ bool
 testNameGet()
 {
   std::string name1 = "name1";
-  ndn::Name name2("/mnemosyne/name1/123");
+  ndn::Name name2("/cert-ledger/name1/123");
   if (name2.get(-2).toUri() == name1) {
     return true;
   }
