@@ -1,5 +1,4 @@
 #include "cert-ledger/backend.hpp"
-#include <ndn-cxx/name.hpp>
 #include <iostream>
 
 using namespace cert_ledger;

@@ -1,13 +1,8 @@
 #include "cert-ledger/record.hpp"
 #include "cert-ledger/cert-ledger.hpp"
-#include <iostream>
 #include <ndn-cxx/security/signing-helpers.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
-#include <ndn-cxx/security/validator.hpp>
-#include <ndn-cxx/util/scheduler.hpp>
 #include <boost/asio/io_service.hpp>
-#include <ndn-cxx/util/io.hpp>
-#include <random>
 
 using namespace cert_ledger;
 

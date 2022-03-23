@@ -1,11 +1,11 @@
-#ifndef CERT_LEDGER_CERT_LEDGER_DAG_SYNC_H_
-#define CERT_LEDGER_CERT_LEDGER_DAG_SYNC_H_
+#ifndef CERT_LEDGER_CERT_LEDGER_H_
+#define CERT_LEDGER_CERT_LEDGER_H_
 
-#include <ndn-svs/svsync.hpp>
 #include "record.hpp"
 #include "config.hpp"
 #include "return-code.hpp"
 #include "backend.hpp"
+#include <ndn-svs/svsync.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
@@ -95,4 +95,4 @@ class CertLedger {
 
 } // namespace cert-ledger
 
-#endif // CERT_LEDGER_CERT_LEDGER_DAG_SYNC_H_
+#endif // CERT_LEDGER_CERT_LEDGER_H_

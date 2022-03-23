@@ -1,18 +1,11 @@
 #include "cert-ledger/cert-ledger.hpp"
 #include "util.hpp"
 
-#include <ndn-cxx/encoding/block-helpers.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
-#include <utility>
-#include <ndn-cxx/security/verification-helpers.hpp>
-#include <ndn-cxx/util/time.hpp>
 #include <ndn-cxx/util/logger.hpp>
 #include <ndn-cxx/util/logging.hpp>
-#include <algorithm>
-#include <random>
-#include <sstream>
 
-NDN_LOG_INIT(cert_ledger.dagsync.impl);
+NDN_LOG_INIT(cert_ledger.impl);
 
 using namespace ndn;
 namespace cert_ledger {
