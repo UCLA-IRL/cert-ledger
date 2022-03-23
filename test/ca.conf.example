@@ -1,6 +1,6 @@
 {
   "ca-prefix": "/cert_ledger",
-  "ca-info": "An example NDNCERT CA for Cert_ledger",
+  "ca-info": "An example NDNCERT CA for CertLedger",
   "max-validity-period": "1296000",
   "max-suffix-length": "2",
   "probe-parameters":

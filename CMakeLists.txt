@@ -21,7 +21,6 @@ find_package(leveldb REQUIRED)
 # files
 set(CERT_LEDGER_LIB_SOURCE_FILES
         src/backend.cpp
-        src/cert-ledger-dag-sync.cpp
         src/cert-ledger.cpp
         src/record.cpp
         src/config.cpp
@@ -44,7 +43,6 @@ target_compile_options(cert-ledger PUBLIC ${NDN_CXX_CFLAGS} ${NDN_SVS_CFLAGS})
 target_link_libraries(cert-ledger PUBLIC ${NDN_CXX_LIBRARIES} ${NDN_SVS_LIBRARIES} leveldb)
 
 add_subdirectory(test)
-add_subdirectory(app)
 
 #configure
 set(PKG_CONFIG_REQUIRES

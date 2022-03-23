@@ -14,7 +14,7 @@ using namespace cert_ledger;
 std::random_device rd;  //Will be used to obtain a seed for the random number engine
 std::mt19937 random_gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 
-void periodicAddRecord(KeyChain& keychain, shared_ptr<Cert_ledgerDagSync> ledger, Scheduler &scheduler) {
+void periodicAddRecord(KeyChain& keychain, shared_ptr<CertLedger> ledger, Scheduler &scheduler) {
     std::uniform_int_distribution<int> distribution(0, INT_MAX);
     Data data("/a/b/" + std::to_string(distribution(random_gen)));
     data.setContent(makeStringBlock(tlv::Content, std::to_string(distribution(random_gen))));
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
         std::cout << e.what() << std::endl;
         return 1;
     }
-    auto ledger = std::make_shared<Cert_ledgerDagSync>(*config, keychain, face, validator);
+    auto ledger = std::make_shared<CertLedger>(*config, keychain, face, validator);
 
     Scheduler scheduler(ioService);
     periodicAddRecord(keychain, ledger, scheduler);

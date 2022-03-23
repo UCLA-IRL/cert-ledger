@@ -14,7 +14,7 @@ class Config {
                                                const std::string &databasePath);
 
     /**
-     * Construct a Config instance used for Cert_ledger initialization.
+     * Construct a Config instance used for CertLedger initialization.
      * @p multicastPrefix, input, the distributed ledger system's multicast prefix.
      * @p peerPrefix, input, the unique prefix of the peer.
      */
@@ -41,7 +41,7 @@ class Config {
      */
     Name syncPrefix;
     /**
-     * The interface pub/sub prefix, under which an publication can reach all Cert_ledger loggers.
+     * The interface pub/sub prefix, under which an publication can reach all CertLedger loggers.
      */
     Name interfacePrefix;
     /**

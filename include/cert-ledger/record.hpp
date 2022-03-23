@@ -81,14 +81,14 @@ class Record {
     bool
     isEmpty() const;
 
-  public: // used for generating a new record before appending it into the Cert_ledger
+  public: // used for generating a new record before appending it into the CertLedger
     /**
-     * @note This constructor is supposed to be used by the Cert_ledger class only
+     * @note This constructor is supposed to be used by the CertLedger class only
      */
     Record(const std::shared_ptr<Data> &data);
 
     /**
-     * @note This constructor is supposed to be used by the Cert_ledger class only
+     * @note This constructor is supposed to be used by the CertLedger class only
      */
     Record(Data data);
 
