@@ -6,7 +6,7 @@
 
 namespace cert_ledger {
 
-Record::Record(RecordType type, const std::string& identifer)
+Record::Record(RecordType type, const Name &identifer)
     : m_data(nullptr),
       m_type(type),
       m_recordName(identifer)
@@ -29,7 +29,7 @@ Record::Record(const Name &producerName, const Data &event)
     setContentItem(event.wireEncode());
 }
 
-Record::Record(const std::shared_ptr<Data> &data)
+Record::Record(shared_ptr<const Data> data)
         : m_data(data) {
     m_recordName = data->getName();
     headerWireDecode(m_data->getContent());
@@ -163,12 +163,17 @@ Record::checkPointerCount(int numPointers) const {
     }
 }
 
-Name Record::getEventName() const {
-    for (int i = 0; i < m_recordName.size(); i ++) {
-        if (readString(m_recordName.get(i)) == "RECORD" || readString(m_recordName.get(i)) == "GENESIS_RECORD")
-            return m_recordName.getSubName(i + 1);
+Name Record::getContentName() const {
+    return getContentName(m_recordName);
+}
+
+Name
+Record::getContentName(const Name& recordName) {
+    for (int i = 0; i < recordName.size(); i ++) {
+        if (readString(recordName.get(i)) == "RECORD" || readString(recordName.get(i)) == "GENESIS_RECORD")
+            return recordName.getSubName(i + 1);
     }
-    return Name();
+    return {};
 }
 
 bool Record::isGenesisRecord() const {

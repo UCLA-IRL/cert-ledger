@@ -1,4 +1,5 @@
 #include "cert-ledger/backend.hpp"
+#include "cert-ledger/record.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -21,8 +22,8 @@ Backend::~Backend() {
 }
 
 shared_ptr<Data>
-Backend::getRecord(const Name &recordName) const {
-    const auto &nameStr = recordName.toUri();
+Backend::getRecord(const Name &contentName) const {
+    const auto &nameStr = contentName.toUri();
     leveldb::Slice key = nameStr;
     std::string value;
     leveldb::Status s = m_db->Get(leveldb::ReadOptions(), key, &value);
@@ -35,8 +36,8 @@ Backend::getRecord(const Name &recordName) const {
 }
 
 bool
-Backend::putRecord(const shared_ptr<const Data> &recordData) {
-    const auto &nameStr = recordData->getFullName().toUri();
+Backend::putRecord(shared_ptr<const Data> recordData) {
+    const auto &nameStr = Record::getContentName(recordData->getName()).toUri();
     leveldb::Slice key = nameStr;
     auto recordBytes = recordData->wireEncode();
     leveldb::Slice value((const char *) recordBytes.wire(), recordBytes.size());
@@ -48,8 +49,8 @@ Backend::putRecord(const shared_ptr<const Data> &recordData) {
 }
 
 void
-Backend::deleteRecord(const Name &recordName) {
-    const auto &nameStr = recordName.toUri();
+Backend::deleteRecord(const Name &contentName) {
+    const auto &nameStr = contentName.toUri();
     leveldb::Slice key = nameStr;
     leveldb::Status s = m_db->Delete(leveldb::WriteOptions(), key);
     if (!s.ok()) {

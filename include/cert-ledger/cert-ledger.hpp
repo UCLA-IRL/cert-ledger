@@ -42,21 +42,21 @@ class CertLedger {
      * @p recordName, input, the name of the record, which is an NDN full name (i.e., containing ImplicitSha256DigestComponent component)
      */
     virtual optional<Record>
-    getRecord(const std::string &recordName) const;
+    getRecord(const Name &contentName) const;
 
     /**
      * Check whether the record exists in the CertLedger.
      * @p recordName, input, the name of the record, which is an NDN full name (i.e., containing ImplicitSha256DigestComponent component)
      */
     virtual bool
-    hasRecord(const std::string &recordName) const;
+    hasRecord(const Name &contentName) const;
 
     /**
       * list the record exists in the CertLedger.
       * @p recordName, input, the name of the record, which is an NDN name prefix.
       */
     virtual std::list<Name>
-    listRecord(const std::string &prefix) const;
+    listRecord(const Name &prefix) const;
 
     const Name& getPeerPrefix() const;
 

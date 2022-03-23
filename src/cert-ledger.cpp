@@ -89,17 +89,22 @@ ReturnCode CertLedger::createRecord(Record &record) {
     return ReturnCode::noError(data->getFullName().toUri());
 }
 
-optional<Record> CertLedger::getRecord(const std::string &recordName) const {
-    NDN_LOG_DEBUG("getRecord Called on " << recordName);
-    return m_backend.getRecord(recordName);
+optional<Record> CertLedger::getRecord(const Name &contentName) const {
+    NDN_LOG_DEBUG("getRecord Called on " << contentName);
+    auto re = m_backend.getRecord(contentName);
+    if (re) {
+        return Record(re);
+    } else {
+        return nullopt;
+    }
 }
 
-bool CertLedger::hasRecord(const std::string &recordName) const {
-    auto dataPtr = m_backend.getRecord(Name(recordName));
+bool CertLedger::hasRecord(const Name &contentName) const {
+    auto dataPtr = m_backend.getRecord(Name(contentName));
     return dataPtr != nullptr;
 }
 
-std::list<Name> CertLedger::listRecord(const std::string &prefix) const {
+std::list<Name> CertLedger::listRecord(const Name &prefix) const {
     return m_backend.listRecord(Name(prefix));
 }
 
@@ -179,7 +184,7 @@ void CertLedger::verifyPreviousRecord(const Record& record) {
     }
 
     for (const auto& i : waitingList) {
-        verifyPreviousRecord(m_backend.getRecord(i));
+        verifyPreviousRecord(Record(m_backend.getRecord(Record::getContentName(i))));
     }
 }
 

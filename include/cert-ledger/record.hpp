@@ -30,7 +30,7 @@ class Record {
      * @p type, input, the type of the record.
      * @p identifier, input, the unique identifer of the record.
      */
-    Record(RecordType type, const std::string& identifer);
+    Record(RecordType type, const Name &identifer);
 
     /**
      * Construct a new record.
@@ -64,7 +64,7 @@ class Record {
       * Get the record unique identifier of the record.
       */
     Name
-    getEventName() const;
+    getContentName() const;
 
     /**
      * Get record payload.
@@ -81,11 +81,17 @@ class Record {
     bool
     isEmpty() const;
 
+    /**
+      * Get the record unique identifier of the record.
+      */
+    static Name
+    getContentName(const Name& recordName);
+
   public: // used for generating a new record before appending it into the CertLedger
     /**
      * @note This constructor is supposed to be used by the CertLedger class only
      */
-    Record(const std::shared_ptr<Data> &data);
+    Record(shared_ptr<const Data> data);
 
     /**
      * @note This constructor is supposed to be used by the CertLedger class only

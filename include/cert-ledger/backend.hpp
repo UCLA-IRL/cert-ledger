@@ -16,13 +16,13 @@ class Backend {
 
     // @param the recordName must be a full name (i.e., containing explicit digest component)
     shared_ptr<Data>
-    getRecord(const Name &recordName) const;
+    getRecord(const Name &contentName) const;
 
     bool
-    putRecord(const shared_ptr<const Data> &recordData);
+    putRecord(shared_ptr<const Data> recordData);
 
     void
-    deleteRecord(const Name &recordName);
+    deleteRecord(const Name &contentName);
 
     std::list<Name>
     listRecord(const Name &prefix) const;
