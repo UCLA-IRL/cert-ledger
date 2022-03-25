@@ -81,7 +81,7 @@ class CertLedger {
     std::shared_ptr<ndn::security::Validator> m_recordValidator;
     std::function<void(const Record&)> m_onRecordCallback;
 
-    std::vector<Name> m_lastNames;
+    std::vector<Name> m_lastNames; //TODO change to tailing record first
     unsigned int m_lastNameTops;
     Name m_selfLastName;
 

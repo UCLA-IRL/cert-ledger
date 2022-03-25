@@ -10,7 +10,7 @@ namespace cert_ledger {
 class Config {
   public:
 
-    static shared_ptr<Config> CustomizedConfig(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &peerPrefix,
+    static shared_ptr<Config> CustomizedConfig(const Name &multicastPrefix, const Name &peerPrefix,
                                                const std::string &databasePath);
 
     /**
@@ -18,7 +18,7 @@ class Config {
      * @p multicastPrefix, input, the distributed ledger system's multicast prefix.
      * @p peerPrefix, input, the unique prefix of the peer.
      */
-    Config(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &peerPrefix);
+    Config(const Name &multicastPrefix, const Name &peerPrefix);
 
   public:
     /**
@@ -32,18 +32,9 @@ class Config {
     size_t numGenesisBlock = 10;
 
     /**
-     * The timeout for fetching ancestor records.
-     */
-    time::milliseconds ancestorFetchTimeout = time::milliseconds(10000);
-
-    /**
      * The multicast prefix, under which an Interest can reach to all the peers in the same multicast group.
      */
     Name syncPrefix;
-    /**
-     * The interface pub/sub prefix, under which an publication can reach all CertLedger loggers.
-     */
-    Name interfacePrefix;
     /**
      * Producer's unique name prefix, under which an Interest can reach to the producer.
      */

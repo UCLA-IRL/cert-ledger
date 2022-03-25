@@ -6,19 +6,18 @@
 namespace cert_ledger {
 
 shared_ptr<Config>
-Config::CustomizedConfig(const std::string &multicastPrefix, const std::string &interfacePrefix, const std::string &producerPrefix,
+Config::CustomizedConfig(const Name &multicastPrefix, const Name &producerPrefix,
                          const std::string &databasePath) {
 
     //starting peers
     std::list<security::Certificate> startingPeerCerts;
-    auto config = std::make_shared<Config>(multicastPrefix, interfacePrefix, producerPrefix);
+    auto config = std::make_shared<Config>(multicastPrefix, producerPrefix);
     config->databasePath = databasePath;
     return config;
 }
 
-Config::Config(const std::string &syncPrefix, const std::string &interfacePrefix, const std::string &peerPrefix)
+Config::Config(const Name &syncPrefix, const Name &peerPrefix)
         : syncPrefix(syncPrefix),
-          interfacePrefix(interfacePrefix),
           peerPrefix(peerPrefix) {}
 
 }  // namespace cert-ledger

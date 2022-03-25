@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     std::shared_ptr<Config> config = nullptr;
     std::shared_ptr<ndn::security::Validator> validator;
     try {
-        config = Config::CustomizedConfig("/ndn/broadcast/cert-ledger-dag", "/ndn/broadcast/cert-ledger", identity,
+        config = Config::CustomizedConfig("/ndn/broadcast/cert-ledger-dag", identity,
                                           std::string("/tmp/cert-ledger-db/" + identity.substr(identity.rfind('/'))));
         auto configValidator = std::make_shared<ndn::security::ValidatorConfig>(face);
         configValidator->load("./test/loggers.schema");
