@@ -1,17 +1,25 @@
 #include "cert-ledger/backend.hpp"
+#include "ndn-cxx/security/signing-helpers.hpp"
+#include "ndn-cxx/security/key-chain.hpp"
+#include "cert-ledger/record.hpp"
 #include <iostream>
 
 using namespace cert_ledger;
+
+ndn::security::KeyChain m_keyChain("pib-memory:", "tpm-memory:");
 
 std::shared_ptr<ndn::Data>
 makeData(const std::string& name, const std::string& content)
 {
   using namespace ndn;
   using namespace std;
-  auto data = make_shared<Data>(ndn::Name(name));
-  data->setContent((const uint8_t*)content.c_str(), content.size());
-  data->setSignatureInfo(SignatureInfo(ndn::tlv::SignatureSha256WithEcdsa));
-  data->setSignatureValue(ConstBufferPtr());
+  Data insideData(name);
+  insideData.setContent((const uint8_t*)content.c_str(), content.size());
+  m_keyChain.sign(insideData, signingWithSha256());
+  insideData.wireEncode();
+  Record record("test", insideData);
+  auto data = make_shared<Data>(record.getRecordName());
+  m_keyChain.sign(*data, signingWithSha256());
   data->wireEncode();
   return data;
 }
@@ -24,7 +32,7 @@ testBackEnd()
       backend.deleteRecord(name);
   }
   auto data = makeData("/cert-ledger/12345", "content is 12345");
-  auto fullName = data->getFullName();
+  auto fullName = "/cert-ledger/12345";
 
   backend.putRecord(data);
 
