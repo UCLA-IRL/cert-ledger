@@ -67,11 +67,13 @@ class CertLedger {
   private:
     void onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info);
 
-    void addReceivedRecord(const shared_ptr<Data>& recordData);
+    void addRecordToDAG(const Record& record);
 
     static ndn::svs::SecurityOptions getSecurityOption(KeyChain& keychain, shared_ptr<ndn::security::Validator> recordValidator, Name peerPrefix);
 
     void verifyPreviousRecord(const Record& record);
+
+    void shuffleAndAddPrev(Record &record, std::vector<Name>& recordList);
 
   protected:
     const Config m_config;
@@ -83,14 +85,12 @@ class CertLedger {
 
     std::vector<Name> m_lastNames; //TODO change to tailing record first
     unsigned int m_lastNameTops;
-    Name m_selfLastName;
+    std::set<Name> m_tailingRecords;
 
     std::set<Name> m_noPrevRecords; // TODO persistence at node failure
     std::multimap<Name, Name> m_waitingReferencedRecords;
 
     std::mt19937_64 m_randomEngine;
-
-    void addSelfRecord(const shared_ptr<Data> &data);
 };
 
 } // namespace cert-ledger

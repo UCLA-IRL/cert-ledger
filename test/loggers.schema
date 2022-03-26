@@ -5,13 +5,13 @@ rule
   filter
   {
     type name
-    name /cert_ledger
+    name /cert-ledger
     relation is-strict-prefix-of
   }
   checker
   {
     type hierarchical
-    sig-type rsa-sha256
+    sig-type ecdsa-sha256
   }
 }
 
@@ -22,18 +22,18 @@ rule
   filter
   {
     type name
-    name /cert_ledger
+    name /cert-ledger
     relation is-strict-prefix-of
   }
   checker
   {
     type hierarchical
-    sig-type rsa-sha256
+    sig-type ecdsa-sha256
   }
 }
 
 trust-anchor
 {
   type file
-  file-name "cert_ledger-anchor.cert"
+  file-name "cert-ledger-anchor.cert"
 }

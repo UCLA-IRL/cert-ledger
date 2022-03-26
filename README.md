@@ -1,6 +1,6 @@
-# Mnemosyne
+# Cert Ledger
 
-Mnemosyne is a distributed logger for storing logs for distributed applications.
+Cert Ledger is a distributed logger for storing Certificates/Revocation records for distributed trust anchors.
 
 ## Dependencies
 
@@ -31,12 +31,10 @@ ndnsec key-gen /cert-ledger | ndnsec cert-gen -s /cert-ledger - > cert-ledger-an
 mkdir test-certs
 ndnsec key-gen /cert-ledger/a | ndnsec cert-gen -s /cert-ledger - > test-certs/a.cert
 ndnsec key-gen /cert-ledger/b | ndnsec cert-gen -s /cert-ledger - > test-certs/b.cert
-ndnsec key-gen /hydra/test-logger | ndnsec cert-gen -s /cert-ledger - > test-certs/test-logger.cert
 
 # need to serve certificate
 
 # run each of the following as a peer
-./build/app/cert-ledger-logger -l /cert-ledger/a
-./build/app/cert-ledger-logger -l /cert-ledger/b
-./build/test/cert-ledger-test-client -c /hydra/test-logger
+./build/test/cert-ledger-test -l /cert-ledger/a
+./build/test/cert-ledger-test -l /cert-ledger/b
 ```

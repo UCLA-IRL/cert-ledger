@@ -2,6 +2,7 @@
 #include "cert-ledger/cert-ledger.hpp"
 #include <ndn-cxx/security/signing-helpers.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
+#include <ndn-cxx/security/validator-null.hpp>
 #include <boost/asio/io_service.hpp>
 
 using namespace cert_ledger;
@@ -39,6 +40,7 @@ int main(int argc, char **argv) {
         auto configValidator = std::make_shared<ndn::security::ValidatorConfig>(face);
         configValidator->load("./test/loggers.schema");
         validator = configValidator;
+        // validator = std::make_shared<ndn::security::ValidatorNull>();
         mkdir("/tmp/cert-ledger-db/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
     catch (const std::exception &e) {

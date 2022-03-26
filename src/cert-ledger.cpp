@@ -41,6 +41,7 @@ CertLedger::CertLedger(const Config &config,
         genesisRecord.m_data = data;
         m_backend.putRecord(data);
         m_lastNames.push_back(genesisRecord.getRecordFullName());
+        m_tailingRecords.emplace(genesisRecord.getRecordFullName());
     }
     NDN_LOG_INFO("STEP 2" << std::endl
                           << "- " << m_config.numGenesisBlock << " genesis records have been added to the CertLedger");
@@ -52,17 +53,14 @@ CertLedger::~CertLedger() = default;
 ReturnCode CertLedger::createRecord(Record &record) {
     NDN_LOG_INFO("[CertLedger::createRecord] Add new record");
 
-    if (!m_selfLastName.empty()) record.addPointer(m_selfLastName);
+    std::vector<Name> tailingRecordList;
+    for (const auto& i : m_tailingRecords) if (m_noPrevRecords.count(i) == 0) tailingRecordList.push_back(i);
+    shuffleAndAddPrev(record, tailingRecordList);
 
-    // randomly shuffle the tailing record list
-    std::vector<Name> recordList;
-    for (const auto& i : m_lastNames) if (m_noPrevRecords.count(i) == 0) recordList.push_back(i);
-    std::shuffle(recordList.begin(), recordList.end(), m_randomEngine);
-
-    for (const auto &tailRecord : recordList) {
-        record.addPointer(tailRecord);
-        if (record.getPointersFromHeader().size() >= m_config.precedingRecordNum)
-            break;
+    if (record.getPointersFromHeader().size() < m_config.precedingRecordNum) {
+        std::vector<Name> lastRecordsList;
+        for (const auto& i : m_lastNames) if (m_noPrevRecords.count(i) == 0) lastRecordsList.push_back(i);
+        shuffleAndAddPrev(record, lastRecordsList);
     }
 
     auto data = make_shared<Data>(record.getRecordName());
@@ -82,11 +80,21 @@ ReturnCode CertLedger::createRecord(Record &record) {
     NDN_LOG_INFO("[CertLedger::createRecord] Added a new record:" << data->getFullName().toUri());
 
     // add new record into the ledger
-    addSelfRecord(data);
+    addRecordToDAG(record);
 
     //send sync interest
     m_dagSync.publishData(data->wireEncode(), data->getFreshnessPeriod(), m_config.peerPrefix, tlv::Data);
     return ReturnCode::noError(data->getFullName().toUri());
+}
+
+void CertLedger::shuffleAndAddPrev(Record &record, std::vector<Name>& recordList) {
+    std::shuffle(recordList.begin(), recordList.end(), m_randomEngine);
+
+    for (const auto &tailRecord : recordList) {
+        record.addPointer(tailRecord);
+        if (record.getPointersFromHeader().size() >= m_config.precedingRecordNum)
+            break;
+    }
 }
 
 optional<Record> CertLedger::getRecord(const Name &contentName) const {
@@ -118,10 +126,10 @@ void CertLedger::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info) {
                         try {
                             Record receivedRecord(receivedData);
                             receivedRecord.checkPointerCount(m_config.precedingRecordNum);
-                            verifyPreviousRecord(receivedRecord);
 
                             NDN_LOG_INFO("Received record " << receivedData->getFullName());
-                            addReceivedRecord(receivedData);
+                            addRecordToDAG(receivedRecord);
+                            verifyPreviousRecord(receivedRecord);
 
                             if (m_onRecordCallback) {
                                 m_onRecordCallback(receivedRecord);
@@ -138,17 +146,18 @@ void CertLedger::onUpdate(const std::vector<ndn::svs::MissingDataInfo>& info) {
     }
 }
 
-void CertLedger::addSelfRecord(const shared_ptr<Data> &data) {
-    NDN_LOG_INFO("Add self record " << data->getFullName());
-    m_backend.putRecord(data);
-    m_selfLastName = data->getFullName();
-}
+void CertLedger::addRecordToDAG(const Record& record) {
+    NDN_LOG_INFO("Add record to Backend " << record.getRecordFullName());
+    m_backend.putRecord(record.m_data);
 
-void CertLedger::addReceivedRecord(const shared_ptr<Data>& recordData) {
-    NDN_LOG_INFO("Add received record " << recordData->getFullName());
-    m_backend.putRecord(recordData);
-    m_lastNames[m_lastNameTops] = recordData->getFullName();
+    m_lastNames[m_lastNameTops] = record.getRecordFullName();
     m_lastNameTops = (m_lastNameTops + 1) % m_lastNames.size();
+
+    m_tailingRecords.emplace(record.getRecordFullName());
+
+    for (const auto& i : record.getPointersFromHeader()) {
+        m_tailingRecords.erase(i);
+    }
 }
 
 const Name &CertLedger::getPeerPrefix() const {
