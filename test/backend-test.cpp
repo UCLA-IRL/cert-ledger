@@ -14,7 +14,7 @@ makeData(const std::string& name, const std::string& content)
   using namespace ndn;
   using namespace std;
   Data insideData(name);
-  insideData.setContent((const uint8_t*)content.c_str(), content.size());
+  insideData.setContent(span<const uint8_t>{reinterpret_cast<const uint8_t*>(content.c_str()), content.size()});
   m_keyChain.sign(insideData, signingWithSha256());
   insideData.wireEncode();
   Record record("test", insideData);

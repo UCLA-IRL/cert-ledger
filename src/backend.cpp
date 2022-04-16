@@ -30,7 +30,7 @@ Backend::getRecord(const Name &contentName) const {
     if (!s.ok()) {
         return nullptr;
     } else {
-        ndn::Block block((const uint8_t *) value.c_str(), value.size());
+        ndn::Block block(span<const uint8_t>{reinterpret_cast<const uint8_t *>(value.c_str()), value.size()});
         return make_shared<Data>(block);
     }
 }
