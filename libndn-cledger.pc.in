@@ -1,0 +1,10 @@
+prefix=@PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: libndn-cledger
+Description: ndn cledger library
+Version: @VERSION@
+Libs: -L${libdir} -lndn-cledger
+Cflags: -I${includedir}
+Requires: libndn-cxx >= 0.8.0

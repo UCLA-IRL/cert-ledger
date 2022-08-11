@@ -1,14 +1,34 @@
-*.DS_Store
-.vscode
-._*
-*.dSYM
-*.o
-backend-test
-build
-.idea/
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+.\#*
+
+# Visual Studio Code
+.vscode/
+
+# Clion
+.idea
 cmake-build-*/
-*-build/
-test-certs/
-*.cert
-*.out
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Waf build system
+/build/
+.waf-*-*/
+.waf3-*-*/
+.lock-waf*
+
+# Compiled python code
+__pycache__/
+*.py[cod]
+
+# Other
+/VERSION.info
 *.cert
