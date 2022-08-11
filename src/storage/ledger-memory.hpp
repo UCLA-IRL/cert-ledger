@@ -1,10 +1,10 @@
-#ifndef CLEDGER_LEDGER_MEMORY_HPP
-#define CLEDGER_LEDGER_MEMORY_HPP
+#ifndef CLEDGER_STORAGE_MEMORY_HPP
+#define CLEDGER_STORAGE_MEMORY_HPP
 
 #include "ledger-storage.hpp"
 
 namespace cledger {
-namespace ledger {
+namespace storage {
 
 class LedgerMemory : public LedgerStorage
 {
@@ -26,7 +26,7 @@ private:
   std::map<Name, Data> m_list;
 };
 
-} // namespace ledger
+} // namespace storage
 } // namespace cledger
 
 #endif // NDNREVOKE_CT_MEMORY_HPP

@@ -17,7 +17,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
 {
   // load the config and create storage
   m_config.load(configPath);
-  m_storage = LedgerStorage::createLedgerStorage(storageType, m_config.ledgerPrefix, "");
+  m_storage = storage::LedgerStorage::createLedgerStorage(storageType, m_config.ledgerPrefix, "");
   m_validator.load(m_config.schemaFile);
   registerPrefix();
   
@@ -106,4 +106,4 @@ LedgerModule::onRegisterFailed(const std::string& reason)
   NDN_LOG_ERROR("Failed to register prefix in local hub's daemon, REASON: " << reason);
 }
 
-} // namespace ndnrevoke::ct
+} // namespace cledger::ledger

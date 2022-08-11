@@ -1,7 +1,7 @@
 #include "ledger-storage.hpp"
 
 namespace cledger {
-namespace ledger {
+namespace storage {
 
 std::unique_ptr<LedgerStorage>
 LedgerStorage::createLedgerStorage(const std::string& ledgerStorageType, const Name& ledgerName, const std::string& path)
@@ -18,5 +18,5 @@ LedgerStorage::getFactory()
   return factory;
 }
 
-} // namespace ledger
+} // namespace storage
 } // namespace cledger

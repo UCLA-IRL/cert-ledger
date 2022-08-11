@@ -1,10 +1,10 @@
 #include "ledger-memory.hpp"
 
 namespace cledger {
-namespace ledger {
+namespace storage {
 
-const std::string LedgerMemory::STORAGE_TYPE = "ledger-storage-memory";
-CLEDGER_REGISTER_LEDGER_STORAGE(LedgerMemory);
+const std::string LedgerMemory::STORAGE_TYPE = "storage-memory";
+CLEDGER_REGISTER_STORAGE(LedgerMemory);
 
 LedgerMemory::LedgerMemory(const Name& lederName, const std::string& path)
   : LedgerStorage()
@@ -42,5 +42,5 @@ LedgerMemory::deleteData(const Name& name)
   m_list.erase(search);
 }
 
-} // namespace ledger
+} // namespace storage
 } // namespace cledger

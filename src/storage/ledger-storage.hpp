@@ -1,10 +1,10 @@
-#ifndef CLEDGER_LEDGER_STORAGE_HPP
-#define CLEDGER_LEDGER_STORAGE_HPP
+#ifndef CLEDGER_STORAGE_HPP
+#define CLEDGER_STORAGE_HPP
 
 #include "cledger-common.hpp"
 
 namespace cledger {
-namespace ledger {
+namespace storage {
 
 class LedgerStorage : boost::noncopyable
 {
@@ -45,13 +45,13 @@ private:
   getFactory();
 };
 
-#define CLEDGER_REGISTER_LEDGER_STORAGE(C)                         \
+#define CLEDGER_REGISTER_STORAGE(C)                         \
 static class Cledger ## C ## LedgerStorageRegistrationClass        \
 {                                                                \
 public:                                                          \
   Cledger ## C ## LedgerStorageRegistrationClass()                 \
   {                                                              \
-    ::cledger::ledger::LedgerStorage::registerLedgerStorage<C>();          \
+    ::cledger::storage::LedgerStorage::registerLedgerStorage<C>();          \
   }                                                              \
 } g_Cledger ## C ## LedgerStorageRegistrationVariable
 

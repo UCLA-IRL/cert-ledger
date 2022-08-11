@@ -18,9 +18,9 @@ class LedgerModule : boost::noncopyable
 {
 public:
   LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath,
-           const std::string& storageType = "ledger-storage-memory");
+           const std::string& storageType = "storage-memory");
 
-  const std::unique_ptr<LedgerStorage>&
+  const std::unique_ptr<storage::LedgerStorage>&
   getLedgerStorage()
   {
     return m_storage;
@@ -55,7 +55,7 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::KeyChain& m_keyChain;
   ndn::ValidatorConfig m_validator{m_face};
   std::unique_ptr<append::Ledger> m_appendCt;
-  std::unique_ptr<LedgerStorage> m_storage;
+  std::unique_ptr<storage::LedgerStorage> m_storage;
 
   append::Handle m_handle;
 };
