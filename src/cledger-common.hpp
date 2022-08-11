@@ -62,6 +62,22 @@ namespace time = ndn::time;
 using namespace ndn::time_literals;
 using namespace std::string_literals;
 
+namespace tlv {
+
+enum RecordType {
+  BASE_RECORD = 0,
+  GENERIC_RECORD = 1,
+  CERTIFICATE_RECORD = 2,
+  REVOCATION_RECORD = 3,
+  GENESIS_RECORD = 4,
+};
+
+enum : uint32_t {
+  TLV_RECORD_POINTER = 211,
+  TLV_RECORD_PAYLOAD = 212
+};
+
+} // namespace tlv
 } // namespace cledger
 
 #endif // CLEDGER_COMMON_HPP
