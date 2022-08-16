@@ -11,7 +11,6 @@
 #include <ndn-svs/svsync-base.hpp>
 
 namespace cledger::sync {
-NDN_LOG_INIT(cledger.sync);
 
 using ndn::svs::SVSyncBase;
 using ndn::svs::NodeID;

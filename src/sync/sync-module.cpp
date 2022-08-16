@@ -1,6 +1,7 @@
 #include "sync/sync-module.hpp"
 
 namespace cledger::sync {
+NDN_LOG_INIT(cledger.sync);
 
 LedgerSVS::LedgerSVS(const Name& syncPrefix,
                       const Name& nodePrefix,
@@ -46,9 +47,9 @@ SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
   // an accumlator to collect all missing records along the way
   std::map<Name, Record> acc;
   for (auto& v : vectors) {
-      for (SeqNo s = v.low; s <= v.high; ++s) {
+    for (SeqNo s = v.low; s <= v.high; ++s) {
       recursiveFetcher(v.nodeId, s, acc);
-      }      
+    }      
   }
 
   NDN_LOG_DEBUG("collected " << acc.size() << " missing records, yeild...");
@@ -60,27 +61,25 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::map<Name, R
 {
   m_svs->fetchData(nid, s, [this, nid, s, &acc] (const ndn::Data& data) {
     Record record(data.getName(), data.getContent());
+
+    // check the pointer first
+    for (auto& p : record.getPointers()) {
+      if (m_existCb(p)) {
+        // then we don't need to care
+      }
+      else {
+        // we need to fetch it
+        auto tuple = parseDataName(p);
+        recursiveFetcher(std::get<0>(tuple), std::get<1>(tuple), acc);
+      }
+    }
+
     // check the record itself
     if (m_existCb(data.getName())) {
       // then we don't need to do anything
     }
     else {
-      // push the curr record into acc
-      if (acc.find(record.getName()) == acc.end()) {
-        acc.emplace(record.getName(), record);
-      }
-
-      // check pointers
-      for (auto& p : record.getPointers()) {
-        if (m_existCb(p)) {
-          // then we don't need to care
-        }
-        else {
-          // we need to fetch it
-          auto tuple = parseDataName(p);
-          recursiveFetcher(std::get<0>(tuple), std::get<1>(tuple), acc);
-        }
-      }
+      acc.emplace(data.getName(), record);
     }
   });  
 }
