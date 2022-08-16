@@ -5,7 +5,7 @@
 
 namespace cledger {
 
-class Record : boost::noncopyable
+class Record
 {
 public:
   class Error : public ndn::tlv::Error

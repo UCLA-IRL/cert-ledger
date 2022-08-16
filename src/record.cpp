@@ -51,7 +51,7 @@ Record::addPointer(const Name& name)
 Record&
 Record::setPayload(const span<const uint8_t>& payload)
 {
-  m_payload = m_payload;
+  m_payload = payload;
   return *this;
 }
 

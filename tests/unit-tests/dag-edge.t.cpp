@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE(Linear)
   BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
   BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
   BOOST_CHECK_EQUAL(1, eManager.reap(3).size());
-  for (auto& s : eManager.m_buffer) {
-    std::cerr << s.second;
-  }
+  // for (auto& s : eManager.m_buffer) {
+  //   std::cerr << s.second;
+  // }
 }
 
 BOOST_AUTO_TEST_CASE(Rectangular1)
@@ -74,9 +74,9 @@ BOOST_AUTO_TEST_CASE(Rectangular1)
   BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
   BOOST_CHECK_EQUAL(1, eManager.reap(2).size());
   BOOST_CHECK_EQUAL(1, eManager.reap(3).size());
-  for (auto& s : eManager.m_buffer) {
-    std::cerr << s.second;
-  }
+  // for (auto& s : eManager.m_buffer) {
+  //   std::cerr << s.second;
+  // }
 }
 
 BOOST_AUTO_TEST_CASE(Rectangular2)
@@ -111,9 +111,9 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
   BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
   BOOST_CHECK_EQUAL(1, eManager.reap(3).size());
-  for (auto& s : eManager.m_buffer) {
-    std::cerr << s.second;
-  }
+  // for (auto& s : eManager.m_buffer) {
+  //   std::cerr << s.second;
+  // }
 }
 
 BOOST_AUTO_TEST_CASE(Rectangular3)
@@ -146,13 +146,12 @@ BOOST_AUTO_TEST_CASE(Rectangular3)
   eManager.add(r3);
   eManager.add(r4);
 
-  for (auto& i :  eManager.reap(2)) std::cout << i.getName();
   BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
   BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
   BOOST_CHECK_EQUAL(1, eManager.reap(3).size());
-  for (auto& s : eManager.m_buffer) {
-    std::cerr << s.second;
-  }
+  // for (auto& s : eManager.m_buffer) {
+  //   std::cerr << s.second;
+  // }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // TestDag
