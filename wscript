@@ -10,7 +10,7 @@ GIT_TAG_PREFIX = 'cledger-'
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
     opt.load(['default-compiler-flags', 'coverage', 'sanitizers',
-              'boost', 'openssl', 'sqlite3'],
+              'boost'],
              tooldir=['.waf-tools'])
 
     optgrp = opt.add_option_group('ndn-cledger Options')
@@ -19,14 +19,12 @@ def options(opt):
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
-               'default-compiler-flags', 'boost', 'openssl', 'sqlite3'])
+               'default-compiler-flags', 'boost'])
 
     conf.env.WITH_TESTS = conf.options.with_tests
 
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'], uselib_store='NDN_CXX',
                    pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
-    conf.check_sqlite3()
-    conf.check_openssl(lib='crypto', atleast_version='1.1.1')
 
     boost_libs = ['system', 'program_options', 'filesystem']
     if conf.env.WITH_TESTS:
@@ -62,7 +60,7 @@ def build(bld):
               vnum=VERSION,
               cnum=VERSION,
               source=bld.path.ant_glob('src/**/*.cpp'),
-              use='NDN_CXX BOOST OPENSSL SQLITE3',
+              use='NDN_CXX BOOST',
               includes='src',
               export_includes='src')
 
