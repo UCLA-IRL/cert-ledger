@@ -61,6 +61,15 @@ public:
   Record&
   setPayload(const span<const uint8_t>& payload);
 
+  bool
+  isGenesis()
+  {
+    for (auto& p : m_pointers) {
+      if (p == m_name) return true;
+    }
+    return false;
+  }
+
 private:
   /**
    * The record-name as

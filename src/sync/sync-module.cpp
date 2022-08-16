@@ -59,32 +59,35 @@ SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
 void
 SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record>& acc)
 {
-  auto accSearch = [&acc] (const Name& n) {
+  auto search = [this, &acc] (const Name& n) {
     for (auto& i : acc) {
       if (i.getName() == n) {
-        return false;
+        return true;
       }
     }
-    return true;
+    return m_existCb(n);
   };
 
-  m_svs->fetchData(nid, s, [this, &acc, accSearch] (const ndn::Data& data) {
+  m_svs->fetchData(nid, s, [this, &acc, search] (const ndn::Data& data) {
     Record record(data.getName(), data.getContent());
 
     // check the pointer first
     for (auto& p : record.getPointers()) {
-      if (m_existCb(p) || accSearch(data.getName())) {
+      if (search(p)) {
         // then we don't need to care
       }
-      else {
+      else if (!record.isGenesis()){
         // we need to fetch it
         auto tuple = parseDataName(p);
         recursiveFetcher(std::get<0>(tuple), std::get<1>(tuple), acc);
       }
+      else {
+        // genesis record, do nothing
+      }
     }
 
     // check the record itself
-    if (m_existCb(data.getName()) || accSearch(data.getName())) {
+    if (search(data.getName())) {
       // then we don't need to do anything
     }
     else {

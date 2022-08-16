@@ -5,6 +5,7 @@ Cert Ledger is a distributed logger for storing Certificates/Revocation records 
 ## Dependencies
 
 * ndn-cxx
+* ndn-svs
 * NFD - to forward the NDN network
 
 ## Compile
