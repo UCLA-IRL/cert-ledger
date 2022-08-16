@@ -9,17 +9,6 @@ EdgeManager::add(Record& record)
   auto state = get(record.getName());
   state.pointers = record.getPointers();
   state.payload = record.getPayload();
-  // is this a gensis record?
-  for (auto& p : state.pointers) {
-    if (p == state.name) {
-      NDN_LOG_TRACE(state.name << " is genesis record");
-      state.status = EdgeState::LOADED;
-      update(state.name, state);
-      m_waitlist[0].insert(state.name);
-      return *this;
-    }
-  }
-
   switch (state.status) {
     case EdgeState::INITIALIZED:
       return onNewRecord(state);
@@ -44,7 +33,6 @@ EdgeManager::getAncestors(EdgeState state)
   uint32_t currAncestors = 0;
   // the oldest being the first
 
-  NDN_LOG_TRACE("ptr size " << state.pointers.size());
   // start
   for (auto& ptr : state.pointers) {
     ancestors.push_back(ptr);
@@ -79,8 +67,6 @@ EdgeManager::getAncestors(EdgeState state)
           ancestors.push_back(parent.name);
         }
 
-        // pending: update descendants
-        // nonpending: add to next frontier
         if (parent.status == EdgeState::INITIALIZED) {
           NDN_LOG_TRACE(parent.name << " is a pending record, stop here...");
         }
@@ -133,11 +119,6 @@ void
 EdgeManager::update(const Name& name, EdgeState state)
 {
   m_buffer.insert_or_assign(name, state);
-  // if (m_buffer.find(name) != m_buffer.end())
-  //   m_buffer.insert_or_assign(name, state);
-  // else {
-  //   NDN_THROW(std::runtime_error("EdgeState for " + name.toUri() + " does not exists"));
-  // }
 }
 
 EdgeManager&
@@ -145,19 +126,33 @@ EdgeManager::onNewRecord(EdgeState& state)
 {
   state.status = EdgeState::LOADED;
   update(state.name, state);
-  m_waitlist[0].insert(state.name);
-  // check all ancestors
+  evaluateWaitlist(state);
+  // if this is a genesis record
+  bool isGenesis = false;
+  for (auto& p : state.pointers) {
+    if (p == state.name) {
+      NDN_LOG_TRACE(state.name << " is genesis record");
+      isGenesis = true;
+      break;
+    }
+  }
+  if (!isGenesis) {
+    evaluateAncestors(state);
+  }
+  return *this;
+}
+
+void
+EdgeManager::evaluateAncestors(EdgeState& state)
+{
   NDN_LOG_TRACE("checking ancestors for " << state.name);
   auto ancestors = getAncestors(state);
   for (auto& a : ancestors) {
     NDN_LOG_TRACE("an ancestor " << a.name);
-    // add pointers
-    // beforeAdd = a.getDescendantProducers().size();
     a.descendants.insert(state.name);
     update(a.name, a);
     evaluateWaitlist(a);
   }
-  return *this;
 }
 
 void
@@ -171,9 +166,17 @@ EdgeManager::evaluateWaitlist(EdgeState& state)
   }
   m_waitlist[state.descendants.size()].insert(state.name); 
 }
-// std::ostream&
-// operator<<(std::ostream& os, const EdgeState& state)
-// {
-//   std::cerr << 
-// }
+
+std::ostream&
+operator<<(std::ostream& os, const EdgeState& state)
+{
+  os << "Edge State Name: " << state.name << "\n";
+  for (auto& p : state.pointers) {
+    os << "   Pointer: " << p << "\n";
+  }
+  for (auto& d : state.descendants) {
+    os << "   Descendant: " << d << "\n";
+  }
+  return os;
+}
 } // namespace cledger::dag

@@ -35,10 +35,13 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   void
   update(const Name& name, EdgeState state);
-  
+
 
   EdgeManager&
   onNewRecord(EdgeState& state);
+
+  void
+  evaluateAncestors(EdgeState& state);
 
   void
   evaluateWaitlist(EdgeState& state);
