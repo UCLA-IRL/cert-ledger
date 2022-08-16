@@ -3,7 +3,7 @@
 
 #include "cledger-common.hpp"
 
-namespace cledger::record {
+namespace cledger {
 
 class Record : boost::noncopyable
 {
@@ -15,6 +15,9 @@ public:
   };
 
   Record();
+
+  explicit
+  Record(const Record& record);
 
   explicit
   Record(const Data& data);
@@ -32,6 +35,12 @@ public:
   getName() const
   {
     return m_name;
+  }
+
+  const Name
+  getProducer() const
+  {
+    return m_name.getPrefix(-1);
   }
 
   const std::list<Name>
@@ -82,5 +91,5 @@ class GenesisRecord : public Record {
     GenesisRecord(int number);
 };
 
-} // namespace cledger::record
+} // namespace cledger
 #endif // CLEDGER_RECORD_HPP

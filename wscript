@@ -72,6 +72,7 @@ def build(bld):
         install_path='${LIBDIR}/pkgconfig',
         VERSION=VERSION)
 
+    bld.recurse('tests')
     bld.install_files(
         dest='${INCLUDEDIR}/cledger',
         files=bld.path.ant_glob('src/**/*.hpp'),

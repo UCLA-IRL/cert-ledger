@@ -60,6 +60,6 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   append::Handle m_handle;
 };
 
-} // namespace ndnrevoke::ct
+} // namespace cledger::ledger
 
-#endif // NDNREVOKE_CT_MODULE_HPP
+#endif // CLEDGER_LEDGER_MODULE_HPP

@@ -1,5 +1,5 @@
-#ifndef NDNREVOKE_TESTS_TEST_COMMON_HPP
-#define NDNREVOKE_TESTS_TEST_COMMON_HPP
+#ifndef CLEDGER_TESTS_TEST_COMMON_HPP
+#define CLEDGER_TESTS_TEST_COMMON_HPP
 
 #include "boost-test.hpp"
 #include "identity-management-fixture.hpp"
@@ -13,4 +13,4 @@
 #include <ndn-cxx/security/verification-helpers.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
-#endif // NDNREVOKE_TESTS_TEST_COMMON_HPP
+#endif // CLEDGER_TESTS_TEST_COMMON_HPP

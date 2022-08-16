@@ -26,8 +26,7 @@
 
 #include <boost/filesystem.hpp>
 
-namespace ndnrevoke {
-namespace tests {
+namespace cledger::tests {
 
 using namespace ndn::security;
 
@@ -127,5 +126,4 @@ IdentityManagementFixture::addCertificate(const Key& key, const std::string& iss
   return certificate;
 }
 
-} // namespace tests
-} // namespace ndncert
+} // namespace cledger::tests

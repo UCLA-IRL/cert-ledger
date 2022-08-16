@@ -55,7 +55,7 @@ public:                                                          \
   }                                                              \
 } g_Cledger ## C ## LedgerStorageRegistrationVariable
 
-} // namespace ledger
+} // namespace storage
 } // namespace cledger
 
 #endif // CLEDGER_LEDGER_STORAGE_HPP

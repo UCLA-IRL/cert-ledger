@@ -22,14 +22,13 @@
 #ifndef NDN_TESTS_UNIT_UNIT_TEST_TIME_FIXTURE_HPP
 #define NDN_TESTS_UNIT_UNIT_TEST_TIME_FIXTURE_HPP
 
-#include "revocation-common.hpp"
+#include "cledger-common.hpp"
 
 #include <ndn-cxx/util/time-unit-test-clock.hpp>
 
 #include <boost/asio/io_service.hpp>
 
-namespace ndnrevoke {
-namespace tests {
+namespace cledger::tests {
 
 // should work without this, don't know what happened
 namespace time = ndn::time;
@@ -105,7 +104,6 @@ public:
   boost::asio::io_service io;
 };
 
-} // namespace tests
-} // namespace ndnrevoke
+} // namespace cledger::tests
 
 #endif // NDN_TESTS_UNIT_UNIT_TEST_TIME_FIXTURE_HPP

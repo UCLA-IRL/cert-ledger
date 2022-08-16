@@ -91,7 +91,7 @@ LedgerModule::onQuery(const Interest& query) {
   catch (std::exception& e) {
     NDN_LOG_DEBUG("Ledger storage cannot get the Data for reason: " << e.what());
     // reply with app layer nack
-    nack::Nack nack;
+    Nack nack;
     auto data = nack.prepareData(query.getName(), time::toUnixTimestamp(time::system_clock::now()));
     data->setFreshnessPeriod(m_config.nackFreshnessPeriod);
     m_keyChain.sign(*data, signingByIdentity(m_config.ledgerPrefix));

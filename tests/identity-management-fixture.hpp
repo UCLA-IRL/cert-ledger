@@ -22,13 +22,12 @@
 #ifndef NDN_TESTS_IDENTITY_MANAGEMENT_FIXTURE_HPP
 #define NDN_TESTS_IDENTITY_MANAGEMENT_FIXTURE_HPP
 
-#include "revocation-common.hpp"
+#include "cledger-common.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
-namespace ndnrevoke {
-namespace tests {
+namespace cledger::tests {
 
 class IdentityManagementBaseFixture
 {
@@ -98,7 +97,6 @@ protected:
   ndn::KeyChain m_keyChain;
 };
 
-} // namespace tests
-} // namespace ndnrevoke
+} // namespace cledger::tests
 
 #endif // NDN_TESTS_IDENTITY_MANAGEMENT_FIXTURE_HPP

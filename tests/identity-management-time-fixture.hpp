@@ -19,23 +19,21 @@
  * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
  */
 
-#ifndef NDNREVOKE_TESTS_IDENTITY_MANAGEMENT_TIME_FIXTURE_HPP
-#define NDNREVOKE_TESTS_IDENTITY_MANAGEMENT_TIME_FIXTURE_HPP
+#ifndef CLEDGER_TESTS_IDENTITY_MANAGEMENT_TIME_FIXTURE_HPP
+#define CLEDGER_TESTS_IDENTITY_MANAGEMENT_TIME_FIXTURE_HPP
 
 #include "identity-management-fixture.hpp"
 #include "unit-test-time-fixture.hpp"
 
 #include <boost/filesystem.hpp>
 
-namespace ndnrevoke {
-namespace tests {
+namespace cledger::tests {
 
 class IdentityManagementTimeFixture : public UnitTestTimeFixture
                                     , public IdentityManagementFixture
 {
 };
 
-} // namespace tests
-} // namespace ndnrevoke
+} // namespace cledger::tests
 
-#endif // NDNREVOKE_TESTS_IDENTITY_MANAGEMENT_TIME_FIXTURE_HPP
+#endif // CLEDGER_TESTS_IDENTITY_MANAGEMENT_TIME_FIXTURE_HPP

@@ -3,7 +3,7 @@
 
 #include "cledger-common.hpp"
 
-namespace cledger::nack {
+namespace cledger {
 
 class Nack : boost::noncopyable
 {
@@ -54,6 +54,6 @@ protected:
 std::ostream&
 operator<<(std::ostream& os, const Nack& nack);
 
-} // namespace cledger::nack
+} // namespace cledger
 
 #endif // CLEDGER_NACK_HPP

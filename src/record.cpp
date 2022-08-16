@@ -1,8 +1,15 @@
 #include "record.hpp"
 
-namespace cledger::record {
+namespace cledger {
 
 Record::Record()
+{
+}
+
+Record::Record(const Record& record)
+  : m_name(record.getName())
+  , m_pointers(record.getPointers())
+  , m_payload(record.getPayload())
 {
 }
 
@@ -94,4 +101,4 @@ Record::prepareData()
   return data; 
 }
 
-} // namespace cledger::record
+} // namespace cledger

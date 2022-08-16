@@ -1,7 +1,6 @@
 #include "nack.hpp"
 
 namespace cledger {
-namespace nack {
 
 const ssize_t Nack::TIMESTAMP_OFFSET = -1;
 const ssize_t Nack::NACK_OFFSET = -2;
@@ -57,5 +56,4 @@ operator<<(std::ostream& os, const Nack& nack)
   return os;
 }
 
-} // namespace nack
 } // namespace cledger

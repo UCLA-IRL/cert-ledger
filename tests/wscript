@@ -10,7 +10,7 @@ def build(bld):
         target='../unit-tests',
         name='unit-tests',
         source=bld.path.ant_glob(['*.cpp', 'unit-tests/**/*.cpp']),
-        use='ndn-revoke',
+        use='ndn-cledger',
         includes='.',
         defines=[tmpdir],
         install_path=None)
