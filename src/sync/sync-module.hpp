@@ -22,7 +22,7 @@ using ndn::svs::DataStore;
 
 using GetLocalRecord = std::function<Record(const Name&)>;
 using ExistLocalRecord = std::function<bool(const Name&)>;
-using YieldRecordCallback = std::function<void(std::map<Name, Record>&)>;
+using YieldRecordCallback = std::function<void(std::list<Record>&)>;
 
 struct SyncOptions
 {
@@ -68,7 +68,7 @@ public:
   onMissingData(const std::vector<MissingDataInfo>& vectors);
 
   void
-  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::map<Name, Record>& acc);
+  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record>& acc);
 
   void
   publishRecord(Record& record);

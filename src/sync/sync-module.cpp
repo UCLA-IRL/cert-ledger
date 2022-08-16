@@ -45,7 +45,7 @@ void
 SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
 { 
   // an accumlator to collect all missing records along the way
-  std::map<Name, Record> acc;
+  std::list<Record> acc;
   for (auto& v : vectors) {
     for (SeqNo s = v.low; s <= v.high; ++s) {
       recursiveFetcher(v.nodeId, s, acc);
@@ -57,14 +57,23 @@ SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
 }
 
 void
-SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::map<Name, Record>& acc)
+SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record>& acc)
 {
-  m_svs->fetchData(nid, s, [this, nid, s, &acc] (const ndn::Data& data) {
+  auto accSearch = [&acc] (const Name& n) {
+    for (auto& i : acc) {
+      if (i.getName() == n) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  m_svs->fetchData(nid, s, [this, &acc, accSearch] (const ndn::Data& data) {
     Record record(data.getName(), data.getContent());
 
     // check the pointer first
     for (auto& p : record.getPointers()) {
-      if (m_existCb(p)) {
+      if (m_existCb(p) || accSearch(data.getName())) {
         // then we don't need to care
       }
       else {
@@ -75,11 +84,11 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::map<Name, R
     }
 
     // check the record itself
-    if (m_existCb(data.getName())) {
+    if (m_existCb(data.getName()) || accSearch(data.getName())) {
       // then we don't need to do anything
     }
     else {
-      acc.emplace(data.getName(), record);
+      acc.push_back(record);
     }
   });  
 }
