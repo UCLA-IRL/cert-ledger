@@ -13,18 +13,31 @@ Record::Record(const Record& record)
 {
 }
 
-Record::Record(const Block& block)
-  : Record(Data(block))
+Record::Record(const Name& name, const Block& content)
 {
-}
-
-Record::Record(const Data& data)
-{
-  Record record;
-  record.fromData(data);
-  m_name = record.getName();
-  m_pointers = record.getPointers();
-  m_payload = record.getPayload();
+  m_name = name;
+  content.parse();
+  for (const auto &item : content.elements()) {
+    switch (item.type()) {
+      case tlv::TLV_RECORD_PAYLOAD:
+        m_payload = make_span<const uint8_t>(item.value(), item.value_size());
+        break;
+      case tlv::TLV_RECORD_POINTER:
+        item.parse();
+        for (const auto& ptr : item.elements()) {
+          m_pointers.push_back(Name(ptr));
+        }
+        break;
+      default:
+        if (ndn::tlv::isCriticalType(item.type())) {
+          NDN_THROW(Error("Unrecognized TLV Type: " + std::to_string(item.type())));
+        }
+        else {
+          //ignore
+        }
+        break;
+    }
+  }
 }
 
 Record&
@@ -55,50 +68,18 @@ Record::setPayload(const span<const uint8_t>& payload)
   return *this;
 }
 
-void
-Record::fromData(const Data& data)
+std::shared_ptr<Block>
+Record::prepareContent()
 {
-  m_name = data.getName();
-  Block content = data.getContent();
-
-  content.parse();
-  for (const auto &item : content.elements()) {
-    switch (item.type()) {
-      case tlv::TLV_RECORD_PAYLOAD:
-        m_payload = make_span<const uint8_t>(item.value(), item.value_size());
-        break;
-      case tlv::TLV_RECORD_POINTER:
-        item.parse();
-        for (const auto& ptr : item.elements()) {
-          m_pointers.push_back(Name(ptr));
-        }
-        break;
-      default:
-        if (ndn::tlv::isCriticalType(item.type())) {
-          NDN_THROW(Error("Unrecognized TLV Type: " + std::to_string(item.type())));
-        }
-        else {
-          //ignore
-        }
-        break;
-    }
-  }
-}
-
-std::shared_ptr<Data>
-Record::prepareData()
-{
-  auto data = std::make_shared<Data>(m_name);
-  Block content(ndn::tlv::Content);
+  auto content = std::make_shared<Block>(ndn::tlv::Content);
   Block pointers;
 
   for (auto& ptr : m_pointers) {
     pointers.push_back(ptr.wireEncode());
   }
-  content.push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_POINTER, pointers));
-  content.push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_PAYLOAD, m_payload));
-  data->setContent(content);
-  return data; 
+  content->push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_POINTER, pointers));
+  content->push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_PAYLOAD, m_payload));
+  return content;
 }
 
 } // namespace cledger

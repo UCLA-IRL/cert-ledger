@@ -25,7 +25,9 @@ def configure(conf):
 
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'], uselib_store='NDN_CXX',
                    pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
-
+    conf.check_cfg(package='libndn-svs', args=['--cflags', '--libs'], uselib_store='NDN_SVS',
+                   pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
+    
     boost_libs = ['system', 'program_options', 'filesystem']
     if conf.env.WITH_TESTS:
         boost_libs.append('unit_test_framework')
@@ -60,7 +62,7 @@ def build(bld):
               vnum=VERSION,
               cnum=VERSION,
               source=bld.path.ant_glob('src/**/*.cpp'),
-              use='NDN_CXX BOOST',
+              use='NDN_CXX NDN_SVS BOOST',
               includes='src',
               export_includes='src')
 

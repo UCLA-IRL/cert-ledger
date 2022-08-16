@@ -20,16 +20,10 @@ public:
   Record(const Record& record);
 
   explicit
-  Record(const Data& data);
-
-  explicit
-  Record(const Block& block);
-
-  void
-  fromData(const Data& data);
+  Record(const Name& name, const Block& content);
   
-  std::shared_ptr<Data>
-  prepareData();
+  std::shared_ptr<Block>
+  prepareContent();
 
   const Name
   getName() const
