@@ -22,7 +22,7 @@ using ndn::svs::DataStore;
 
 using GetLocalRecord = std::function<Record(const Name&)>;
 using ExistLocalRecord = std::function<bool(const Name&)>;
-using YieldRecordCallback = std::function<void(std::list<Record>&)>;
+using YieldRecordCallback = std::function<void(const Record&)>;
 
 struct SyncOptions
 {
@@ -48,37 +48,25 @@ class SyncModule
 {
 public:
   explicit
-  SyncModule(const SyncOptions &options, ndn::Face& face,
+  SyncModule(const SyncOptions &options, const SecurityOptions& secOps, ndn::Face& face,
             const ExistLocalRecord& exist, const YieldRecordCallback& yield);
 
   std::tuple<NodeID, SeqNo>
   parseDataName(const Name& name);
 
   void
-  run()
-  {
-    std::thread thread_svs([this] { m_face.processEvents(); });
-    while (true) {
-    }
-
-    thread_svs.join();
-  }
-
-  void
   onMissingData(const std::vector<MissingDataInfo>& vectors);
 
   void
-  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record>& acc);
+  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record> acc);
 
   void
   publishRecord(Record& record);
 
 public:
   SyncOptions m_syncOptions;
-  ndn::Face& m_face;
-  ndn::KeyChain m_keyChain;
-  ndn::security::SigningInfo m_signingInfo;
   SecurityOptions m_secOptions;
+  ndn::Face& m_face;
 
   std::shared_ptr<LedgerSVS> m_svs;
   ExistLocalRecord m_existCb;

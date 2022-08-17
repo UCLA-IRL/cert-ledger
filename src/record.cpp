@@ -72,12 +72,14 @@ std::shared_ptr<Block>
 Record::prepareContent()
 {
   auto content = std::make_shared<Block>(ndn::tlv::Content);
-  Block pointers;
+  std::vector<uint8_t> ptrsEnc;
 
   for (auto& ptr : m_pointers) {
-    pointers.push_back(ptr.wireEncode());
+    auto b = ptr.wireEncode();
+    ptrsEnc.insert(ptrsEnc.end(), b.begin(), b.end());
   }
-  content->push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_POINTER, pointers));
+  content->push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_POINTER, 
+                                          span<const uint8_t>(ptrsEnc.data(), ptrsEnc.size())));
   content->push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_PAYLOAD, m_payload));
   return content;
 }

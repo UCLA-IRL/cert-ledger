@@ -19,17 +19,15 @@ LedgerSVS::getDataName(const NodeID& nid, const SeqNo& seqNo)
   return Name(m_syncPrefix).append(nid).appendNumber(seqNo);
 }
 
-SyncModule::SyncModule(const SyncOptions &options, ndn::Face& face,
+SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps, ndn::Face& face,
                        const ExistLocalRecord& exist, const YieldRecordCallback& yield)
   : m_syncOptions(options)
+  , m_secOptions(secOps)
   , m_face(face)
-  , m_secOptions(m_keyChain)
   , m_existCb(exist)
   , m_yieldCb(yield)
 {
   // TODO: move to ecdsa later
-  m_signingInfo.setSha256Signing();
-  m_secOptions.interestSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
   m_svs = std::make_shared<LedgerSVS>(m_syncOptions.prefix, 
                                       Name(m_syncOptions.prefix).append(m_syncOptions.id),
                                       m_face, std::bind(&SyncModule::onMissingData, this, _1), m_secOptions);
@@ -51,15 +49,12 @@ SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
       recursiveFetcher(v.nodeId, s, acc);
     }      
   }
-
-  NDN_LOG_DEBUG("collected " << acc.size() << " missing records, yeild...");
-  m_yieldCb(acc);
 }
 
 void
-SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record>& acc)
+SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record> acc)
 {
-  auto search = [this, &acc] (const Name& n) {
+  auto search = [this, acc] (const Name& n) {
     for (auto& i : acc) {
       if (i.getName() == n) {
         return true;
@@ -69,6 +64,8 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record
   };
 
   m_svs->fetchData(nid, s, [this, &acc, search] (const ndn::Data& data) {
+    NDN_LOG_DEBUG("Data name " << data.getName());
+
     Record record(data.getName(), data.getContent());
 
     // check the pointer first
@@ -82,7 +79,7 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record
         recursiveFetcher(std::get<0>(tuple), std::get<1>(tuple), acc);
       }
       else {
-        // genesis record, do nothing
+        NDN_LOG_INFO(data.getName() << " is a genesis record");
       }
     }
 
@@ -92,8 +89,10 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record
     }
     else {
       acc.push_back(record);
+      NDN_LOG_DEBUG("yield missing records " << record.getName()); 
+      m_yieldCb(record);
     }
-  });  
+  });
 }
 
 void

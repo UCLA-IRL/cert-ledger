@@ -3,23 +3,20 @@
 namespace cledger::tests {
 using ndn::security::SigningInfo;
 
-SVSCoreFixture::SVSCoreFixture(const Name& syncPrefix,
-                               const SecurityOptions& securityOptions,
-                               const NodeID& nid)
-  : m_syncPrefix(syncPrefix)
-  , m_securityOptions(securityOptions)
-  , m_id(nid)
+SVSCoreFixture::SVSCoreFixture()
+{}
+
+SVSCoreFixture::~SVSCoreFixture()
 {}
 
 void
 SVSCoreFixture::updateSeqNo(const SeqNo& seq, const NodeID& nid)
 {
-  SeqNo prev = m_vv.get(nid);
   m_vv.set(nid, seq);
 }
 
 std::shared_ptr<Interest>
-SVSCoreFixture::makeSyncInterest()
+SVSCoreFixture::makeSyncInterest(const SecurityOptions& secOps)
 {
   Name syncName(m_syncPrefix);
   syncName.append(Name::Component(m_vv.encode()));
@@ -31,7 +28,7 @@ SVSCoreFixture::makeSyncInterest()
   interest->setCanBePrefix(true);
   interest->setMustBeFresh(true);
 
-  switch (m_securityOptions.interestSigner->signingInfo.getSignerType())
+  switch (secOps.interestSigner->signingInfo.getSignerType())
   {
     case SigningInfo::SIGNER_TYPE_NULL:
       break;
@@ -41,10 +38,21 @@ SVSCoreFixture::makeSyncInterest()
     //   break;
 
     default:
-      m_securityOptions.interestSigner->sign(*interest);
+      secOps.interestSigner->sign(*interest);
       break;
   }
   return interest;
+}
+
+std::shared_ptr<Data>
+SVSCoreFixture::makeData(const SeqNo& seq, const NodeID& nid, const Block& content, const SecurityOptions& secOps)
+{
+  Name dataName = Name(m_syncPrefix).append(nid).appendNumber(seq);
+  auto data = std::make_shared<Data>(dataName);
+  data->setContent(content);
+  data->setFreshnessPeriod(1_s);
+  secOps.dataSigner->sign(*data);
+  return data;
 }
 
 SeqNo

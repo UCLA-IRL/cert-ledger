@@ -17,11 +17,7 @@ using ndn::svs::DataStore;
 class SVSCoreFixture
 {
 public:
-
-  explicit
-  SVSCoreFixture(const Name& syncPrefix,
-                    const SecurityOptions& securityOptions,
-                    const NodeID& nid);
+  SVSCoreFixture();
 
   ~SVSCoreFixture();
 
@@ -32,14 +28,15 @@ public:
   updateSeqNo(const SeqNo& seq, const NodeID& nid);
 
   std::shared_ptr<Interest>
-  makeSyncInterest();
+  makeSyncInterest(const SecurityOptions& secOps);
 
+  std::shared_ptr<Data>
+  makeData(const SeqNo& seq, const NodeID& nid, const Block& content, const SecurityOptions& secOps);
 protected:
 
   // Communication
-  const Name m_syncPrefix;
-  const SecurityOptions m_securityOptions;
-  const NodeID m_id;
+  Name m_syncPrefix;
+  NodeID m_id;
 
   // State
   VersionVector m_vv;
