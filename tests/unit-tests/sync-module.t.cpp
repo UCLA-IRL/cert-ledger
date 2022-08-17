@@ -19,16 +19,12 @@ BOOST_AUTO_TEST_CASE(SVSUpdate)
   SecurityOptions secOps(m_keyChain);
   secOps.interestSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
 
-
-    // using ExistLocalRecord = std::function<bool(const Name&)>;
-    // using YieldRecordCallback = std::function<void(std::list<Record>&)>;
-  
   std::set<Name> buffer;
-  auto existFinder = [buffer] (const Name& n) {
+  auto existFinder = [&buffer] (const Name& n) {
     return buffer.find(n) == buffer.end()? false : true;
   };
-  auto yielder = [] (const Record&) {
-    std::cout << "yield\n";
+  auto yielder = [&buffer] (const Record& r) {
+    buffer.insert(r.getName());
   };
   DummyClientFace face(io, m_keyChain, {true, true});
 
@@ -37,21 +33,36 @@ BOOST_AUTO_TEST_CASE(SVSUpdate)
   advanceClocks(time::milliseconds(20), 60);
 
   // prepare an event
-  SeqNo seq = 1;
+  SeqNo seq = 0;
   NodeID id2 = Name("/node-2");
+
+  // learn gensis record r1
+  Record r1;
+  r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.addPointer(r1.getName());
+  std::string str = "Dummy Genesis Record";
+  r1.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str.data()), str.size()));
+
   updateSeqNo(seq, id2);
-  auto syncInt1 = makeSyncInterest(secOps);
-  face.receive(*syncInt1);
+  auto syncInt = makeSyncInterest(secOps);
+  face.receive(*syncInt);
+  advanceClocks(time::milliseconds(20), 60);
+  auto data = makeData(seq, id2, *r1.prepareContent(), secOps);
+  face.receive(*data);
   advanceClocks(time::milliseconds(20), 60);
 
-  // prepare a gensis record
-  Record record;
-  record.setName(Name(m_syncPrefix).append(id2).appendNumber(seq));
-  record.addPointer(record.getName());
-  std::string str = "Dummy Genesis Record";
-  record.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str.data()), str.size()));
+  // learn gensis record r2
+  Record r2;
+  r2.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r2.addPointer(r1.getName());
+  std::string str2 = "Dummy General Record";
+  r2.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
 
-  auto data = makeData(seq, id2, *record.prepareContent(), secOps);
+  updateSeqNo(seq, id2);
+  syncInt = makeSyncInterest(secOps);
+  face.receive(*syncInt);
+  advanceClocks(time::milliseconds(20), 60);
+  data = makeData(seq, id2, *r2.prepareContent(), secOps);
   face.receive(*data);
   advanceClocks(time::milliseconds(20), 60);
 }

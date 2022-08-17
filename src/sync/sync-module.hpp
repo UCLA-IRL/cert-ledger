@@ -58,7 +58,7 @@ public:
   onMissingData(const std::vector<MissingDataInfo>& vectors);
 
   void
-  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record> acc);
+  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::set<Name>> acc);
 
   void
   publishRecord(Record& record);

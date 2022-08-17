@@ -43,7 +43,7 @@ void
 SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
 { 
   // an accumlator to collect all missing records along the way
-  std::list<Record> acc;
+  auto acc = std::make_shared<std::set<Name>>();
   for (auto& v : vectors) {
     for (SeqNo s = v.low; s <= v.high; ++s) {
       recursiveFetcher(v.nodeId, s, acc);
@@ -52,19 +52,15 @@ SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
 }
 
 void
-SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record> acc)
+SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::set<Name>> acc)
 {
   auto search = [this, acc] (const Name& n) {
-    for (auto& i : acc) {
-      if (i.getName() == n) {
-        return true;
-      }
-    }
-    return m_existCb(n);
+    return (acc->find(n) != acc->end()) || m_existCb(n);
   };
 
-  m_svs->fetchData(nid, s, [this, &acc, search] (const ndn::Data& data) {
-    NDN_LOG_DEBUG("Data name " << data.getName());
+  NDN_LOG_TRACE("trying getting data " << m_svs->getDataName(nid, s));
+  m_svs->fetchData(nid, s, [this, acc, search] (const ndn::Data& data) {
+    NDN_LOG_DEBUG("getting data " << data.getName());
 
     Record record(data.getName(), data.getContent());
 
@@ -72,14 +68,16 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record
     for (auto& p : record.getPointers()) {
       if (search(p)) {
         // then we don't need to care
+        NDN_LOG_TRACE(p << " already exists");
       }
       else if (!record.isGenesis()){
+        NDN_LOG_DEBUG(record.getName() << " is a general record");
         // we need to fetch it
         auto tuple = parseDataName(p);
         recursiveFetcher(std::get<0>(tuple), std::get<1>(tuple), acc);
       }
       else {
-        NDN_LOG_INFO(data.getName() << " is a genesis record");
+        NDN_LOG_INFO(p << " is an new genesis record");
       }
     }
 
@@ -88,7 +86,7 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::list<Record
       // then we don't need to do anything
     }
     else {
-      acc.push_back(record);
+      acc->emplace(record.getName());
       NDN_LOG_DEBUG("yield missing records " << record.getName()); 
       m_yieldCb(record);
     }
