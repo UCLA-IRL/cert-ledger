@@ -1,4 +1,5 @@
 #include "dag/edge.hpp"
+#include "dag/interlock-policy-descendants.hpp"
 #include "test-common.hpp"
 
 namespace cledger::tests {
@@ -6,6 +7,7 @@ namespace cledger::tests {
 using ndn::util::DummyClientFace;
 using ndn::security::verifySignature;
 using dag::EdgeManager;
+using dag::InterlockPolicyDescendants;
 
 BOOST_FIXTURE_TEST_SUITE(TestDagModule, IdentityManagementTimeFixture)
 
@@ -30,6 +32,7 @@ BOOST_AUTO_TEST_CASE(Linear)
   r4.addPointer(r3.getName());
 
   EdgeManager eManager;
+  eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
   eManager.add(r3);
@@ -68,6 +71,7 @@ BOOST_AUTO_TEST_CASE(Rectangular1)
   r4.addPointer(r3.getName());
 
   EdgeManager eManager;
+  eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
   eManager.add(r3);
@@ -106,6 +110,7 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   r3.addPointer(r4.getName());
 
   EdgeManager eManager;
+  eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
   eManager.add(r4);
@@ -145,6 +150,7 @@ BOOST_AUTO_TEST_CASE(Rectangular3)
   r4.addPointer(r3.getName());
 
   EdgeManager eManager;
+  eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
   eManager.add(r3);

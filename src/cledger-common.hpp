@@ -70,6 +70,7 @@ enum : uint32_t {
   CERTIFICATE_RECORD = 2,
   REVOCATION_RECORD = 3,
   GENESIS_RECORD = 4,
+  REPLY_RECORD = 5,
 };
 
 enum : uint32_t {

@@ -21,6 +21,14 @@ EdgeManager::add(Record& record)
   return *this;
 }
 
+
+EdgeManager&
+EdgeManager::setInterlockPolicy(const std::shared_ptr<InterlockPolicy> policy)
+{
+  m_policy = policy;
+  return *this;
+}
+
 std::list<EdgeState>
 EdgeManager::getAncestors(EdgeState state) 
 {
@@ -164,19 +172,9 @@ EdgeManager::evaluateWaitlist(EdgeState& state)
       l.second.erase(prev);
     }
   }
-  m_waitlist[state.descendants.size()].insert(state.name); 
-}
-
-std::ostream&
-operator<<(std::ostream& os, const EdgeState& state)
-{
-  os << "Edge State Name: " << state.name << "\n";
-  for (auto& p : state.pointers) {
-    os << "   Pointer: " << p << "\n";
+  if (!m_policy) {
+    NDN_THROW(std::runtime_error("Interlock policy has not been set"));
   }
-  for (auto& d : state.descendants) {
-    os << "   Descendant: " << d << "\n";
-  }
-  return os;
+  m_waitlist[m_policy->evaluate(state)].insert(state.name); 
 }
 } // namespace cledger::dag
