@@ -1,4 +1,5 @@
 #include "sync/sync-module.hpp"
+// #include "sync/recursive-fetcher.hpp"
 
 namespace cledger::sync {
 NDN_LOG_INIT(cledger.sync);
@@ -36,26 +37,29 @@ SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps
 std::tuple<NodeID, SeqNo>
 SyncModule::parseDataName(const Name& name)
 {
-  return std::make_tuple<NodeID, SeqNo>(name.getPrefix(-2), name.get(-1).toNumber());
+  return std::make_tuple<NodeID, SeqNo>(name.getPrefix(-1)
+                                            .getSubName(m_syncOptions.prefix.size()),
+                                        name.get(-1).toNumber());
 }
 
 void
 SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
 { 
   // an accumlator to collect all missing records along the way
-  auto acc = std::make_shared<std::set<Name>>();
+  auto acc = std::make_shared<std::list<Record>>();
   for (auto& v : vectors) {
-    for (SeqNo s = v.low; s <= v.high; ++s) {
-      recursiveFetcher(v.nodeId, s, acc);
-    }      
+    recursiveFetcher(v.nodeId, v.high, acc); 
   }
 }
 
 void
-SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::set<Name>> acc)
+SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::list<Record>> acc)
 {
   auto search = [this, acc] (const Name& n) {
-    return (acc->find(n) != acc->end()) || m_existCb(n);
+    for (auto& r : *acc) {
+      if (r.getName() == n) return true;
+    }
+    return m_existCb(n);
   };
 
   NDN_LOG_TRACE("trying getting data " << m_svs->getDataName(nid, s));
@@ -63,32 +67,32 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
     NDN_LOG_DEBUG("getting data " << data.getName());
 
     Record record(data.getName(), data.getContent());
+    if (!search(record.getName())) acc->push_front(record);
+
+    if (record.isGenesis()) {
+      NDN_LOG_INFO(record.getName() << " is an new genesis record");
+    }
 
     // check the pointer first
+    bool allExist = true;
     for (auto& p : record.getPointers()) {
       if (search(p)) {
         // then we don't need to care
         NDN_LOG_TRACE(p << " already exists");
       }
-      else if (!record.isGenesis()){
-        NDN_LOG_DEBUG(record.getName() << " is a general record");
+      else {
+        allExist = false;
+        NDN_LOG_DEBUG("discover " << p);
         // we need to fetch it
         auto tuple = parseDataName(p);
         recursiveFetcher(std::get<0>(tuple), std::get<1>(tuple), acc);
       }
-      else {
-        NDN_LOG_INFO(p << " is an new genesis record");
-      }
     }
 
-    // check the record itself
-    if (search(data.getName())) {
-      // then we don't need to do anything
-    }
-    else {
-      acc->emplace(record.getName());
-      NDN_LOG_DEBUG("yield missing records " << record.getName()); 
-      m_yieldCb(record);
+    if (allExist) {
+      // clean the acc
+      for (auto& r : *acc) m_yieldCb(r);
+      acc->clear();
     }
   });
 }

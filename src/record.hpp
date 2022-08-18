@@ -14,6 +14,7 @@ public:
     using ndn::tlv::Error::Error;
   };
 
+  explicit
   Record();
 
   explicit
