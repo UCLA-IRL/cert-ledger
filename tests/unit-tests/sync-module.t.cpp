@@ -17,8 +17,8 @@ BOOST_AUTO_TEST_CASE(R1R2InOrder)
   m_syncPrefix = Name("/sync-group");
   m_id = Name("/node-1");
   SecurityOptions secOps(m_keyChain);
-  secOps.dataSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
-  secOps.interestSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
+  secOps.dataSigner->signingInfo.setSha256Signing();
+  secOps.interestSigner->signingInfo.setSha256Signing();
 
   std::set<Name> buffer;
   auto existFinder = [&buffer] (const Name& n) {
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(R2Only)
   m_syncPrefix = Name("/sync-group");
   m_id = Name("/node-1");
   SecurityOptions secOps(m_keyChain);
-  secOps.dataSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
-  secOps.interestSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
+  secOps.dataSigner->signingInfo.setSha256Signing();
+  secOps.interestSigner->signingInfo.setSha256Signing();
 
   std::set<Name> buffer;
   auto existFinder = [&buffer] (const Name& n) {
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(R3Only)
   m_syncPrefix = Name("/sync-group");
   m_id = Name("/node-1");
   SecurityOptions secOps(m_keyChain);
-  secOps.dataSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
-  secOps.interestSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
+  secOps.dataSigner->signingInfo.setSha256Signing();
+  secOps.interestSigner->signingInfo.setSha256Signing();
 
   std::set<Name> buffer;
   auto existFinder = [&buffer] (const Name& n) {
@@ -200,8 +200,8 @@ BOOST_AUTO_TEST_CASE(Rectangular)
   m_syncPrefix = Name("/sync-group");
   m_id = Name("/node-1");
   SecurityOptions secOps(m_keyChain);
-  secOps.dataSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
-  secOps.interestSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
+  secOps.dataSigner->signingInfo.setSha256Signing();
+  secOps.interestSigner->signingInfo.setSha256Signing();
 
   std::set<Name> buffer;
   auto existFinder = [&buffer] (const Name& n) {
@@ -277,8 +277,8 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   m_syncPrefix = Name("/sync-group");
   m_id = Name("/node-1");
   SecurityOptions secOps(m_keyChain);
-  secOps.dataSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
-  secOps.interestSigner->signingInfo.setSigningHmacKey("dGhpcyBpcyBhIHNlY3JldCBtZXNzYWdl");
+  secOps.dataSigner->signingInfo.setSha256Signing();
+  secOps.interestSigner->signingInfo.setSha256Signing();
 
   std::set<Name> buffer;
   auto existFinder = [&buffer] (const Name& n) {
