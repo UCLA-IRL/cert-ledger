@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_CASE(Linear)
 
   Record r1, r2, r3, r4;
   r1.setName(Name("/r1"));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   
   r2.setName(Name("/r2"));
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(Rectangular1)
    */
   Record r1, r2, r3, r4;
   r1.setName(Name("/r1"));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   
   r2.setName(Name("/r2"));
@@ -90,6 +92,7 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
    */
   Record r1, r2, r3, r4;
   r1.setName(Name("/r1"));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   
   r2.setName(Name("/r2"));
@@ -127,6 +130,7 @@ BOOST_AUTO_TEST_CASE(Rectangular3)
    */
   Record r1, r2, r3, r4;
   r1.setName(Name("/r1"));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   
   r2.setName(Name("/r2"));

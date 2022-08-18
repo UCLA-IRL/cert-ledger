@@ -3,11 +3,13 @@
 namespace cledger {
 
 Record::Record()
+  : m_type(tlv::GENERIC_RECORD)
 {
 }
 
 Record::Record(const Record& record)
   : m_name(record.getName())
+  , m_type(record.getType())
   , m_pointers(record.getPointers())
   , m_payload(record.getPayload())
 {
@@ -19,6 +21,9 @@ Record::Record(const Name& name, const Block& content)
   content.parse();
   for (const auto &item : content.elements()) {
     switch (item.type()) {
+      case tlv::TLV_RECORD_TYPE:
+        m_type = readNonNegativeInteger(item);
+        break;
       case tlv::TLV_RECORD_PAYLOAD:
         m_payload = make_span<const uint8_t>(item.value(), item.value_size());
         break;
@@ -44,6 +49,13 @@ Record&
 Record::setName(const Name& name)
 {
   m_name = name;
+  return *this;
+}
+
+Record&
+Record::setType(const RecordType type)
+{
+  m_type = type;
   return *this;
 }
 
@@ -78,10 +90,17 @@ Record::prepareContent()
     auto b = ptr.wireEncode();
     ptrsEnc.insert(ptrsEnc.end(), b.begin(), b.end());
   }
+  content->push_back(ndn::makeNonNegativeIntegerBlock(tlv::TLV_RECORD_TYPE, m_type));
   content->push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_POINTER, 
                                           span<const uint8_t>(ptrsEnc.data(), ptrsEnc.size())));
   content->push_back(ndn::makeBinaryBlock(tlv::TLV_RECORD_PAYLOAD, m_payload));
   return content;
+}
+
+bool
+Record::isGenesis()
+{
+  return m_type == tlv::GENESIS_RECORD? true : false;
 }
 
 } // namespace cledger

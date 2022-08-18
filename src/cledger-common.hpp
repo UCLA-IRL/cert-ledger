@@ -64,7 +64,7 @@ using namespace std::string_literals;
 
 namespace tlv {
 
-enum RecordType {
+enum : uint32_t {
   BASE_RECORD = 0,
   GENERIC_RECORD = 1,
   CERTIFICATE_RECORD = 2,
@@ -73,8 +73,9 @@ enum RecordType {
 };
 
 enum : uint32_t {
-  TLV_RECORD_POINTER = 211,
-  TLV_RECORD_PAYLOAD = 212
+  TLV_RECORD_TYPE = 211,
+  TLV_RECORD_POINTER = 212,
+  TLV_RECORD_PAYLOAD = 213
 };
 
 } // namespace tlv

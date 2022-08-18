@@ -40,6 +40,7 @@ BOOST_AUTO_TEST_CASE(R1R2InOrder)
   // learn gensis record r1
   Record r1;
   r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
   r1.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str.data()), str.size()));
@@ -98,6 +99,7 @@ BOOST_AUTO_TEST_CASE(R2Only)
   // learn gensis record r1
   Record r1;
   r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
   r1.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str.data()), str.size()));
@@ -154,6 +156,7 @@ BOOST_AUTO_TEST_CASE(R3Only)
   // learn gensis record r1
   Record r1;
   r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
   r1.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str.data()), str.size()));
@@ -224,6 +227,7 @@ BOOST_AUTO_TEST_CASE(Rectangular)
   // learn gensis record r1
   Record r1;
   r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
   r1.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str.data()), str.size()));
@@ -301,6 +305,7 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   // learn gensis record r1
   Record r1;
   r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
   r1.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str.data()), str.size()));

@@ -5,6 +5,8 @@
 
 namespace cledger {
 
+using RecordType = uint32_t;
+
 class Record
 {
 public:
@@ -32,10 +34,10 @@ public:
     return m_name;
   }
 
-  const Name
-  getProducer() const
+  RecordType
+  getType() const
   {
-    return m_name.getPrefix(-1);
+    return m_type;
   }
 
   const std::list<Name>
@@ -54,6 +56,9 @@ public:
   setName(const Name& name);
 
   Record&
+  setType(const RecordType type);
+
+  Record&
   setPointers(const std::list<Name> name);
 
   Record&
@@ -63,27 +68,12 @@ public:
   setPayload(const span<const uint8_t>& payload);
 
   bool
-  isGenesis()
-  {
-    for (auto& p : m_pointers) {
-      if (p == m_name) return true;
-    }
-    return false;
-  }
+  isGenesis();
 
 private:
-  /**
-   * The record-name as
-   * /<producer-prefix>/RECORD/<event-name>
-   */
   Name m_name;
-  /**
-   * The list of pointers to preceding records.
-   */
+  RecordType m_type;
   std::list<Name> m_pointers;
-  /**
-   * The data structure to carry the record body payloads.
-   */
   span<const uint8_t> m_payload;
 };
 
