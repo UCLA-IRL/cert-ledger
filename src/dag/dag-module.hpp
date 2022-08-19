@@ -18,7 +18,7 @@ public:
   setStorage(const std::shared_ptr<storage::LedgerStorage> policy); 
 
   std::list<Record>
-  reap(const uint32_t threshold);
+  reap(const uint32_t threshold, bool removeFromWaitlist = false);
 
 CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::list<EdgeState>

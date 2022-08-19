@@ -11,8 +11,6 @@ struct EdgeState
     LOADED = 2,
   };
   Name stateName;
-//   std::list<Name> pointers;
-//   span<const uint8_t> payload;
 
   Record record;
   std::set<Name> descendants;
@@ -27,7 +25,10 @@ Name
 fromStateName(const Name& stateName);
 
 Block
-encodeEdgeState(const EdgeState& state);
+encodeEdgeState(EdgeState& state);
+
+EdgeState
+decodeEdgeState(Block& block);
 
 std::ostream&
 operator<<(std::ostream& os, const EdgeState& state);

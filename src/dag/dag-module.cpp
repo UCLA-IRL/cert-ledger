@@ -101,13 +101,28 @@ DagModule::getAncestors(EdgeState state)
 }
 
 std::list<Record>
-DagModule::reap(const uint32_t threshold)
+DagModule::reap(const uint32_t threshold, bool removeFromWaitlist)
 {
+  auto consolidate = [this] (EdgeState& s) {
+    try {
+      m_storage->addBlock(s.stateName, encodeEdgeState(s));
+    }
+    catch (std::exception&) {
+      NDN_LOG_DEBUG(s.stateName << " already exists");
+      return;
+    }
+    NDN_LOG_DEBUG(s.stateName << " consolidated");
+    m_buffer.erase(s.stateName);
+  }; 
+
   std::list<Record> ret;
   for (auto& map : m_waitlist) {
     if (map.first >= threshold)  {
       for (auto& s : map.second) {
-        ret.push_back(get(s).record);
+        auto state = get(s);
+        ret.push_back(state.record);
+        if (removeFromWaitlist) map.second.erase(s);
+        if (m_storage) consolidate(state);
       }
     }
   }
@@ -117,12 +132,26 @@ DagModule::reap(const uint32_t threshold)
 EdgeState
 DagModule::get(const Name& name)
 {
-  if (m_buffer.find(name) != m_buffer.end())
+  auto construct = [] (const Name& n) {
+    EdgeState s;
+    s.stateName = Name(n);
+    s.status = EdgeState::INITIALIZED;
+    return s;
+  };
+
+  if (m_buffer.find(name) != m_buffer.end()) {
     return m_buffer[name];
-  EdgeState s;
-  s.stateName = Name(name);
-  s.status = EdgeState::INITIALIZED;
-  return s;
+  }
+  else if (m_storage) {
+    try {
+      auto block = m_storage->getBlock(name);
+      return decodeEdgeState(block);
+    }
+    catch (std::exception& e) {
+      return construct(name);
+    }
+  }
+  else return construct(name);
 }
 
 void

@@ -1,4 +1,5 @@
 #include "dag/dag-module.hpp"
+#include "storage/ledger-memory.hpp"
 #include "dag/interlock-policy-descendants.hpp"
 #include "test-common.hpp"
 
@@ -32,6 +33,7 @@ BOOST_AUTO_TEST_CASE(Linear)
   r4.addPointer(r3.getName());
 
   DagModule eManager;
+  eManager.setStorage(storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", ""));
   eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
@@ -40,7 +42,8 @@ BOOST_AUTO_TEST_CASE(Linear)
 
   BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
   BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(3).size());
+  BOOST_CHECK_EQUAL(1, eManager.reap(3, true).size());
+  BOOST_CHECK_EQUAL(0, eManager.reap(3).size());
   // for (auto& s : eManager.m_buffer) {
   //   std::cerr << s.second;
   // }
@@ -71,6 +74,7 @@ BOOST_AUTO_TEST_CASE(Rectangular1)
   r4.addPointer(r3.getName());
 
   DagModule eManager;
+  eManager.setStorage(storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", ""));
   eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
@@ -79,7 +83,8 @@ BOOST_AUTO_TEST_CASE(Rectangular1)
 
   BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
   BOOST_CHECK_EQUAL(1, eManager.reap(2).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(3).size());
+  BOOST_CHECK_EQUAL(1, eManager.reap(3, true).size());
+  BOOST_CHECK_EQUAL(0, eManager.reap(3).size());
   // for (auto& s : eManager.m_buffer) {
   //   std::cerr << s.second;
   // }
@@ -110,6 +115,7 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   r3.addPointer(r4.getName());
 
   DagModule eManager;
+  eManager.setStorage(storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", ""));
   eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
@@ -118,7 +124,8 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
 
   BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
   BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(3).size());
+  BOOST_CHECK_EQUAL(1, eManager.reap(3, true).size());
+  BOOST_CHECK_EQUAL(0, eManager.reap(3).size());
   // for (auto& s : eManager.m_buffer) {
   //   std::cerr << s.second;
   // }
@@ -150,6 +157,7 @@ BOOST_AUTO_TEST_CASE(Rectangular3)
   r4.addPointer(r3.getName());
 
   DagModule eManager;
+  eManager.setStorage(storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", ""));
   eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
@@ -158,7 +166,8 @@ BOOST_AUTO_TEST_CASE(Rectangular3)
 
   BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
   BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(3).size());
+  BOOST_CHECK_EQUAL(1, eManager.reap(3, true).size());
+  BOOST_CHECK_EQUAL(0, eManager.reap(3).size());
   // for (auto& s : eManager.m_buffer) {
   //   std::cerr << s.second;
   // }
