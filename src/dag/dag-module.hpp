@@ -3,15 +3,19 @@
 
 #include "record.hpp"
 #include "dag/interlock-policy.hpp"
+#include "storage/ledger-storage.hpp"
 namespace cledger::dag {
 
-class EdgeManager {
+class DagModule {
 public:
-  EdgeManager&
+  DagModule&
   add(Record& record);
 
-  EdgeManager&
+  DagModule&
   setInterlockPolicy(const std::shared_ptr<InterlockPolicy> policy); 
+
+  DagModule&
+  setStorage(const std::shared_ptr<storage::LedgerStorage> policy); 
 
   std::list<Record>
   reap(const uint32_t threshold);
@@ -27,7 +31,7 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   update(const Name& name, EdgeState state);
 
 
-  EdgeManager&
+  DagModule&
   onNewRecord(EdgeState& state);
 
   void
@@ -39,6 +43,7 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::map<Name, EdgeState> m_buffer;
   std::map<const uint32_t, std::set<Name>> m_waitlist;
   std::shared_ptr<InterlockPolicy> m_policy;
+  std::shared_ptr<storage::LedgerStorage> m_storage;
 };
 
 std::ostream&

@@ -59,7 +59,7 @@ LedgerModule::onDataSubmission(const Data& data)
     [this, &data, &ret] (const Data&) {
       NDN_LOG_TRACE("Submitted Data conforms to trust schema");
       try {
-        m_storage->addData(data);
+        m_storage->addBlock(data.getName(), data.wireEncode());
         ret = AppendStatus::SUCCESS;
       }
       catch (std::exception& e) {
@@ -84,7 +84,7 @@ LedgerModule::onQuery(const Interest& query) {
 
   NDN_LOG_TRACE("Received Query " << query);
   try {
-    Data data = m_storage->getData(query.getName());
+    Data data(m_storage->getBlock(query.getName()));
     NDN_LOG_TRACE("Ledger replies with: " << data.getName());
     m_face.put(data);
   }

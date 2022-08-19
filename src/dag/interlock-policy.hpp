@@ -2,21 +2,8 @@
 #define CLEDGER_DAG_INTERLOCK_POLICY_HPP
 
 #include "record.hpp"
+#include "dag/edge-state.hpp"
 namespace cledger::dag {
-
-struct EdgeState
-{
-  enum Status {
-    INITIALIZED = 0,
-    LOADED = 2,
-  };
-  Name name;
-  std::list<Name> pointers;
-  span<const uint8_t> payload;
-  std::set<Name> descendants;
-
-  Status status;
-};
 
 std::ostream&
 operator<<(std::ostream& os, const EdgeState& state);

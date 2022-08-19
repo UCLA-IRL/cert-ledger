@@ -14,16 +14,16 @@ public:
 
 public:
   void
-  addData(const Data& data) override;
+  addBlock(const Name& name, const Block& block) override;
 
-  Data
-  getData(const Name& name) override;
+  Block
+  getBlock(const Name& name) override;
 
   void
-  deleteData(const Name& name) override;
+  deleteBlock(const Name& name) override;
 
 private:
-  std::map<Name, Data> m_list;
+  std::map<Name, Block> m_list;
 };
 
 } // namespace storage

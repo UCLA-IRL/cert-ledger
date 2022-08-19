@@ -12,32 +12,31 @@ LedgerMemory::LedgerMemory(const Name& lederName, const std::string& path)
 }
 
 void
-LedgerMemory::addData(const Data& data)
+LedgerMemory::addBlock(const Name& name, const Block& block)
 {
-  Name name = data.getName();
   auto search = m_list.find(name);
   if (search != m_list.end()) {
-    NDN_THROW(std::runtime_error("Data for " + name.toUri() + " already exists"));
+    NDN_THROW(std::runtime_error("Block for " + name.toUri() + " already exists"));
   }
-  m_list.insert(std::make_pair(name, data));
+  m_list.insert(std::make_pair(name, block));
 }
 
-Data
-LedgerMemory::getData(const Name& name)
+Block
+LedgerMemory::getBlock(const Name& name)
 {
   auto search = m_list.find(name);
   if (search == m_list.end()) {
-    NDN_THROW(std::runtime_error("Data for " + name.toUri() + " does not exists"));
+    NDN_THROW(std::runtime_error("Block for " + name.toUri() + " does not exists"));
   }
   return search->second;
 }
 
 void
-LedgerMemory::deleteData(const Name& name)
+LedgerMemory::deleteBlock(const Name& name)
 {
   auto search = m_list.find(name);
   if (search == m_list.end()) {
-    NDN_THROW(std::runtime_error("Data for " + name.toUri() + " does not exists"));
+    NDN_THROW(std::runtime_error("Block for " + name.toUri() + " does not exists"));
   }
   m_list.erase(search);
 }

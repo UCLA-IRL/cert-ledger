@@ -11,13 +11,13 @@ class LedgerStorage : boost::noncopyable
 public: 
 
   virtual void
-  addData(const Data& data) = 0;
+  addBlock(const Name& name, const Block& block) = 0;
 
-  virtual Data
-  getData(const Name& name) = 0;
+  virtual Block
+  getBlock(const Name& name) = 0;
 
   virtual void
-  deleteData(const Name& name) = 0;
+  deleteBlock(const Name& name) = 0;
 
 
 public: // factory

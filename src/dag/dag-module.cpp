@@ -1,14 +1,13 @@
-#include "dag/edge.hpp"
+#include "dag/dag-module.hpp"
 
 namespace cledger::dag {
 NDN_LOG_INIT(cledger.dag);
 
-EdgeManager&
-EdgeManager::add(Record& record)
+DagModule&
+DagModule::add(Record& record)
 {
-  auto state = get(record.getName());
-  state.pointers = record.getPointers();
-  state.payload = record.getPayload();
+  auto state = get(toStateName(record.getName()));
+  state.record = record;
   switch (state.status) {
     case EdgeState::INITIALIZED:
       return onNewRecord(state);
@@ -22,15 +21,22 @@ EdgeManager::add(Record& record)
 }
 
 
-EdgeManager&
-EdgeManager::setInterlockPolicy(const std::shared_ptr<InterlockPolicy> policy)
+DagModule&
+DagModule::setInterlockPolicy(const std::shared_ptr<InterlockPolicy> policy)
 {
   m_policy = policy;
   return *this;
 }
 
+DagModule&
+DagModule::setStorage(const std::shared_ptr<storage::LedgerStorage> storage)
+{
+  m_storage = storage;
+  return *this;
+}
+
 std::list<EdgeState>
-EdgeManager::getAncestors(EdgeState state) 
+DagModule::getAncestors(EdgeState state) 
 {
   std::list<EdgeState> ret;
   std::vector<Name> ancestors;
@@ -42,16 +48,16 @@ EdgeManager::getAncestors(EdgeState state)
   // the oldest being the first
 
   // start
-  for (auto& ptr : state.pointers) {
-    ancestors.push_back(ptr);
-    auto parent = get(ptr);
+  for (auto& ptr : state.record.getPointers()) {
+    ancestors.push_back(toStateName(ptr));
+    auto parent = get(toStateName(ptr));
     // if this is pending, update its descendents
     if (parent.status == EdgeState::INITIALIZED) {
-      NDN_LOG_TRACE(parent.name << " is a pending record, stop here...");
+      NDN_LOG_TRACE(parent.stateName << " is a pending state, stop here...");
     }
     else {
       // we gonna expand this ptr in the next round.
-      frontier.push_back(ptr);
+      frontier.push_back(toStateName(ptr));
     }
   }
   currAncestors = ancestors.size();
@@ -60,26 +66,26 @@ EdgeManager::getAncestors(EdgeState state)
   {
     nextFrontier.clear();
     for (auto& f : frontier) {
-      for (auto& ptr : get(f).pointers) {
-        auto parent = get(ptr);
+      for (auto& ptr : get(f).record.getPointers()) {
+        auto parent = get(toStateName(ptr));
 
         // add to ancestor?
         bool hasSeen = false;
         for (auto& a : ancestors) {
-          if (a == parent.name) {
+          if (a == parent.stateName) {
             hasSeen = true;
             break;
           }
         }
         if (!hasSeen) {
-          ancestors.push_back(parent.name);
+          ancestors.push_back(parent.stateName);
         }
 
         if (parent.status == EdgeState::INITIALIZED) {
-          NDN_LOG_TRACE(parent.name << " is a pending record, stop here...");
+          NDN_LOG_TRACE(parent.stateName << " is a pending state, stop here...");
         }
         else {
-          nextFrontier.push_back(parent.name);
+          nextFrontier.push_back(parent.stateName);
         }
       }
     }
@@ -95,79 +101,67 @@ EdgeManager::getAncestors(EdgeState state)
 }
 
 std::list<Record>
-EdgeManager::reap(const uint32_t threshold)
+DagModule::reap(const uint32_t threshold)
 {
   std::list<Record> ret;
-  for (auto& map : m_waitlist)
-    if (map.first >= threshold) 
-      for (auto& n : map.second) {
-        auto item = get(n);
-        Record r;
-        r.setName(item.name);
-        r.setPointers(item.pointers);
-        r.setPayload(item.payload);
-        ret.push_back(r);
+  for (auto& map : m_waitlist) {
+    if (map.first >= threshold)  {
+      for (auto& s : map.second) {
+        ret.push_back(get(s).record);
       }
+    }
+  }
   return ret;
 }
 
 EdgeState
-EdgeManager::get(const Name& name)
+DagModule::get(const Name& name)
 {
   if (m_buffer.find(name) != m_buffer.end())
     return m_buffer[name];
-  // if cannot get it, then it must be pending or initialized 
   EdgeState s;
-  s.name = name;
+  s.stateName = Name(name);
   s.status = EdgeState::INITIALIZED;
   return s;
 }
 
 void
-EdgeManager::update(const Name& name, EdgeState state)
+DagModule::update(const Name& name, EdgeState state)
 {
   m_buffer.insert_or_assign(name, state);
 }
 
-EdgeManager&
-EdgeManager::onNewRecord(EdgeState& state)
+DagModule&
+DagModule::onNewRecord(EdgeState& state)
 {
   state.status = EdgeState::LOADED;
-  update(state.name, state);
+  update(state.stateName, state);
   evaluateWaitlist(state);
   // if this is a genesis record
-  bool isGenesis = false;
-  for (auto& p : state.pointers) {
-    if (p == state.name) {
-      NDN_LOG_TRACE(state.name << " is genesis record");
-      isGenesis = true;
-      break;
-    }
-  }
-  if (!isGenesis) {
+  if (!state.record.isGenesis()) {
     evaluateAncestors(state);
   }
   return *this;
 }
 
 void
-EdgeManager::evaluateAncestors(EdgeState& state)
+DagModule::evaluateAncestors(EdgeState& state)
 {
-  NDN_LOG_TRACE("checking ancestors for " << state.name);
+  NDN_LOG_TRACE("checking ancestors for " << state.stateName);
   auto ancestors = getAncestors(state);
   for (auto& a : ancestors) {
-    NDN_LOG_TRACE("an ancestor " << a.name);
-    a.descendants.insert(state.name);
-    update(a.name, a);
+    NDN_LOG_TRACE("an ancestor " << a.stateName);
+    a.descendants.insert(state.stateName);
+    update(a.stateName, a);
     evaluateWaitlist(a);
   }
 }
 
 void
-EdgeManager::evaluateWaitlist(EdgeState& state)
+DagModule::evaluateWaitlist(EdgeState& state)
 {
   for (auto& l : m_waitlist) {
-    auto prev = l.second.find(state.name);
+    auto prev = l.second.find(state.stateName);
     if (prev != l.second.end()) {
       l.second.erase(prev);
     }
@@ -175,6 +169,6 @@ EdgeManager::evaluateWaitlist(EdgeState& state)
   if (!m_policy) {
     NDN_THROW(std::runtime_error("Interlock policy has not been set"));
   }
-  m_waitlist[m_policy->evaluate(state)].insert(state.name); 
+  m_waitlist[m_policy->evaluate(state)].insert(state.stateName); 
 }
 } // namespace cledger::dag
