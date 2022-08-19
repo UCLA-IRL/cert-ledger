@@ -65,10 +65,7 @@ using namespace std::string_literals;
 namespace tlv {
 
 enum : uint32_t {
-  BASE_RECORD = 0,
   GENERIC_RECORD = 1,
-  CERTIFICATE_RECORD = 2,
-  REVOCATION_RECORD = 3,
   GENESIS_RECORD = 4,
   REPLY_RECORD = 5,
 };

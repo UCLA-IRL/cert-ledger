@@ -20,6 +20,18 @@ public:
   std::list<Record>
   reap(const uint32_t threshold, bool removeFromWaitlist = false);
 
+  std::set<Name>
+  getWaitList(const uint32_t value)
+  {
+    return m_waitlist[value];
+  }
+
+  std::map<const uint32_t, std::set<Name>>
+  getWaitList()
+  {
+    return m_waitlist;
+  }
+
 CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::list<EdgeState>
   getAncestors(EdgeState state);

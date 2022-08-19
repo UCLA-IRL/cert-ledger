@@ -27,7 +27,7 @@ public:
   }
 
   LedgerConfig&
-  getCtConf()
+  getLedgerConf()
   {
     return m_config;
   }
