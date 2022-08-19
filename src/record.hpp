@@ -16,13 +16,8 @@ public:
     using ndn::tlv::Error::Error;
   };
 
-  explicit
   Record();
 
-  explicit
-  Record(const Record& record);
-
-  explicit
   Record(const Name& name, const Block& content);
   
   std::shared_ptr<Block>

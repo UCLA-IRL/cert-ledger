@@ -7,14 +7,6 @@ Record::Record()
 {
 }
 
-Record::Record(const Record& record)
-  : m_name(record.getName())
-  , m_type(record.getType())
-  , m_pointers(record.getPointers())
-  , m_payload(record.getPayload())
-{
-}
-
 Record::Record(const Name& name, const Block& content)
 {
   m_name = name;
