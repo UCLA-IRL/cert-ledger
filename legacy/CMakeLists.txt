@@ -13,10 +13,11 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsa
 set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
 # dependencies
+find_package(leveldb REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(NDN_CXX REQUIRED libndn-cxx)
 pkg_check_modules(NDN_SVS REQUIRED libndn-svs)
-find_package(leveldb REQUIRED)
+
 
 # files
 set(CERT_LEDGER_LIB_SOURCE_FILES
