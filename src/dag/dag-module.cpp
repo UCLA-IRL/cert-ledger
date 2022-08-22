@@ -3,8 +3,9 @@
 namespace cledger::dag {
 NDN_LOG_INIT(cledger.dag);
 
-DagModule::DagModule(storage::Interface storageIntf)
+DagModule::DagModule(storage::Interface storageIntf, policy::Interface policyIntf)
  : m_storageIntf(storageIntf)
+ , m_policyIntf(policyIntf)
 {
 }
 
@@ -22,14 +23,6 @@ DagModule::add(const Record& record)
     default:
       break;
   }
-  return *this;
-}
-
-
-DagModule&
-DagModule::setInterlockPolicy(const std::shared_ptr<InterlockPolicy> policy)
-{
-  m_policy = policy;
   return *this;
 }
 
@@ -177,9 +170,6 @@ DagModule::evaluateWaitlist(EdgeState& state)
       l.second.erase(state.stateName);
     }
   }
-  if (!m_policy) {
-    NDN_THROW(std::runtime_error("Interlock policy has not been set"));
-  }
-  m_waitlist[m_policy->evaluate(state)].insert(state.stateName); 
+  m_waitlist[m_policyIntf.evaluater(state)].insert(state.stateName); 
 }
 } // namespace cledger::dag

@@ -65,7 +65,7 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
     }
   };
 
-  auto searchAccOrStorage = [this, searchStorage, acc] (const Name& n) {
+  auto searchAccOrStorage = [searchStorage, acc] (const Name& n) {
     for (auto& r : *acc) {
       if (r.getName() == n) return true;
     }

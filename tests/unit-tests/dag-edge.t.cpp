@@ -8,7 +8,6 @@ namespace cledger::tests {
 using ndn::util::DummyClientFace;
 using ndn::security::verifySignature;
 using dag::DagModule;
-using dag::InterlockPolicyDescendants;
 
 BOOST_FIXTURE_TEST_SUITE(TestDagModule, IdentityManagementTimeFixture)
 
@@ -33,8 +32,8 @@ BOOST_AUTO_TEST_CASE(Linear)
   r4.addPointer(r3.getName());
 
   auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
-  DagModule eManager(storage->getInterface());
-  eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
+  auto policy = dag::policy::InterlockPolicy::createInterlockPolicy("policy-descendants", "");
+  DagModule eManager(storage->getInterface(), policy->getInterface());
   eManager.add(r1);
   eManager.add(r2);
   eManager.add(r3);
@@ -74,8 +73,8 @@ BOOST_AUTO_TEST_CASE(Rectangular1)
   r4.addPointer(r3.getName());
 
   auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
-  DagModule eManager(storage->getInterface());
-  eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
+  auto policy = dag::policy::InterlockPolicy::createInterlockPolicy("policy-descendants", "");
+  DagModule eManager(storage->getInterface(), policy->getInterface());
   eManager.add(r1);
   eManager.add(r2);
   eManager.add(r3);
@@ -115,8 +114,8 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   r3.addPointer(r4.getName());
 
   auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
-  DagModule eManager(storage->getInterface());
-  eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
+  auto policy = dag::policy::InterlockPolicy::createInterlockPolicy("policy-descendants", "");
+  DagModule eManager(storage->getInterface(), policy->getInterface());
   eManager.add(r1);
   eManager.add(r2);
   eManager.add(r4);
@@ -157,8 +156,8 @@ BOOST_AUTO_TEST_CASE(Rectangular3)
   r4.addPointer(r3.getName());
 
   auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
-  DagModule eManager(storage->getInterface());
-  eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
+  auto policy = dag::policy::InterlockPolicy::createInterlockPolicy("policy-descendants", "");
+  DagModule eManager(storage->getInterface(), policy->getInterface());
   eManager.add(r1);
   eManager.add(r2);
   eManager.add(r3);

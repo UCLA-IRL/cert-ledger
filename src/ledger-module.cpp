@@ -12,7 +12,8 @@ namespace cledger::ledger {
 
 NDN_LOG_INIT(cledger.ledger);
 
-LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath, const std::string& storageType)
+LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath,
+                           const std::string& storageType, const std::string& policyType)
   : m_face(face)
   , m_keyChain(keyChain)
 {
@@ -31,8 +32,8 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_storage = storage::LedgerStorage::createLedgerStorage(storageType, m_config.ledgerPrefix, "");
 
   // dag engine
-  m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface());
-  m_dag->setInterlockPolicy(std::make_shared<dag::InterlockPolicyDescendants>());
+  auto policy = dag::policy::InterlockPolicy::createInterlockPolicy(policyType, "");
+  m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface(), policy->getInterface());
 
   // initialize sync module
   sync::SyncOptions syncOps;
@@ -42,7 +43,6 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   // only for now
   secOps.interestSigner->signingInfo.setSigningHmacKey("certledger2022demo");
   secOps.dataSigner->signingInfo.setSigningHmacKey("certledger2022demo");
-  // a wrapper for record finder
   m_sync = std::make_unique<sync::SyncModule>(syncOps, secOps, m_face,
     m_storage->getInterface(),
     [this] (const Record& record) {
