@@ -24,6 +24,9 @@ public:
   void
   deleteBlock(const Name& name) override;
 
+  Interface
+  getInterface() override;
+
 private:
   leveldb::DB* db;
   leveldb::Options options;
