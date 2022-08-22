@@ -33,6 +33,7 @@ public:
 
 public:
   Name ledgerPrefix;
+  Name instanceSuffix;
   ndn::time::milliseconds nackFreshnessPeriod;
   // operator should list the namespace(s) that this Ledger is responsible of.
   // Ledger won't do look up for records that are that belong to any of the record Zone.

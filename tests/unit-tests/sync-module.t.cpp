@@ -20,17 +20,14 @@ BOOST_AUTO_TEST_CASE(R1R2InOrder)
   secOps.dataSigner->signingInfo.setSha256Signing();
   secOps.interestSigner->signingInfo.setSha256Signing();
 
-  std::set<Name> buffer;
-  auto existFinder = [&buffer] (const Name& n) {
-    return buffer.find(n) == buffer.end()? false : true;
-  };
-  auto yielder = [&buffer] (const Record& r) {
-    buffer.insert(r.getName());
+  auto yielder = [] (const Record& r) {
+    std::cout << "yield " << r.getName() << std::endl;
   };
   DummyClientFace face(io, m_keyChain, {true, true});
 
   SyncOptions syncOps{m_syncPrefix, Name("/node-1")};
-  SyncModule syncMod(syncOps, secOps, face, existFinder, yielder);
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  SyncModule syncMod(syncOps, secOps, face, storage->getInterface(), yielder);
   advanceClocks(time::milliseconds(20), 60);
 
   // prepare an event
@@ -78,18 +75,14 @@ BOOST_AUTO_TEST_CASE(R2Only)
   secOps.dataSigner->signingInfo.setSha256Signing();
   secOps.interestSigner->signingInfo.setSha256Signing();
 
-  std::set<Name> buffer;
-  auto existFinder = [&buffer] (const Name& n) {
-    return buffer.find(n) == buffer.end()? false : true;
-  };
-  auto yielder = [&buffer] (const Record& r) {
+  auto yielder = [] (const Record& r) {
     std::cout << "yield " << r.getName() << std::endl;
-    buffer.insert(r.getName());
   };
   DummyClientFace face(io, m_keyChain, {true, true});
 
   SyncOptions syncOps{m_syncPrefix, Name("/node-1")};
-  SyncModule syncMod(syncOps, secOps, face, existFinder, yielder);
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  SyncModule syncMod(syncOps, secOps, face, storage->getInterface(), yielder);
   advanceClocks(time::milliseconds(20), 60);
 
   // prepare an event
@@ -135,18 +128,14 @@ BOOST_AUTO_TEST_CASE(R3Only)
   secOps.dataSigner->signingInfo.setSha256Signing();
   secOps.interestSigner->signingInfo.setSha256Signing();
 
-  std::set<Name> buffer;
-  auto existFinder = [&buffer] (const Name& n) {
-    return buffer.find(n) == buffer.end()? false : true;
-  };
-  auto yielder = [&buffer] (const Record& r) {
+  auto yielder = [] (const Record& r) {
     std::cout << "yield " << r.getName() << std::endl;
-    buffer.insert(r.getName());
   };
   DummyClientFace face(io, m_keyChain, {true, true});
 
   SyncOptions syncOps{m_syncPrefix, Name("/node-1")};
-  SyncModule syncMod(syncOps, secOps, face, existFinder, yielder);
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  SyncModule syncMod(syncOps, secOps, face, storage->getInterface(), yielder);
   advanceClocks(time::milliseconds(20), 60);
 
   // prepare an event
@@ -206,18 +195,14 @@ BOOST_AUTO_TEST_CASE(Rectangular)
   secOps.dataSigner->signingInfo.setSha256Signing();
   secOps.interestSigner->signingInfo.setSha256Signing();
 
-  std::set<Name> buffer;
-  auto existFinder = [&buffer] (const Name& n) {
-    return buffer.find(n) == buffer.end()? false : true;
-  };
-  auto yielder = [&buffer] (const Record& r) {
+  auto yielder = [] (const Record& r) {
     std::cout << "yield " << r.getName() << std::endl;
-    buffer.insert(r.getName());
   };
   DummyClientFace face(io, m_keyChain, {true, true});
 
   SyncOptions syncOps{m_syncPrefix, Name("/node-1")};
-  SyncModule syncMod(syncOps, secOps, face, existFinder, yielder);
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  SyncModule syncMod(syncOps, secOps, face, storage->getInterface(), yielder);
   advanceClocks(time::milliseconds(20), 60);
 
   // prepare an event
@@ -284,18 +269,14 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   secOps.dataSigner->signingInfo.setSha256Signing();
   secOps.interestSigner->signingInfo.setSha256Signing();
 
-  std::set<Name> buffer;
-  auto existFinder = [&buffer] (const Name& n) {
-    return buffer.find(n) == buffer.end()? false : true;
-  };
-  auto yielder = [&buffer] (const Record& r) {
+  auto yielder = [] (const Record& r) {
     std::cout << "yield " << r.getName() << std::endl;
-    buffer.insert(r.getName());
   };
   DummyClientFace face(io, m_keyChain, {true, true});
 
   SyncOptions syncOps{m_syncPrefix, Name("/node-1")};
-  SyncModule syncMod(syncOps, secOps, face, existFinder, yielder);
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  SyncModule syncMod(syncOps, secOps, face, storage->getInterface(), yielder);
   advanceClocks(time::milliseconds(20), 60);
 
   // prepare an event

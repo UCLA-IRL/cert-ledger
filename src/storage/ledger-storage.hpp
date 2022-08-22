@@ -6,6 +6,15 @@
 namespace cledger {
 namespace storage {
 
+using Adder = std::function<void(const Name&, const Block&)>;
+using Getter = std::function<Block(const Name&)>;
+using Deleter = std::function<void(const Name&)>;
+struct Interface {
+  Adder adder;
+  Getter getter;
+  Deleter deleter;
+};
+
 class LedgerStorage : boost::noncopyable
 {
 public: 
@@ -19,6 +28,8 @@ public:
   virtual void
   deleteBlock(const Name& name) = 0;
 
+  virtual Interface
+  getInterface() = 0;
 
 public: // factory
   template<class LedgerStorageType>
