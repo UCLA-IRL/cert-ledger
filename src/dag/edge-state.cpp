@@ -36,7 +36,7 @@ encodeEdgeState(EdgeState& state)
 
   if (state.descendants.size() > 0) {
     block.push_back(ndn::makeBinaryBlock(TLV_EDGE_STATE_DESCENDANTS, 
-                                         span<const uint8_t>(nameBuffer.data(), nameBuffer.size())));
+      span<const uint8_t>(nameBuffer.data(), nameBuffer.size())));
   }
   block.encode();
   return block;
@@ -59,6 +59,7 @@ decodeEdgeState(Block& block)
         state.record = Record(fromStateName(state.stateName), item);
         break;
       case TLV_EDGE_STATE_DESCENDANTS:
+        item.parse();
         for (const auto& ptr : item.elements()) {
           state.descendants.insert(Name(ptr));
         }

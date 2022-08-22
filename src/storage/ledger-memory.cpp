@@ -41,5 +41,15 @@ LedgerMemory::deleteBlock(const Name& name)
   m_list.erase(search);
 }
 
+Interface
+LedgerMemory::getInterface()
+{
+  Interface intf;
+  intf.adder = std::bind(&LedgerMemory::addBlock, this, _1, _2);
+  intf.getter = std::bind(&LedgerMemory::getBlock, this, _1);
+  intf.deleter = std::bind(&LedgerMemory::deleteBlock, this, _1);
+  return intf;
+}
+
 } // namespace storage
 } // namespace cledger

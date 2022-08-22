@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(Linear)
   r4.setName(Name("/r4"));
   r4.addPointer(r3.getName());
 
-  DagModule eManager;
-  eManager.setStorage(storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", ""));
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  DagModule eManager(storage->getInterface());
   eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(Rectangular1)
   r4.addPointer(r2.getName());
   r4.addPointer(r3.getName());
 
-  DagModule eManager;
-  eManager.setStorage(storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", ""));
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  DagModule eManager(storage->getInterface());
   eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   r3.addPointer(r1.getName());
   r3.addPointer(r4.getName());
 
-  DagModule eManager;
-  eManager.setStorage(storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", ""));
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  DagModule eManager(storage->getInterface());
   eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);
@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(Rectangular3)
   r4.addPointer(r2.getName());
   r4.addPointer(r3.getName());
 
-  DagModule eManager;
-  eManager.setStorage(storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", ""));
+  auto storage = storage::LedgerStorage::createLedgerStorage("storage-memory", "/test/ledger", "");
+  DagModule eManager(storage->getInterface());
   eManager.setInterlockPolicy(std::make_shared<InterlockPolicyDescendants>());
   eManager.add(r1);
   eManager.add(r2);

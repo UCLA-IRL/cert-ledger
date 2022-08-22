@@ -8,6 +8,7 @@
 namespace cledger::ledger {
 
 const std::string CONFIG_LEDGER_PREFIX = "ledger-prefix";
+const std::string CONFIG_INSTANCE_SUFFIX = "instance-suffix";
 const std::string CONFIG_NACK_FRESHNESS_PERIOD = "nack-freshness-period";
 const std::string CONFIG_RECORD_ZONES = "record-zones";
 const std::string CONFIG_RECORD_ZONE_PREFIX = "record-zone-prefix";
@@ -32,6 +33,11 @@ LedgerConfig::load(const std::string& fileName)
   ledgerPrefix = Name(configJson.get(CONFIG_LEDGER_PREFIX, ""));
   if (ledgerPrefix.empty()) {
     NDN_THROW(std::runtime_error("Cannot parse ledger-prefix from the config file"));
+  }
+  // Instance suffix
+  instanceSuffix = Name(configJson.get(CONFIG_INSTANCE_SUFFIX, ""));
+  if (instanceSuffix.empty()) {
+    NDN_THROW(std::runtime_error("Cannot parse instance-suffix from the config file"));
   }
   // Nack Freshness Period
   nackFreshnessPeriod = time::seconds(configJson.get(CONFIG_NACK_FRESHNESS_PERIOD, 86400));

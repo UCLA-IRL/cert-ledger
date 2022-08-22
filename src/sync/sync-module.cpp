@@ -21,11 +21,11 @@ LedgerSVS::getDataName(const NodeID& nid, const SeqNo& seqNo)
 }
 
 SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps, ndn::Face& face,
-                       const ExistLocalRecord& exist, const YieldRecordCallback& yield)
+                       storage::Interface storageIntf, const YieldRecordCallback& yield)
   : m_syncOptions(options)
   , m_secOptions(secOps)
   , m_face(face)
-  , m_existCb(exist)
+  , m_storageIntf(storageIntf)
   , m_yieldCb(yield)
 {
   // TODO: move to ecdsa later
@@ -46,37 +46,48 @@ void
 SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
 { 
   // an accumlator to collect all missing records along the way
-  auto acc = std::make_shared<std::list<Record>>();
+  auto acc = std::make_shared<std::list<Data>>();
   for (auto& v : vectors) {
     recursiveFetcher(v.nodeId, v.high, acc); 
   }
 }
 
 void
-SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::list<Record>> acc)
+SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::list<Data>> acc)
 {
-  auto search = [this, acc] (const Name& n) {
+  auto searchStorage = [this] (const Name& n) {
+    try {
+      m_storageIntf.getter(n);
+      return true;
+    }
+    catch (std::exception& e) {
+      return false;
+    }
+  };
+
+  auto searchAccOrStorage = [this, searchStorage, acc] (const Name& n) {
     for (auto& r : *acc) {
       if (r.getName() == n) return true;
     }
-    return m_existCb(n);
+    return searchStorage(n);
   };
 
   NDN_LOG_TRACE("trying getting data " << m_svs->getDataName(nid, s));
-  m_svs->fetchData(nid, s, [this, acc, search] (const ndn::Data& data) {
+  m_svs->fetchData(nid, s, [this, acc, searchAccOrStorage] (const ndn::Data& data) {
     NDN_LOG_DEBUG("getting data " << data.getName());
 
-    Record record(data.getName(), data.getContent());
-    if (!search(record.getName())) acc->push_front(record);
+    if (!searchAccOrStorage(data.getName())) acc->push_front(data);
 
+    // has to parse the content at this time
+    Record record(data.getName(), data.getContent());
     if (record.isGenesis()) {
-      NDN_LOG_INFO(record.getName() << " is an new genesis record");
+      NDN_LOG_INFO(data.getName() << " is an new genesis record");
     }
 
     // check the pointer first
     bool allExist = true;
     for (auto& p : record.getPointers()) {
-      if (search(p)) {
+      if (searchAccOrStorage(p)) {
         // then we don't need to care
         NDN_LOG_TRACE(p << " already exists");
       }
@@ -91,7 +102,10 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
 
     if (allExist) {
       // clean the acc
-      for (auto& r : *acc) m_yieldCb(r);
+      for (auto& d : *acc) {
+        m_storageIntf.adder(d.getName(), d.wireEncode());
+        m_yieldCb(Record(d.getName(), d.getContent()));
+      }
       acc->clear();
     }
   });

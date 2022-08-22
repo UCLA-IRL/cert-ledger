@@ -1,5 +1,6 @@
 #include "ledger-module.hpp"
 #include "nack.hpp"
+#include "dag/interlock-policy-descendants.hpp"
 
 #include <ndn-cxx/security/signing-helpers.hpp>
 #include <ndn-cxx/security/verification-helpers.hpp>
@@ -17,13 +18,37 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
 {
   // load the config and create storage
   m_config.load(configPath);
-  m_storage = storage::LedgerStorage::createLedgerStorage(storageType, m_config.ledgerPrefix, "");
   m_validator.load(m_config.schemaFile);
   registerPrefix();
   
   Name topic = Name(m_config.ledgerPrefix).append("LEDGER").append("append");
+
+  // initiliaze CA facing prefixes
   m_appendCt = std::make_unique<append::Ledger>(m_config.ledgerPrefix, topic, m_face, m_keyChain, m_validator);
   m_appendCt->listen(std::bind(&LedgerModule::onDataSubmission, this, _1));
+
+  // initialize backend storage module
+  m_storage = storage::LedgerStorage::createLedgerStorage(storageType, m_config.ledgerPrefix, "");
+
+  // dag engine
+  m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface());
+  m_dag->setInterlockPolicy(std::make_shared<dag::InterlockPolicyDescendants>());
+
+  // initialize sync module
+  sync::SyncOptions syncOps;
+  sync::SecurityOptions secOps(m_keyChain);
+  syncOps.prefix = m_config.ledgerPrefix;
+  syncOps.id = m_config.instanceSuffix;
+  // only for now
+  secOps.interestSigner->signingInfo.setSigningHmacKey("certledger2022demo");
+  secOps.dataSigner->signingInfo.setSigningHmacKey("certledger2022demo");
+  // a wrapper for record finder
+  m_sync = std::make_unique<sync::SyncModule>(syncOps, secOps, m_face,
+    m_storage->getInterface(),
+    [this] (const Record& record) {
+      m_dag->add(record);
+    }
+  );  
 }
 
 void
@@ -105,5 +130,4 @@ LedgerModule::onRegisterFailed(const std::string& reason)
 {
   NDN_LOG_ERROR("Failed to register prefix in local hub's daemon, REASON: " << reason);
 }
-
 } // namespace cledger::ledger

@@ -22,6 +22,9 @@ public:
   void
   deleteBlock(const Name& name) override;
 
+  Interface
+  getInterface() override;
+
 private:
   std::map<Name, Block> m_list;
 };

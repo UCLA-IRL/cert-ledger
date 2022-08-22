@@ -2,6 +2,7 @@
 #define CLEDGER_SYNC_MODULE_HPP
 
 #include "record.hpp"
+#include "storage/ledger-storage.hpp"
 
 #include <iostream>
 #include <string>
@@ -20,8 +21,6 @@ using ndn::svs::UpdateCallback;
 using ndn::svs::MissingDataInfo;
 using ndn::svs::DataStore;
 
-using GetLocalRecord = std::function<Record(const Name&)>;
-using ExistLocalRecord = std::function<bool(const Name&)>;
 using YieldRecordCallback = std::function<void(const Record&)>;
 
 struct SyncOptions
@@ -49,7 +48,7 @@ class SyncModule
 public:
   explicit
   SyncModule(const SyncOptions &options, const SecurityOptions& secOps, ndn::Face& face,
-            const ExistLocalRecord& exist, const YieldRecordCallback& yield);
+             storage::Interface storageIntf, const YieldRecordCallback& yield);
 
   std::tuple<NodeID, SeqNo>
   parseDataName(const Name& name);
@@ -58,7 +57,7 @@ public:
   onMissingData(const std::vector<MissingDataInfo>& vectors);
 
   void
-  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::list<Record>> acc);
+  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::list<Data>> acc);
 
   void
   publishRecord(Record& record);
@@ -69,7 +68,7 @@ public:
   ndn::Face& m_face;
 
   std::shared_ptr<LedgerSVS> m_svs;
-  ExistLocalRecord m_existCb;
+  storage::Interface m_storageIntf;
   YieldRecordCallback m_yieldCb;
 };
 

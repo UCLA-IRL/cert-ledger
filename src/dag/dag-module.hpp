@@ -8,14 +8,15 @@ namespace cledger::dag {
 
 class DagModule {
 public:
-  DagModule&
-  add(Record& record);
+
+  // TODO: need an explicit constructor
+  DagModule(storage::Interface storageIntf);
 
   DagModule&
-  setInterlockPolicy(const std::shared_ptr<InterlockPolicy> policy); 
+  add(const Record& record);
 
   DagModule&
-  setStorage(const std::shared_ptr<storage::LedgerStorage> policy); 
+  setInterlockPolicy(const std::shared_ptr<InterlockPolicy> policy);
 
   std::list<Record>
   reap(const uint32_t threshold, bool removeFromWaitlist = false);
@@ -37,7 +38,7 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   getAncestors(EdgeState state);
 
   EdgeState
-  get(const Name& name);
+  getOrConstruct(const Name& name);
 
   void
   update(const Name& name, EdgeState state);
@@ -52,10 +53,10 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   evaluateWaitlist(EdgeState& state);
 
-  std::map<Name, EdgeState> m_buffer;
   std::map<const uint32_t, std::set<Name>> m_waitlist;
   std::shared_ptr<InterlockPolicy> m_policy;
-  std::shared_ptr<storage::LedgerStorage> m_storage;
+
+  storage::Interface m_storageIntf;
 };
 
 std::ostream&
