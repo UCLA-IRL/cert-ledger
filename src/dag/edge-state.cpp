@@ -6,7 +6,8 @@ static const std::string stateNameHeader = "/32=EdgeState";
 
 enum : uint32_t {
   TLV_EDGE_STATE_TYPE= 311,
-  TLV_EDGE_STATE_DESCENDANTS = 312
+  TLV_EDGE_STATE_STATUS = 312,
+  TLV_EDGE_STATE_DESCENDANTS = 313
 };
 
 Name
@@ -26,6 +27,7 @@ encodeEdgeState(EdgeState& state)
 {
   Block block(TLV_EDGE_STATE_TYPE);
   block.push_back(state.stateName.wireEncode());
+  block.push_back(ndn::makeNonNegativeIntegerBlock(TLV_EDGE_STATE_STATUS, state.status));
   block.push_back(*state.record.prepareContent());
 
   Buffer nameBuffer;
@@ -54,6 +56,9 @@ decodeEdgeState(Block& block)
     switch (item.type()) {
       case ndn::tlv::Name:
         state.stateName = Name(item);
+        break;
+      case TLV_EDGE_STATE_STATUS:
+        state.status = static_cast<EdgeState::Status>(ndn::readNonNegativeInteger(item));
         break;
       case ndn::tlv::Content:
         state.record = Record(fromStateName(state.stateName), item);

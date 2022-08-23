@@ -21,4 +21,5 @@ export BOOST_TEST_DETECT_MEMORY_LEAK=0
 export BOOST_TEST_LOGGER=HRF,test_suite,stdout:XML,all,build/xunit-log.xml
 
 # Run unit tests
+export NDN_LOG="cledger.*=TRACE"
 ./build/unit-tests
