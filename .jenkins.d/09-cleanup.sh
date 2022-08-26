@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-PROJ=ndnrevoke
+PROJ=ndn-cledger
 
 sudo rm -f /usr/local/bin/"$PROJ"*
 sudo rm -fr /usr/local/include/"$PROJ"
