@@ -32,3 +32,4 @@ __pycache__/
 # Other
 /VERSION.info
 *.cert
+test_db/

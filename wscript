@@ -10,7 +10,7 @@ GIT_TAG_PREFIX = 'cledger-'
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
     opt.load(['default-compiler-flags', 'coverage', 'sanitizers',
-              'boost'],
+              'boost', 'leveldb'],
              tooldir=['.waf-tools'])
 
     optgrp = opt.add_option_group('ndn-cledger Options')
@@ -19,7 +19,7 @@ def options(opt):
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
-               'default-compiler-flags', 'boost'])
+               'default-compiler-flags', 'boost', 'leveldb'])
 
     conf.env.WITH_TESTS = conf.options.with_tests
 
@@ -34,6 +34,7 @@ def configure(conf):
     if conf.env.WITH_TESTS:
         boost_libs.append('unit_test_framework')
 
+    conf.check_leveldb()
     conf.check_boost(lib=boost_libs, mt=True)
     if conf.env.BOOST_VERSION_NUMBER < 106501:
         conf.fatal('The minimum supported version of Boost is 1.65.1.\n'
