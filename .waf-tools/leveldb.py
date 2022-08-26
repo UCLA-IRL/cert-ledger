@@ -5,7 +5,7 @@
 from waflib.Configure import conf
 
 def options(opt):
-    opt.add_option('--with-leveldb', type='string', default=None, dest='leveldb_dir',
+    opt.add_option('--with-leveldb', type='string', default='/usr/lib', dest='leveldb_dir',
                    help='directory where LevelDB is installed, e.g., /usr/local')
 
 @conf

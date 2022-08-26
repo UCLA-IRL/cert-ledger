@@ -27,8 +27,6 @@ def configure(conf):
                    pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
     conf.check_cfg(package='libndn-svs', args=['--cflags', '--libs'], uselib_store='NDN_SVS',
                    pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
-    conf.check_cfg(package='libleveldb', args=['--cflags', '--libs'], uselib_store='LEVELDB',
-                   pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
     
     boost_libs = ['system', 'program_options', 'filesystem']
     if conf.env.WITH_TESTS:
