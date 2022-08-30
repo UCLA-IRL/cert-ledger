@@ -92,7 +92,7 @@ DagModule::getAncestors(EdgeState state)
 }
 
 std::list<Record>
-DagModule::reap(const uint32_t threshold, bool removeFromWaitlist)
+DagModule::harvest(const uint32_t threshold, bool removeFromWaitlist)
 {
   std::list<Record> ret;
   for (auto& map : m_waitlist) {

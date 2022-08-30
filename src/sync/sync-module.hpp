@@ -29,18 +29,21 @@ struct SyncOptions
   Name id;
 };
 
-class LedgerSVS : public SVSyncBase
+class LedgerSVSBase : public SVSyncBase
 {
 public:
-  LedgerSVS(const Name& syncPrefix,
-            const Name& nodePrefix,
-            ndn::Face& face,
-            const UpdateCallback& updateCallback,
-            const SecurityOptions& securityOptions = SecurityOptions::DEFAULT,
-            std::shared_ptr<DataStore> dataStore = DEFAULT_DATASTORE);
+  LedgerSVSBase(const Name& syncPrefix,
+                const Name& nodePrefix,
+                ndn::Face& face,
+                const UpdateCallback& updateCallback,
+                const SecurityOptions& securityOptions = SecurityOptions::DEFAULT,
+                std::shared_ptr<DataStore> dataStore = DEFAULT_DATASTORE);
 
   Name
   getDataName(const NodeID& nid, const SeqNo& seqNo) override;
+
+  Name
+  getMyDataName(const SeqNo& seqNo);
 };
 
 class SyncModule
@@ -50,6 +53,16 @@ public:
   SyncModule(const SyncOptions &options, const SecurityOptions& secOps, ndn::Face& face,
              storage::Interface storageIntf, const YieldRecordCallback& yield);
 
+  Name
+  publishRecord(Record& record);
+
+  std::shared_ptr<LedgerSVSBase>
+  getSyncBase()
+  {
+    return m_svs;
+  }
+
+CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::tuple<NodeID, SeqNo>
   parseDataName(const Name& name);
 
@@ -59,15 +72,11 @@ public:
   void
   recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::list<Data>> acc);
 
-  void
-  publishRecord(Record& record);
-
-public:
   SyncOptions m_syncOptions;
   SecurityOptions m_secOptions;
   ndn::Face& m_face;
 
-  std::shared_ptr<LedgerSVS> m_svs;
+  std::shared_ptr<LedgerSVSBase> m_svs;
   storage::Interface m_storageIntf;
   YieldRecordCallback m_yieldCb;
 };

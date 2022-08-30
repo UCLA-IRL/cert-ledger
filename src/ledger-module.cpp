@@ -47,6 +47,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
     m_storage->getInterface(),
     [this] (const Record& record) {
       m_dag->add(record);
+      printDagChanges();
     }
   );  
 }
@@ -129,5 +130,54 @@ void
 LedgerModule::onRegisterFailed(const std::string& reason)
 {
   NDN_LOG_ERROR("Failed to register prefix in local hub's daemon, REASON: " << reason);
+}
+
+void
+LedgerModule::afterValidation(const Data& data)
+{
+  // put raw data into storage
+  m_storage->addBlock(data.getName(), data.wireEncode());
+
+  // it is either a certificate or revocation record
+  Record newRecord;
+  std::list<Name> pointers;
+  // name is given by SVS, don't set it
+  newRecord.setPayload(data.wireEncode());
+  for (auto& i : m_dag->getWaitList(0)) {
+    pointers.push_back(i);
+  }
+  
+  if (pointers.size() < 1) {
+    // no waitlist, make a gensis record only referencing to itself
+    newRecord.setType(tlv::GENESIS_RECORD);
+    // a gensis record must be its first SVS publication,
+    // therefore we can guess the name
+    auto genesisName = m_sync->getSyncBase()->getMyDataName(1);
+    newRecord.setPointers({genesisName});
+  }
+  else {
+    // a generic record, add pointers normally
+    newRecord.setType(tlv::GENERIC_RECORD);
+    newRecord.setPointers(pointers);
+  }
+
+  // publish record
+  Name name = m_sync->publishRecord(newRecord);
+  newRecord.setName(name);
+  // add to DAG
+  m_dag->add(newRecord);
+  printDagChanges();
+}
+
+void
+LedgerModule::printDagChanges()
+{
+  // harvest record that collects enough citations (e.g., 3)
+  auto recordList = m_dag->harvest(3, true);
+  // put those record into 
+  NDN_LOG_DEBUG("The following Records have been interlocked");
+  for (auto& i : recordList) {
+    NDN_LOG_DEBUG("   " << i.getName());
+  }  
 }
 } // namespace cledger::ledger

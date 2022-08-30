@@ -48,12 +48,19 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   registerPrefix();
 
   void
+  afterValidation(const Data& data);
+
+  void
   onRegisterFailed(const std::string& reason);
 
   bool
   isValidQuery(Name queryName);
 
 CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+
+  void
+  printDagChanges();
+
   ndn::Face& m_face;
   LedgerConfig m_config;
   ndn::KeyChain& m_keyChain;

@@ -4,20 +4,27 @@
 namespace cledger::sync {
 NDN_LOG_INIT(cledger.sync);
 
-LedgerSVS::LedgerSVS(const Name& syncPrefix,
-                      const Name& nodePrefix,
-                      ndn::Face& face,
-                      const UpdateCallback& updateCallback,
-                      const SecurityOptions& securityOptions,
-                      std::shared_ptr<DataStore> dataStore)
+LedgerSVSBase::LedgerSVSBase(const Name& syncPrefix,
+                             const Name& nodePrefix,
+                             ndn::Face& face,
+                             const UpdateCallback& updateCallback,
+                             const SecurityOptions& securityOptions,
+                             std::shared_ptr<DataStore> dataStore)
   : SVSyncBase(syncPrefix, Name(nodePrefix).append(syncPrefix), nodePrefix,
                 face, updateCallback, securityOptions, std::move(dataStore))
 {}
 
 Name
-LedgerSVS::getDataName(const NodeID& nid, const SeqNo& seqNo)
+LedgerSVSBase::getDataName(const NodeID& nid, const SeqNo& seqNo)
 {
   return Name(m_syncPrefix).append(nid).appendNumber(seqNo);
+}
+
+Name
+LedgerSVSBase::getMyDataName(const SeqNo& seqNo)
+{
+  
+  return getDataName(m_id, 0);
 }
 
 SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps, ndn::Face& face,
@@ -29,9 +36,9 @@ SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps
   , m_yieldCb(yield)
 {
   // TODO: move to ecdsa later
-  m_svs = std::make_shared<LedgerSVS>(m_syncOptions.prefix, 
-                                      Name(m_syncOptions.prefix).append(m_syncOptions.id),
-                                      m_face, std::bind(&SyncModule::onMissingData, this, _1), m_secOptions);
+  m_svs = std::make_shared<LedgerSVSBase>(m_syncOptions.prefix, 
+                                          Name(m_syncOptions.prefix).append(m_syncOptions.id),
+                                          m_face, std::bind(&SyncModule::onMissingData, this, _1), m_secOptions);
 }
 
 std::tuple<NodeID, SeqNo>
@@ -111,10 +118,11 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
   });
 }
 
-void
+Name
 SyncModule::publishRecord(Record& record)
 { 
-  m_svs->publishData(*record.prepareContent(), ndn::time::milliseconds(3000));
+  SeqNo seq = m_svs->publishData(*record.prepareContent(), ndn::time::milliseconds(3000));
+  return m_svs->getDataName(m_syncOptions.id, seq);
 }
 
 } // namespace cledger::sync

@@ -16,7 +16,7 @@ public:
   add(const Record& record);
 
   std::list<Record>
-  reap(const uint32_t threshold, bool removeFromWaitlist = false);
+  harvest(const uint32_t threshold, bool removeFromWaitlist = false);
 
   std::set<Name>
   getWaitList(const uint32_t value)

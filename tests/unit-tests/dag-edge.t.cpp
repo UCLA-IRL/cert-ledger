@@ -39,10 +39,10 @@ BOOST_AUTO_TEST_CASE(Linear)
   eManager.add(r3);
   eManager.add(r4);
 
-  BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
-  BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(3, true).size());
-  BOOST_CHECK_EQUAL(0, eManager.reap(3).size());
+  BOOST_CHECK_EQUAL(3, eManager.harvest(1).size());
+  BOOST_CHECK_EQUAL(2, eManager.harvest(2).size());
+  BOOST_CHECK_EQUAL(1, eManager.harvest(3, true).size());
+  BOOST_CHECK_EQUAL(0, eManager.harvest(3).size());
   // for (auto& s : eManager.m_buffer) {
   //   std::cerr << s.second;
   // }
@@ -80,10 +80,10 @@ BOOST_AUTO_TEST_CASE(Rectangular1)
   eManager.add(r3);
   eManager.add(r4);
 
-  BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(2).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(3, true).size());
-  BOOST_CHECK_EQUAL(0, eManager.reap(3).size());
+  BOOST_CHECK_EQUAL(3, eManager.harvest(1).size());
+  BOOST_CHECK_EQUAL(1, eManager.harvest(2).size());
+  BOOST_CHECK_EQUAL(1, eManager.harvest(3, true).size());
+  BOOST_CHECK_EQUAL(0, eManager.harvest(3).size());
   // for (auto& s : eManager.m_buffer) {
   //   std::cerr << s.second;
   // }
@@ -121,10 +121,10 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
   eManager.add(r4);
   eManager.add(r3);
 
-  BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
-  BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(3, true).size());
-  BOOST_CHECK_EQUAL(0, eManager.reap(3).size());
+  BOOST_CHECK_EQUAL(3, eManager.harvest(1).size());
+  BOOST_CHECK_EQUAL(2, eManager.harvest(2).size());
+  BOOST_CHECK_EQUAL(1, eManager.harvest(3, true).size());
+  BOOST_CHECK_EQUAL(0, eManager.harvest(3).size());
   // for (auto& s : eManager.m_buffer) {
   //   std::cerr << s.second;
   // }
@@ -163,10 +163,10 @@ BOOST_AUTO_TEST_CASE(Rectangular3)
   eManager.add(r3);
   eManager.add(r4);
 
-  BOOST_CHECK_EQUAL(3, eManager.reap(1).size());
-  BOOST_CHECK_EQUAL(2, eManager.reap(2).size());
-  BOOST_CHECK_EQUAL(1, eManager.reap(3, true).size());
-  BOOST_CHECK_EQUAL(0, eManager.reap(3).size());
+  BOOST_CHECK_EQUAL(3, eManager.harvest(1).size());
+  BOOST_CHECK_EQUAL(2, eManager.harvest(2).size());
+  BOOST_CHECK_EQUAL(1, eManager.harvest(3, true).size());
+  BOOST_CHECK_EQUAL(0, eManager.harvest(3).size());
   // for (auto& s : eManager.m_buffer) {
   //   std::cerr << s.second;
   // }
