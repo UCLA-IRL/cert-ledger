@@ -9,6 +9,8 @@ struct EdgeStateList
   Name listName;
   uint32_t key;
   std::set<Name> value;
+
+  Name nextList;
 };
 
 Name
@@ -16,6 +18,9 @@ toStateListName(uint32_t key);
 
 uint32_t
 fromStateListName(const Name& stateListName);
+
+Name
+getStateListNull();
 
 Block
 encodeEdgeStateList(EdgeStateList& stateList);

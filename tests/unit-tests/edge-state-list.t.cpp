@@ -4,6 +4,7 @@
 namespace cledger::tests {
 
 using dag::EdgeStateList;
+using dag::getStateListNull;
 using dag::encodeEdgeStateList;
 using dag::decodeEdgeStateList;
 
@@ -15,11 +16,13 @@ BOOST_AUTO_TEST_CASE(Encoding)
   input.listName = Name("/32=EdgeStateList/l1");
   input.key = 1;
   input.value.insert(Name("/32=EdgeState/r1"));
+  input.nextList = getStateListNull();
 
   Block block = encodeEdgeStateList(input);
   EdgeStateList output = decodeEdgeStateList(block);
   BOOST_CHECK_EQUAL(input.listName, output.listName);
   BOOST_CHECK_EQUAL(input.value.size(), output.value.size());
+  BOOST_CHECK_EQUAL(input.nextList, output.nextList);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // TestEdgeStateList

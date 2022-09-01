@@ -4,10 +4,14 @@ namespace cledger::dag {
 
 static const std::string stateListNameHeader = "/32=EdgeStateList";
 
+static const std::string stateListNull = "/32=EdgeStateList/null";
+
 enum : uint32_t {
   TLV_EDGE_STATE_LIST_TYPE = 351,
-  TLV_EDGE_STATE_LIST_KEY = 352,
-  TLV_EDGE_STATE_LIST_VALUE = 353,
+  TLV_EDGE_STATE_LIST_NAME = 352,
+  TLV_EDGE_STATE_LIST_KEY = 353,
+  TLV_EDGE_STATE_LIST_VALUE = 354,
+  TLV_EDGE_STATE_LIST_NEXT = 355,
 };
 
 
@@ -23,11 +27,17 @@ fromStateListName(const Name& stateListName)
   return stateListName.get(-1).toNumber();
 }
 
+Name
+getStateListNull()
+{
+  return Name(stateListNull);
+}
+
 Block
 encodeEdgeStateList(EdgeStateList& stateList)
 {
   Block block(TLV_EDGE_STATE_LIST_TYPE);
-  block.push_back(stateList.listName.wireEncode());
+  block.push_back(ndn::makeNestedBlock(TLV_EDGE_STATE_LIST_NAME, stateList.listName));
   block.push_back(ndn::makeNonNegativeIntegerBlock(TLV_EDGE_STATE_LIST_KEY, stateList.key));
 
   Buffer nameBuffer;
@@ -40,6 +50,7 @@ encodeEdgeStateList(EdgeStateList& stateList)
     block.push_back(ndn::makeBinaryBlock(TLV_EDGE_STATE_LIST_VALUE, 
       span<const uint8_t>(nameBuffer.data(), nameBuffer.size())));
   }
+  block.push_back(ndn::makeNestedBlock(TLV_EDGE_STATE_LIST_NEXT, stateList.nextList));
   block.encode();
   return block;
 }
@@ -54,8 +65,8 @@ decodeEdgeStateList(Block& block)
   }
   for (const auto &item : block.elements()) {
     switch (item.type()) {
-      case ndn::tlv::Name:
-        stateList.listName = Name(item);
+      case TLV_EDGE_STATE_LIST_NAME:
+        stateList.listName.wireDecode(Block(make_span<const uint8_t>(item.value(), item.value_size())));
         break;
       case TLV_EDGE_STATE_LIST_KEY:
         stateList.key = ndn::readNonNegativeInteger(item);
@@ -65,6 +76,9 @@ decodeEdgeStateList(Block& block)
         for (const auto& stateName : item.elements()) {
           stateList.value.insert(Name(stateName));
         }
+        break;
+      case TLV_EDGE_STATE_LIST_NEXT:
+        stateList.nextList.wireDecode(Block(make_span<const uint8_t>(item.value(), item.value_size())));
         break;
       default:
         if (ndn::tlv::isCriticalType(item.type())) {
