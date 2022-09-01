@@ -56,8 +56,6 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   bool
   isValidQuery(Name queryName);
 
-CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-
   void
   printDagChanges();
 
@@ -72,11 +70,12 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   // storage backend
   std::unique_ptr<storage::LedgerStorage> m_storage;
-  
+
   // sync module
   std::unique_ptr<sync::SyncModule> m_sync;
 
   // dag module
+  std::unique_ptr<dag::policy::InterlockPolicy> m_policy;
   std::unique_ptr<dag::DagModule> m_dag;
 
 };

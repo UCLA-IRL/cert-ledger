@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(Rectangular)
    *  ^                ^
    *  |                |
    *  |                |
-   * r3 ------------> r4
+   * r3 <------------ r4
    */
 
   // init

@@ -6,11 +6,13 @@ Cert Ledger is a distributed logger for storing Certificates/Revocation records 
 
 * ndn-cxx
 * ndn-svs
+* leveldb
 * NFD - to forward the NDN network
 
-## Compile
+## Compile (on Ubuntu)
 
 ```bash
+sudo apt-get install libleveldb-dev
 ./waf configure --with-tests
 ./waf
 sudo ./waf install

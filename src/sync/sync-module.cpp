@@ -22,9 +22,8 @@ LedgerSVSBase::getDataName(const NodeID& nid, const SeqNo& seqNo)
 
 Name
 LedgerSVSBase::getMyDataName(const SeqNo& seqNo)
-{
-  
-  return getDataName(m_id, 0);
+{ 
+  return Name(m_id).appendNumber(seqNo);
 }
 
 SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps, ndn::Face& face,

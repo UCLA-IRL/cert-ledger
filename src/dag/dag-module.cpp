@@ -96,12 +96,14 @@ DagModule::harvest(const uint32_t threshold, bool removeFromWaitlist)
 {
   std::list<Record> ret;
   for (auto& map : m_waitlist) {
+    std::list<Name> rm;
     if (map.first >= threshold)  {
       for (auto& s : map.second) {
         auto state = getOrConstruct(s);
         ret.push_back(state.record);
-        if (removeFromWaitlist) map.second.erase(s);
+        if (removeFromWaitlist) rm.push_back(s);
       }
+      for (auto& n : rm) map.second.erase(n);
     }
   }
   return ret;
@@ -137,6 +139,7 @@ DagModule::update(const Name& name, EdgeState state)
 DagModule&
 DagModule::onNewRecord(EdgeState& state)
 {
+  NDN_LOG_TRACE("Processing EdgeState " << state.stateName);
   state.status = EdgeState::LOADED;
   update(state.stateName, state);
   evaluateWaitlist(state);
@@ -150,10 +153,10 @@ DagModule::onNewRecord(EdgeState& state)
 void
 DagModule::evaluateAncestors(EdgeState& state)
 {
-  NDN_LOG_TRACE("checking ancestors for " << state.stateName);
+  NDN_LOG_TRACE("Checking ancestors for " << state.stateName);
   auto ancestors = getAncestors(state);
   for (auto& a : ancestors) {
-    NDN_LOG_TRACE("adding a descendant " << state.stateName << " for " << a.stateName
+    NDN_LOG_TRACE("Adding a descendant " << state.stateName << " for " << a.stateName
                   << ", current descendant size is " << a.descendants.size());
     a.descendants.insert(state.stateName);
     update(a.stateName, a);
@@ -164,12 +167,13 @@ DagModule::evaluateAncestors(EdgeState& state)
 void
 DagModule::evaluateWaitlist(EdgeState& state)
 {
+  NDN_LOG_TRACE("Evaluating waitlist for " << state.stateName);
   for (auto& l : m_waitlist) {
     auto prev = l.second.find(state.stateName);
     if (prev != l.second.end()) {
       l.second.erase(state.stateName);
     }
   }
-  m_waitlist[m_policyIntf.evaluater(state)].insert(state.stateName); 
+  m_waitlist[m_policyIntf.evaluater(state)].insert(state.stateName);
 }
 } // namespace cledger::dag

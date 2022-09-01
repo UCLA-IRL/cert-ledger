@@ -32,8 +32,8 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_storage = storage::LedgerStorage::createLedgerStorage(storageType, m_config.ledgerPrefix, "");
 
   // dag engine
-  auto policy = dag::policy::InterlockPolicy::createInterlockPolicy(policyType, "");
-  m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface(), policy->getInterface());
+  m_policy = dag::policy::InterlockPolicy::createInterlockPolicy(policyType, "");
+  m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface(), m_policy->getInterface());
 
   // initialize sync module
   sync::SyncOptions syncOps;
@@ -135,6 +135,7 @@ LedgerModule::onRegisterFailed(const std::string& reason)
 void
 LedgerModule::afterValidation(const Data& data)
 {
+  NDN_LOG_TRACE("Receiving validated Data " << data.getName());
   // put raw data into storage
   m_storage->addBlock(data.getName(), data.wireEncode());
 
@@ -142,9 +143,12 @@ LedgerModule::afterValidation(const Data& data)
   Record newRecord;
   std::list<Name> pointers;
   // name is given by SVS, don't set it
-  newRecord.setPayload(data.wireEncode());
+
+  auto dataTlv = data.wireEncode();
+  newRecord.setPayload(make_span<const uint8_t>(dataTlv.wire(), dataTlv.size()));
   for (auto& i : m_dag->getWaitList(0)) {
-    pointers.push_back(i);
+    NDN_LOG_DEBUG("Referencing to [Generic] " << dag::fromStateName(i));
+    pointers.push_back(dag::fromStateName(i));
   }
   
   if (pointers.size() < 1) {
@@ -153,6 +157,7 @@ LedgerModule::afterValidation(const Data& data)
     // a gensis record must be its first SVS publication,
     // therefore we can guess the name
     auto genesisName = m_sync->getSyncBase()->getMyDataName(1);
+    NDN_LOG_DEBUG("Referencing to [Genesis] " << genesisName);
     newRecord.setPointers({genesisName});
   }
   else {
@@ -160,12 +165,12 @@ LedgerModule::afterValidation(const Data& data)
     newRecord.setType(tlv::GENERIC_RECORD);
     newRecord.setPointers(pointers);
   }
-
   // publish record
   Name name = m_sync->publishRecord(newRecord);
   newRecord.setName(name);
   // add to DAG
   m_dag->add(newRecord);
+  NDN_LOG_DEBUG("Generating new Record " << newRecord.getName());
   printDagChanges();
 }
 
@@ -173,11 +178,13 @@ void
 LedgerModule::printDagChanges()
 {
   // harvest record that collects enough citations (e.g., 3)
-  auto recordList = m_dag->harvest(3, true);
+  auto recordList = m_dag->harvest(2);
   // put those record into 
-  NDN_LOG_DEBUG("The following Records have been interlocked");
-  for (auto& i : recordList) {
-    NDN_LOG_DEBUG("   " << i.getName());
-  }  
+  if (recordList.size() > 0) {
+    NDN_LOG_DEBUG("The following Records have been interlocked");
+    for (auto& i : recordList) {
+      NDN_LOG_DEBUG("   " << i.getName());
+    }
+  }
 }
 } // namespace cledger::ledger

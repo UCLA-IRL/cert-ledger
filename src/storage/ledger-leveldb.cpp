@@ -46,7 +46,7 @@ LedgerLevelDB::getBlock(const Name& name)
   if (!s.ok()){
     NDN_THROW(std::runtime_error("Block for " + name.toUri() + " does not exists"));
   }
-  return Block({reinterpret_cast<const uint8_t*>(data_str.data()), data_str.size()});
+  return Block(make_span<const uint8_t>(reinterpret_cast<const uint8_t*>(data_str.data()), data_str.size()));
 }
 
 void
