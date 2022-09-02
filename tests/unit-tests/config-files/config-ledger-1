@@ -4,8 +4,12 @@
   "nack-freshness-period": "10",
   "record-zones":
   [
-    {"record-zone-prefix": "/ndn/site1"},
-    {"record-zone-prefix": "/ndn/site2"}
+    "/ndn/site1", "/ndn/site2"
   ],
+  "interlock-policy":
+  {
+    "policy-type": "policy-descendants",
+    "policy-threshold": "3"
+  },
   "trust-schema": "tests/unit-tests/config-files/trust-schema.conf"
 }

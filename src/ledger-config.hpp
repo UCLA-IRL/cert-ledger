@@ -16,8 +16,13 @@ namespace cledger::ledger {
  *  "nack-freshness-period": "", (in seconds)
  *  "record-zones":
  *  [
- *    {"record-zone-prefix": ""},
- *    {"record-zone-prefix": ""}
+ *    "", ""
+ *  ]
+ *  "storage": ""
+ *  "interlock-policy":
+ *  [
+ *    "policy-type": ""
+ *    "policy-threshold": ""
  *  ]
  * }
  */
@@ -39,6 +44,9 @@ public:
   // Ledger won't do look up for records that are that belong to any of the record Zone.
   // no protocol side impact, purely for filtering Ledger side unnecessary record look up.
   std::vector<Name> recordZones;
+  std::string storageType;
+  std::string policyType;
+  uint32_t policyThreshold = -1;
   std::string schemaFile;
 };
 

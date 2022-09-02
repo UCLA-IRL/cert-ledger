@@ -1,4 +1,5 @@
 #include "dag/dag-module.hpp"
+#include "dag/edge-state-list.hpp"
 
 namespace cledger::dag {
 NDN_LOG_INIT(cledger.dag);
@@ -92,7 +93,7 @@ DagModule::getAncestors(EdgeState state)
 }
 
 std::list<Record>
-DagModule::harvest(const uint32_t threshold, bool removeFromWaitlist)
+DagModule::harvest(const uint32_t threshold, bool remove)
 {
   std::list<Record> ret;
   for (auto& map : m_waitlist) {
@@ -101,7 +102,7 @@ DagModule::harvest(const uint32_t threshold, bool removeFromWaitlist)
       for (auto& s : map.second) {
         auto state = getOrConstruct(s);
         ret.push_back(state.record);
-        if (removeFromWaitlist) rm.push_back(s);
+        if (remove) rm.push_back(s);
       }
       for (auto& n : rm) map.second.erase(n);
     }
@@ -130,10 +131,10 @@ DagModule::getOrConstruct(const Name& name)
 }
 
 void
-DagModule::update(const Name& name, EdgeState state)
+DagModule::update(EdgeState state)
 {
-  m_storageIntf.deleter(name);
-  m_storageIntf.adder(name, encodeEdgeState(state));
+  m_storageIntf.deleter(state.stateName);
+  m_storageIntf.adder(state.stateName, encodeEdgeState(state));
 }
 
 DagModule&
@@ -141,7 +142,7 @@ DagModule::onNewRecord(EdgeState& state)
 {
   NDN_LOG_TRACE("Processing EdgeState " << state.stateName);
   state.status = EdgeState::LOADED;
-  update(state.stateName, state);
+  update(state);
   evaluateWaitlist(state);
   // if this is a genesis record
   if (!state.record.isGenesis()) {
@@ -159,7 +160,7 @@ DagModule::evaluateAncestors(EdgeState& state)
     NDN_LOG_TRACE("Adding a descendant " << state.stateName << " for " << a.stateName
                   << ", current descendant size is " << a.descendants.size());
     a.descendants.insert(state.stateName);
-    update(a.stateName, a);
+    update(a);
     evaluateWaitlist(a);
   }
 }

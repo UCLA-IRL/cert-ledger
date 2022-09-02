@@ -12,8 +12,7 @@ namespace cledger::ledger {
 
 NDN_LOG_INIT(cledger.ledger);
 
-LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath,
-                           const std::string& storageType, const std::string& policyType)
+LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath)
   : m_face(face)
   , m_keyChain(keyChain)
 {
@@ -29,10 +28,10 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_appendCt->listen(std::bind(&LedgerModule::onDataSubmission, this, _1));
 
   // initialize backend storage module
-  m_storage = storage::LedgerStorage::createLedgerStorage(storageType, m_config.ledgerPrefix, "");
+  m_storage = storage::LedgerStorage::createLedgerStorage(m_config.storageType, m_config.ledgerPrefix, "");
 
   // dag engine
-  m_policy = dag::policy::InterlockPolicy::createInterlockPolicy(policyType, "");
+  m_policy = dag::policy::InterlockPolicy::createInterlockPolicy(m_config.policyType, "");
   m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface(), m_policy->getInterface());
 
   // initialize sync module
@@ -47,7 +46,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
     m_storage->getInterface(),
     [this] (const Record& record) {
       m_dag->add(record);
-      printDagChanges();
+      dagHarvest();
     }
   );  
 }
@@ -76,7 +75,7 @@ LedgerModule::registerPrefix()
   m_handle.handlePrefix(prefixId);
 }
 
-AppendStatus 
+AppendStatus
 LedgerModule::onDataSubmission(const Data& data)
 {
   NDN_LOG_TRACE("Received Submission " << data);
@@ -171,14 +170,15 @@ LedgerModule::afterValidation(const Data& data)
   // add to DAG
   m_dag->add(newRecord);
   NDN_LOG_DEBUG("Generating new Record " << newRecord.getName());
-  printDagChanges();
+  dagHarvest();
 }
 
 void
-LedgerModule::printDagChanges()
+LedgerModule::dagHarvest()
 {
   // harvest record that collects enough citations (e.g., 3)
-  auto recordList = m_dag->harvest(2);
+  // this ensures the waitlist be relatively small
+  auto recordList = m_dag->harvest(m_config.policyThreshold);
   // put those record into 
   if (recordList.size() > 0) {
     NDN_LOG_DEBUG("The following Records have been interlocked");

@@ -16,7 +16,7 @@ public:
   add(const Record& record);
 
   std::list<Record>
-  harvest(const uint32_t threshold, bool removeFromWaitlist = false);
+  harvest(const uint32_t threshold, bool remove = false);
 
   std::set<Name>
   getWaitList(const uint32_t value)
@@ -38,8 +38,7 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   getOrConstruct(const Name& name);
 
   void
-  update(const Name& name, EdgeState state);
-
+  update(EdgeState state);
 
   DagModule&
   onNewRecord(EdgeState& state);

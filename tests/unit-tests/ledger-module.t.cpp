@@ -21,8 +21,7 @@ BOOST_AUTO_TEST_CASE(Single)
   auto clientId3 = addSubCertificate(Name("/anchor/client3"), anchorId);
 
   DummyClientFace face(io, m_keyChain, {true, true});
-  LedgerModule ledger(face, m_keyChain, "tests/unit-tests/config-files/config-ledger-1",
-                                        "storage-memory", "policy-descendants");
+  LedgerModule ledger(face, m_keyChain, "tests/unit-tests/config-files/config-ledger-1");
   ledger.afterValidation(anchorId.getDefaultKey().getDefaultCertificate());
   ledger.afterValidation(clientId1.getDefaultKey().getDefaultCertificate());
   ledger.afterValidation(clientId2.getDefaultKey().getDefaultCertificate());
@@ -50,8 +49,7 @@ BOOST_AUTO_TEST_CASE(Merged)
   secOps.dataSigner->signingInfo.setSigningHmacKey("certledger2022demo");
 
   DummyClientFace face1(io, m_keyChain, {true, true});
-  LedgerModule ledger1(face1, m_keyChain, "tests/unit-tests/config-files/config-ledger-1",
-                                         "storage-memory", "policy-descendants");
+  LedgerModule ledger1(face1, m_keyChain, "tests/unit-tests/config-files/config-ledger-1");
   // branch 2
   SeqNo seq = 0;
   m_syncPrefix = Name("/ndn");
@@ -89,7 +87,6 @@ BOOST_AUTO_TEST_CASE(Merged)
   advanceClocks(time::milliseconds(20), 60);
   updateSeqNo(seq, m_id);
   auto syncInt = makeSyncInterest(secOps);
-  std::cout << syncInt->getName() << std::endl;
   face1.receive(*syncInt);
   advanceClocks(time::milliseconds(20), 60);
   face1.receive(*data3);

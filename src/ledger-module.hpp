@@ -21,9 +21,7 @@ using appendtlv::AppendStatus;
 class LedgerModule : boost::noncopyable
 {
 public:
-  LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath,
-               const std::string& storageType = "storage-memory",
-               const std::string& policyType = "policy-descendants");
+  LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath);
 
   const std::unique_ptr<storage::LedgerStorage>&
   getLedgerStorage()
@@ -57,7 +55,7 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   isValidQuery(Name queryName);
 
   void
-  printDagChanges();
+  dagHarvest();
 
   ndn::Face& m_face;
   LedgerConfig m_config;
