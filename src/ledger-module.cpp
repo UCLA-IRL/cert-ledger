@@ -39,9 +39,8 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   sync::SecurityOptions secOps(m_keyChain);
   syncOps.prefix = m_config.ledgerPrefix;
   syncOps.id = m_config.instanceSuffix;
-  // only for now
-  secOps.interestSigner->signingInfo.setSigningHmacKey("certledger2022demo");
-  secOps.dataSigner->signingInfo.setSigningHmacKey("certledger2022demo");
+  secOps.interestSigner->signingInfo = m_config.interestSigner;
+  secOps.dataSigner->signingInfo = m_config.dataSigner;
   m_sync = std::make_unique<sync::SyncModule>(syncOps, secOps, m_face,
     m_storage->getInterface(),
     [this] (const Record& record) {

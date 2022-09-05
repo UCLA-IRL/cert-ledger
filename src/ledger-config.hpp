@@ -36,6 +36,10 @@ public:
   void
   load(const std::string& fileName);
 
+CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+void
+  parseSigningInfo(ndn::security::SigningInfo& signer, const boost::property_tree::ptree& ptree);
+
 public:
   Name ledgerPrefix;
   Name instanceSuffix;
@@ -48,6 +52,9 @@ public:
   std::string policyType;
   uint32_t policyThreshold = -1;
   std::string schemaFile;
+
+  ndn::security::SigningInfo interestSigner;
+  ndn::security::SigningInfo dataSigner;
 };
 
 } // namespace cledger::ledger

@@ -11,5 +11,10 @@
     "policy-type": "policy-descendants",
     "policy-threshold": "3"
   },
-  "trust-schema": "tests/unit-tests/config-files/trust-schema.conf"
+  "trust-schema": "tests/unit-tests/config-files/trust-schema.conf",
+  "sync":
+  {
+    "interest-signing": { "hmac": "certledgerdemo2022" },
+    "data-signing": { "hmac": "certledgerdemo2022" }
+  }
 }

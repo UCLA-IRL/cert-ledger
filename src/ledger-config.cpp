@@ -17,6 +17,15 @@ const std::string CONFIG_INTERLOCK_POLICY_TYPE = "policy-type";
 const std::string CONFIG_INTERLOCK_POLICY_THRESHOLD = "policy-threshold";
 const std::string CONFIG_TRUST_SCHEMA = "trust-schema";
 
+const std::string CONFIG_SYNC = "sync";
+const std::string CONFIG_SYNC_INTEREST_SIGNING = "interest-signing";
+const std::string CONFIG_SYNC_DATA_SIGNING = "data-signing";
+
+const std::string CONFIG_SYNC_SIGNING_HMAC = "hmac";
+const std::string CONFIG_SYNC_SIGNING_ECDSA_ID = "ecdsa-identity";
+const std::string CONFIG_SYNC_SIGNING_ECDSA_KEY = "ecdsa-key";
+const std::string CONFIG_SYNC_SIGNING_ECDSA_CERT = "ecdsa-cert";
+
 void
 LedgerConfig::load(const std::string& fileName)
 {
@@ -88,6 +97,44 @@ LedgerConfig::load(const std::string& fileName)
   if (schemaFile.empty()) {
     NDN_THROW(std::runtime_error("Cannot parse trust schema from the config file"));
   }
+  // sync
+  auto syncConfig = configJson.get_child_optional(CONFIG_SYNC);
+  if (syncConfig) {
+    for (const auto& item : *syncConfig) {
+      if (item.first == CONFIG_SYNC_INTEREST_SIGNING) {
+        parseSigningInfo(interestSigner, item.second);
+      }
+      else if (item.first == CONFIG_SYNC_DATA_SIGNING) {
+        parseSigningInfo(dataSigner, item.second);
+      }
+      else {
+        NDN_THROW(std::runtime_error("Unrecognized keyword " + item.first));
+      }
+    }
+  }
+  else {
+    NDN_THROW(std::runtime_error("Cannot parse sync config from the config file"));
+  }
 }
 
+
+void
+LedgerConfig::parseSigningInfo(ndn::security::SigningInfo& signer, const boost::property_tree::ptree& ptree)
+{
+  if (!ptree.get(CONFIG_SYNC_SIGNING_HMAC, "").empty()) {
+    signer.setSigningHmacKey(ptree.get(CONFIG_SYNC_SIGNING_HMAC, ""));
+  }
+  else if (!ptree.get(CONFIG_SYNC_SIGNING_ECDSA_ID, "").empty()) {
+    signer.setSigningIdentity(ptree.get(CONFIG_SYNC_SIGNING_ECDSA_ID, ""));
+  }
+  else if (!ptree.get(CONFIG_SYNC_SIGNING_ECDSA_KEY, "").empty()) {
+    signer.setSigningKeyName(ptree.get(CONFIG_SYNC_SIGNING_ECDSA_KEY, ""));
+  }
+  else if (!ptree.get(CONFIG_SYNC_SIGNING_ECDSA_CERT, "").empty()) {
+    signer.setSigningCertName(ptree.get(CONFIG_SYNC_SIGNING_ECDSA_CERT, ""));
+  }
+  else {
+    NDN_THROW(std::runtime_error("Unrecognized keyword " + ptree.data()));
+  }
+}
 } // namespace ndnrevoke::ct

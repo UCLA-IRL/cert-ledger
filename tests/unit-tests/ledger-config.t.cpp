@@ -19,6 +19,7 @@ BOOST_AUTO_TEST_CASE(LedgerConfigFile)
   BOOST_CHECK_EQUAL(config.storageType, "storage-memory");
   BOOST_CHECK_EQUAL(config.policyType, "policy-descendants");
   BOOST_CHECK_EQUAL(config.policyThreshold, 3);
+  BOOST_CHECK_EQUAL(config.interestSigner.getSignerType(), ndn::security::SigningInfo::SignerType::SIGNER_TYPE_HMAC);
 }
 
 BOOST_AUTO_TEST_CASE(LedgerConfigFileWithErrors)
