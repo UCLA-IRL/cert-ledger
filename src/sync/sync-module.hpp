@@ -3,6 +3,7 @@
 
 #include "record.hpp"
 #include "storage/ledger-storage.hpp"
+#include "sync/ledger-svs.hpp"
 
 #include <iostream>
 #include <string>
@@ -22,29 +23,6 @@ using ndn::svs::MissingDataInfo;
 using ndn::svs::DataStore;
 
 using YieldRecordCallback = std::function<void(const Record&)>;
-
-struct SyncOptions
-{
-  Name prefix;
-  Name id;
-};
-
-class LedgerSVSBase : public SVSyncBase
-{
-public:
-  LedgerSVSBase(const Name& syncPrefix,
-                const Name& nodePrefix,
-                ndn::Face& face,
-                const UpdateCallback& updateCallback,
-                const SecurityOptions& securityOptions = SecurityOptions::DEFAULT,
-                std::shared_ptr<DataStore> dataStore = DEFAULT_DATASTORE);
-
-  Name
-  getDataName(const NodeID& nid, const SeqNo& seqNo) override;
-
-  Name
-  getMyDataName(const SeqNo& seqNo);
-};
 
 class SyncModule
 {

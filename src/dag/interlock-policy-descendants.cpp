@@ -10,10 +10,17 @@ InterlockPolicyDescendants::InterlockPolicyDescendants(const std::string& intern
 {
 }
 
+
+std::set<Name>
+InterlockPolicyDescendants::select(const EdgeState& state)
+{
+  return state.descendants;
+}
+
 uint32_t
 InterlockPolicyDescendants::evaluate(const EdgeState& state)
 {
-  return state.descendants.size();
+  return select(state).size();
 }
 
 Interface

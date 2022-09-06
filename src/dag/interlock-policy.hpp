@@ -14,6 +14,9 @@ class InterlockPolicy
 {
 public:
 
+  virtual std::set<Name>
+  select(const EdgeState& state) = 0;
+
   virtual uint32_t
   evaluate(const EdgeState& state) = 0;
 

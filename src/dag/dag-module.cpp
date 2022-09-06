@@ -10,21 +10,22 @@ DagModule::DagModule(storage::Interface storageIntf, policy::Interface policyInt
 {
 }
 
-DagModule&
+Name
 DagModule::add(const Record& record)
 {
   auto state = getOrConstruct(toStateName(record.getName()));
   state.record = record;
   switch (state.status) {
     case EdgeState::INITIALIZED:
-      return onNewRecord(state);
+      onNewRecord(state);
+      return state.stateName;
     case EdgeState::LOADED:
       // duplicate, reject
-      return *this;
+      return state.stateName;
     default:
       break;
   }
-  return *this;
+  return state.stateName;
 }
 
 std::list<EdgeState>

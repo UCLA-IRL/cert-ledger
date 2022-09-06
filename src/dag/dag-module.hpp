@@ -12,7 +12,7 @@ public:
   // TODO: need an explicit constructor
   DagModule(storage::Interface storageIntf, policy::Interface policyIntf);
 
-  DagModule&
+  Name
   add(const Record& record);
 
   std::list<Record>

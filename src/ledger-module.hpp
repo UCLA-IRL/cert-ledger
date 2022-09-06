@@ -55,6 +55,18 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   isValidQuery(Name queryName);
 
   void
+  addPayloadMap(const span<const uint8_t>& payload, const Name& mapTo);
+
+  Name
+  getPayloadMap(const span<const uint8_t>& payload);
+
+  void
+  sendNack(const Name& name);
+
+  void
+  replyOrSendNack(const Name& name);
+
+  void
   dagHarvest();
 
   ndn::Face& m_face;

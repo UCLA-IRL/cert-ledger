@@ -10,6 +10,9 @@ public:
   InterlockPolicyDescendants(const std::string& internalConfig = "");
   const static std::string POLICY_TYPE;
 
+  std::set<Name>
+  select(const EdgeState& state) override;
+
   uint32_t
   evaluate(const EdgeState& state) override;
 
