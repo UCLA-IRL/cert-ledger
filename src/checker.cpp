@@ -18,7 +18,7 @@ Checker::doCheck(const Name ledgerPrefix, const Data& data,
                  const onDataCallback onData, 
                  const onFailureCallback onFailure)
 {
-  auto state = std::make_shared<CheckerState>(m_face, data, onNack, onData, onFailure);
+  auto state = std::make_shared<CheckerState>(data, onNack, onData, onFailure);
   dispatchInterest(state, ledgerPrefix);
 }
 

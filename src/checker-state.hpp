@@ -20,8 +20,7 @@ public:
   const ssize_t CHECKER_MAX_RETRIES = 3;
 
   explicit
-  CheckerState(ndn::Face& face,
-               const Data& data,
+  CheckerState(const Data& data,
                const onNackCallback onNack, 
                const onDataCallback onData, 
                const onFailureCallback onFailure);
@@ -54,8 +53,6 @@ public:
   }
 
 private:
-  ndn::Face& m_face;
-
   Data m_data;
   onNackCallback m_nCb;
   onDataCallback m_dCb;

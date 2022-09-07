@@ -3,13 +3,11 @@
 #include <ndn-cxx/security/signing-helpers.hpp>
 namespace cledger::checker {
 
-CheckerState::CheckerState(ndn::Face& face,
-                           const Data& data,
+CheckerState::CheckerState(const Data& data,
                            const onNackCallback onNack, 
                            const onDataCallback onData, 
                            const onFailureCallback onFailure)
-  : m_face(face)
-  , m_data(data)
+  : m_data(data)
   , m_nCb(onNack)
   , m_dCb(onData)
   , m_fCb(onFailure)
