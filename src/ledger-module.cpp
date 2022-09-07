@@ -20,7 +20,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   // load the config and create storage
   m_config.load(configPath);
   m_validator.load(m_config.schemaFile);
-  registerPrefix();
+  registerPrefix(); 
   
   Name topic = Name(m_config.ledgerPrefix).append("LEDGER").append("append");
 
@@ -36,19 +36,23 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface(), m_policy->getInterface());
 
   // initialize sync module
-  sync::SyncOptions syncOps;
-  sync::SecurityOptions secOps(m_keyChain);
-  syncOps.prefix = m_config.ledgerPrefix;
-  syncOps.id = m_config.instanceSuffix;
-  secOps.interestSigner->signingInfo = m_config.interestSigner;
-  secOps.dataSigner->signingInfo = m_config.dataSigner;
-  m_sync = std::make_unique<sync::SyncModule>(syncOps, secOps, m_face,
+  m_syncOps.prefix = m_config.ledgerPrefix;
+  m_syncOps.id = m_config.instanceSuffix;
+  m_secOps.interestSigner->signingInfo = m_config.interestSigner;
+  m_secOps.dataSigner->signingInfo = m_config.dataSigner;
+  m_sync = std::make_unique<sync::SyncModule>(m_syncOps, m_secOps, m_face,
     m_storage->getInterface(),
     [this] (const Record& record) {
       addPayloadMap(record.getPayload(), m_dag->add(record));
       dagHarvest();
     }
-  );  
+  );
+
+  // self publishing
+  auto cert = m_keyChain.getPib().getIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix))
+                                 .getDefaultKey()
+                                 .getDefaultCertificate();
+  afterValidation(cert);
 }
 
 void
@@ -58,7 +62,7 @@ LedgerModule::registerPrefix()
   Name prefix = m_config.ledgerPrefix;
   // let's first use "LEDGER" in protocol
   prefix.append("LEDGER");
-
+  // NDN_LOG_TRACE("here");
   auto prefixId = m_face.registerPrefix(
     prefix,
     [&] (const Name& name) {
@@ -84,7 +88,7 @@ LedgerModule::onDataSubmission(const Data& data)
     [this, &data, &ret] (const Data&) {
       NDN_LOG_TRACE("Submitted Data conforms to trust schema");
       try {
-        m_storage->addBlock(data.getName(), data.wireEncode());
+        afterValidation(data);
         ret = AppendStatus::SUCCESS;
       }
       catch (std::exception& e) {
@@ -100,7 +104,8 @@ LedgerModule::onDataSubmission(const Data& data)
 }
 
 void
-LedgerModule::onQuery(const Interest& query) {
+LedgerModule::onQuery(const Interest& query)
+{
   NDN_LOG_TRACE("Received Query " << query);
   // need to validate query format
   if (query.getForwardingHint().empty()) {
@@ -110,7 +115,7 @@ LedgerModule::onQuery(const Interest& query) {
   
   auto interestName = query.getName();
   // interest for internal data structure or exact data match
-  if (interestName.get(-1).type() == ndn::tlv::KeywordNameComponent ||
+  if (interestName.get(-1).isKeyword() &&
       !query.getCanBePrefix())
   {
     // internal object name always start from /32=
@@ -118,15 +123,22 @@ LedgerModule::onQuery(const Interest& query) {
   }
   // query of a certificate or record
   else if (Certificate::isValidName(interestName.getPrefix(-1)) &&
-           interestName.get(-1) == Name::Component("/32=record"))
+           interestName.get(-1).toUri() == "32=record")
   {
+    NDN_LOG_TRACE("A Record Query for " << interestName.getPrefix(-1));
     // 1. get the cert data (payload) with cert name
     // 2. map cert data to edge state name
     try {
       Block content(ndn::tlv::Content);
       auto payloadblock = m_storage->getBlock(interestName.getPrefix(-1));
-      auto stateName = dag::toMapName(make_span<const uint8_t>(payloadblock.wire(), payloadblock.size()));
-      auto stateblock = m_storage->getBlock(stateName);
+      auto mapName = dag::toMapName(make_span<const uint8_t>(payloadblock.wire(), payloadblock.size()));
+
+      NDN_LOG_TRACE("Finding PayloadMap... " << mapName);
+      auto mapblock = m_storage->getBlock(mapName);
+      auto payloadMap = dag::decodePayloadMap(mapblock);
+
+      NDN_LOG_TRACE("Finding EdgeState... " << payloadMap.mapTo);
+      auto stateblock = m_storage->getBlock(payloadMap.mapTo);
       auto state = dag::decodeEdgeState(stateblock);
       auto encoder = [this] (Block& b, const Name& n) {
         auto tlv = m_storage->getBlock(n);
@@ -147,34 +159,36 @@ LedgerModule::onQuery(const Interest& query) {
       }
       
       Name dataName(query.getName());
-      dataName.appendTimestamp();
+      dataName.append("data").appendTimestamp();
       Data data(dataName);
       // this deserves some considerations
       data.setFreshnessPeriod(m_config.nackFreshnessPeriod);
       data.setContent(content);
-      m_keyChain.sign(data, signingByIdentity(m_config.ledgerPrefix));
+      m_keyChain.sign(data, signingByIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix)));
       NDN_LOG_TRACE("Ledger replies with: " << data.getName());
       m_face.put(data);
     }
     catch (const std::exception& e) {
+      NDN_LOG_DEBUG("Ledger storage cannot get the Data for reason: " << e.what());
       sendNack(query.getName());
     }
   }
-
-  try {
-    Data data(m_storage->getBlock(query.getName()));
-    NDN_LOG_TRACE("Ledger replies with: " << data.getName());
-    m_face.put(data);
-  }
-  catch (std::exception& e) {
-    NDN_LOG_DEBUG("Ledger storage cannot get the Data for reason: " << e.what());
-    // reply with app layer nack
-    Nack nack;
-    auto data = nack.prepareData(query.getName(), time::toUnixTimestamp(time::system_clock::now()));
-    data->setFreshnessPeriod(m_config.nackFreshnessPeriod);
-    m_keyChain.sign(*data, signingByIdentity(m_config.ledgerPrefix));
-    NDN_LOG_TRACE("Ledger replies with: " << data->getName());
-    m_face.put(*data);
+  else {
+    try {
+      Data data(m_storage->getBlock(query.getName()));
+      NDN_LOG_TRACE("Ledger replies with: " << data.getName());
+      m_face.put(data);
+    }
+    catch (std::exception& e) {
+      NDN_LOG_DEBUG("Ledger storage cannot get the Data for reason: " << e.what());
+      // reply with app layer nack
+      Nack nack;
+      auto data = nack.prepareData(query.getName(), time::toUnixTimestamp(time::system_clock::now()));
+      data->setFreshnessPeriod(m_config.nackFreshnessPeriod);
+      m_keyChain.sign(*data, signingByIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix)));
+      NDN_LOG_TRACE("Ledger replies with: " << data->getName());
+      m_face.put(*data);
+    }
   }
 }
 
@@ -189,7 +203,13 @@ LedgerModule::afterValidation(const Data& data)
 {
   NDN_LOG_TRACE("Receiving validated Data " << data.getName());
   // put raw data into storage
-  m_storage->addBlock(data.getName(), data.wireEncode());
+  try {
+    m_storage->addBlock(data.getName(), data.wireEncode());
+  }
+  catch (const std::runtime_error& e) {
+    NDN_LOG_DEBUG("Duplicate Data " << data.getName());
+    return;
+  }
 
   // it is either a certificate or revocation record
   Record newRecord;
@@ -250,7 +270,7 @@ LedgerModule::sendNack(const Name& name)
   Nack nack;
   auto data = nack.prepareData(name, time::toUnixTimestamp(time::system_clock::now()));
   data->setFreshnessPeriod(m_config.nackFreshnessPeriod);
-  m_keyChain.sign(*data, signingByIdentity(m_config.ledgerPrefix));
+  m_keyChain.sign(*data, signingByIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix)));
   NDN_LOG_TRACE("Ledger replies with: " << data->getName());
   m_face.put(*data);
 }

@@ -1,7 +1,7 @@
 #include "sync/ledger-svs.hpp"
 
 namespace cledger::sync {
-
+NDN_LOG_INIT(cledger.sync);
 
 LedgerSVSDataStore::LedgerSVSDataStore(storage::Interface storageIntf)
   : m_storageIntf(storageIntf)
@@ -10,6 +10,7 @@ LedgerSVSDataStore::LedgerSVSDataStore(storage::Interface storageIntf)
 std::shared_ptr<const Data>
 LedgerSVSDataStore::find(const Interest& interest)
 {
+  NDN_LOG_TRACE("Finding... " << interest.getName());
   try {
     auto data = std::make_shared<const Data>(m_storageIntf.getter(interest.getName()));
     return data;
@@ -22,6 +23,7 @@ LedgerSVSDataStore::find(const Interest& interest)
 void
 LedgerSVSDataStore::insert(const Data& data)
 {
+  NDN_LOG_TRACE("Inserting... " << data.getName());
   m_storageIntf.adder(data.getName(), data.wireEncode());
 }
 
@@ -38,13 +40,13 @@ LedgerSVSBase::LedgerSVSBase(const Name& syncPrefix,
 Name
 LedgerSVSBase::getDataName(const NodeID& nid, const SeqNo& seqNo)
 {
-  return Name(m_syncPrefix).append(nid).appendNumber(seqNo);
+  return Name(nid).appendNumber(seqNo);
 }
 
 Name
 LedgerSVSBase::getMyDataName(const SeqNo& seqNo)
 { 
-  return Name(m_id).appendNumber(seqNo);
+  return Name(m_syncPrefix).append(m_id).appendNumber(seqNo);
 }
 
 } // namespace cledger::sync

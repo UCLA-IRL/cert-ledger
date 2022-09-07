@@ -1,0 +1,16 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+top = '..'
+
+def build(bld):
+    bld.program(
+        name='ndncledger-checker',
+        target='../bin/ndncledger-checker',
+        source='ndncledger-checker.cpp',
+        use='ndn-cledger')
+
+    bld.program(
+        name='ndncledger-ledger',
+        target='../bin/ndncledger-ledger',
+        source='ndncledger-ledger.cpp',
+        use='ndn-cledger')

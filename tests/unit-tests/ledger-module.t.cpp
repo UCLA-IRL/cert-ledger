@@ -15,10 +15,10 @@ BOOST_AUTO_TEST_CASE(Single)
    * anchor <-- client1 <-- client2 <-- client3
    */
 
-  auto anchorId = addIdentity(Name("/anchor"));
-  auto clientId1 = addSubCertificate(Name("/anchor/client1"), anchorId);
-  auto clientId2 = addSubCertificate(Name("/anchor/client2"), anchorId);
-  auto clientId3 = addSubCertificate(Name("/anchor/client3"), anchorId);
+  auto anchorId = addIdentity(Name("/ndn/site1"));
+  auto clientId1 = addSubCertificate(Name("/ndn/site1/instance1"), anchorId);
+  auto clientId2 = addSubCertificate(Name("/ndn/site1/instance2"), anchorId);
+  auto clientId3 = addSubCertificate(Name("/ndn/site1/instance3"), anchorId);
 
   DummyClientFace face(io, m_keyChain, {true, true});
   LedgerModule ledger(face, m_keyChain, "tests/unit-tests/config-files/config-ledger-1");
@@ -36,23 +36,23 @@ BOOST_AUTO_TEST_CASE(Merged)
    * client3 <-- client4 <-- client5
    */
 
-  auto anchorId = addIdentity(Name("/anchor"));
-  auto clientId1 = addSubCertificate(Name("/anchor/client1"), anchorId);
-  auto clientId2 = addSubCertificate(Name("/anchor/client2"), anchorId);
-  auto clientId3 = addSubCertificate(Name("/anchor/client3"), anchorId);
-  auto clientId4 = addSubCertificate(Name("/anchor/client4"), anchorId);
-  auto clientId5 = addSubCertificate(Name("/anchor/client5"), anchorId);
-  auto clientId6 = addSubCertificate(Name("/anchor/client6"), anchorId);
+  auto anchorId = addIdentity(Name("/ndn/site1"));
+  auto clientId1 = addSubCertificate(Name("/ndn/site1/instance1"), anchorId);
+  auto clientId2 = addSubCertificate(Name("/ndn/site1/instance2"), anchorId);
+  auto clientId3 = addSubCertificate(Name("/ndn/site1/instance3"), anchorId);
+  auto clientId4 = addSubCertificate(Name("/ndn/site1/instance4"), anchorId);
+  auto clientId5 = addSubCertificate(Name("/ndn/site1/instance5"), anchorId);
+  auto clientId6 = addSubCertificate(Name("/ndn/site1/instance6"), anchorId);
 
   sync::SecurityOptions secOps(m_keyChain);
-  secOps.interestSigner->signingInfo.setSigningHmacKey("certledger2022demo");
-  secOps.dataSigner->signingInfo.setSigningHmacKey("certledger2022demo");
+  secOps.interestSigner->signingInfo = ndn::security::SigningInfo("hmac-sha256:z4MZh0VOKfqkLBuIm55CaGB8jt5fgvWJCDC/vbCwZKM=");
+  secOps.dataSigner->signingInfo = ndn::security::SigningInfo("id:/ndn/site1/instance1");
 
   DummyClientFace face1(io, m_keyChain, {true, true});
   LedgerModule ledger1(face1, m_keyChain, "tests/unit-tests/config-files/config-ledger-1");
   // branch 2
   SeqNo seq = 0;
-  m_syncPrefix = Name("/ndn");
+  m_syncPrefix = Name("/ndn/site1");
   m_id = Name("/instance2");
 
   Record r1;

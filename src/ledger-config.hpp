@@ -36,11 +36,6 @@ public:
   void
   load(const std::string& fileName);
 
-CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-void
-  parseSigningInfo(ndn::security::SigningInfo& signer, const boost::property_tree::ptree& ptree);
-
-public:
   Name ledgerPrefix;
   Name instanceSuffix;
   ndn::time::milliseconds nackFreshnessPeriod;

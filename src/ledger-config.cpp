@@ -21,11 +21,6 @@ const std::string CONFIG_SYNC = "sync";
 const std::string CONFIG_SYNC_INTEREST_SIGNING = "interest-signing";
 const std::string CONFIG_SYNC_DATA_SIGNING = "data-signing";
 
-const std::string CONFIG_SYNC_SIGNING_HMAC = "hmac";
-const std::string CONFIG_SYNC_SIGNING_ECDSA_ID = "ecdsa-identity";
-const std::string CONFIG_SYNC_SIGNING_ECDSA_KEY = "ecdsa-key";
-const std::string CONFIG_SYNC_SIGNING_ECDSA_CERT = "ecdsa-cert";
-
 void
 LedgerConfig::load(const std::string& fileName)
 {
@@ -102,10 +97,10 @@ LedgerConfig::load(const std::string& fileName)
   if (syncConfig) {
     for (const auto& item : *syncConfig) {
       if (item.first == CONFIG_SYNC_INTEREST_SIGNING) {
-        parseSigningInfo(interestSigner, item.second);
+        interestSigner = ndn::security::SigningInfo(item.second.data());
       }
       else if (item.first == CONFIG_SYNC_DATA_SIGNING) {
-        parseSigningInfo(dataSigner, item.second);
+        dataSigner = ndn::security::SigningInfo(item.second.data());
       }
       else {
         NDN_THROW(std::runtime_error("Unrecognized keyword " + item.first));
@@ -117,24 +112,4 @@ LedgerConfig::load(const std::string& fileName)
   }
 }
 
-
-void
-LedgerConfig::parseSigningInfo(ndn::security::SigningInfo& signer, const boost::property_tree::ptree& ptree)
-{
-  if (!ptree.get(CONFIG_SYNC_SIGNING_HMAC, "").empty()) {
-    signer.setSigningHmacKey(ptree.get(CONFIG_SYNC_SIGNING_HMAC, ""));
-  }
-  else if (!ptree.get(CONFIG_SYNC_SIGNING_ECDSA_ID, "").empty()) {
-    signer.setSigningIdentity(ptree.get(CONFIG_SYNC_SIGNING_ECDSA_ID, ""));
-  }
-  else if (!ptree.get(CONFIG_SYNC_SIGNING_ECDSA_KEY, "").empty()) {
-    signer.setSigningKeyName(ptree.get(CONFIG_SYNC_SIGNING_ECDSA_KEY, ""));
-  }
-  else if (!ptree.get(CONFIG_SYNC_SIGNING_ECDSA_CERT, "").empty()) {
-    signer.setSigningCertName(ptree.get(CONFIG_SYNC_SIGNING_ECDSA_CERT, ""));
-  }
-  else {
-    NDN_THROW(std::runtime_error("Unrecognized keyword " + ptree.data()));
-  }
-}
 } // namespace ndnrevoke::ct

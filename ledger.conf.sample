@@ -11,7 +11,7 @@
     "policy-type": "policy-descendants",
     "policy-threshold": "3"
   },
-  "trust-schema": "tests/unit-tests/config-files/trust-schema.conf",
+  "trust-schema": "trust-schema.conf.sample",
   "sync":
   {
     "interest-signing": "hmac-sha256:z4MZh0VOKfqkLBuIm55CaGB8jt5fgvWJCDC/vbCwZKM=",

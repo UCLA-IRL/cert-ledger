@@ -46,6 +46,9 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   registerPrefix();
 
   void
+  registerPrefixContinuation(const Name& name);
+
+  void
   afterValidation(const Data& data);
 
   void
@@ -83,6 +86,8 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   // sync module
   std::unique_ptr<sync::SyncModule> m_sync;
+  sync::SyncOptions m_syncOps;
+  sync::SecurityOptions m_secOps{m_keyChain};
 
   // dag module
   std::unique_ptr<dag::policy::InterlockPolicy> m_policy;

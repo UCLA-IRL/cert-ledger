@@ -98,7 +98,9 @@ Name
 SyncModule::publishRecord(Record& record)
 { 
   SeqNo seq = m_svs->publishData(*record.prepareContent(), ndn::time::milliseconds(3000));
-  return m_svs->getDataName(m_syncOptions.id, seq);
+  auto puiblishedName = m_svs->getDataName(Name(m_syncOptions.prefix).append(m_syncOptions.id), seq);
+  NDN_LOG_DEBUG("Published " << puiblishedName);
+  return puiblishedName;
 }
 
 } // namespace cledger::sync

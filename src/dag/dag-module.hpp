@@ -21,7 +21,12 @@ public:
   std::set<Name>
   getWaitList(const uint32_t value)
   {
-    return m_waitlist[value];
+    try {
+      return m_waitlist[value];
+    }
+    catch (const std::runtime_error& e) {
+      return std::set<Name>();
+    }
   }
 
   std::map<const uint32_t, std::set<Name>>

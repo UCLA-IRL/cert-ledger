@@ -73,6 +73,7 @@ def build(bld):
         install_path='${LIBDIR}/pkgconfig',
         VERSION=VERSION)
 
+    bld.recurse('tools')
     bld.recurse('tests')
     bld.install_files(
         dest='${INCLUDEDIR}/cledger',
@@ -82,3 +83,7 @@ def build(bld):
 
     bld.install_files('${INCLUDEDIR}/cledger',
                       bld.path.find_resource('src/cledger-config.hpp'))
+    bld.install_files('${SYSCONFDIR}/cledger',
+                      ['ledger.conf.sample'])
+    bld.install_files('${SYSCONFDIR}/cledger',
+                      ['trust-schema.conf.sample'])
