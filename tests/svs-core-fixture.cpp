@@ -32,11 +32,6 @@ SVSCoreFixture::makeSyncInterest(const SecurityOptions& secOps)
   {
     case SigningInfo::SIGNER_TYPE_NULL:
       break;
-
-    // case SigningInfo::SIGNER_TYPE_HMAC:
-    //   m_keyChainMem.sign(interest, m_securityOptions.interestSigner->signingInfo);
-    //   break;
-
     default:
       secOps.interestSigner->sign(*interest);
       break;
@@ -47,7 +42,7 @@ SVSCoreFixture::makeSyncInterest(const SecurityOptions& secOps)
 std::shared_ptr<Data>
 SVSCoreFixture::makeData(const SeqNo& seq, const NodeID& nid, const Block& content, const SecurityOptions& secOps)
 {
-  Name dataName = Name(m_syncPrefix).append(nid).appendNumber(seq);
+  Name dataName = Name(nid).append(m_syncPrefix).appendNumber(seq);
   auto data = std::make_shared<Data>(dataName);
   data->setContent(content);
   data->setFreshnessPeriod(1_s);

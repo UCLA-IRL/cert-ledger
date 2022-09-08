@@ -36,14 +36,22 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface(), m_policy->getInterface());
 
   // initialize sync module
-  m_syncOps.prefix = m_config.ledgerPrefix;
-  m_syncOps.id = m_config.instanceSuffix;
+  Name syncPrefix = Name(m_config.ledgerPrefix).append("LEDGER").append("SYNC");
+  m_syncOps.prefix = syncPrefix;
+  m_syncOps.id = Name(m_config.ledgerPrefix).append(m_config.instanceSuffix);
   m_secOps.interestSigner->signingInfo = m_config.interestSigner;
   m_secOps.dataSigner->signingInfo = m_config.dataSigner;
   m_sync = std::make_unique<sync::SyncModule>(m_syncOps, m_secOps, m_face,
     m_storage->getInterface(),
     [this] (const Record& record) {
-      addPayloadMap(record.getPayload(), m_dag->add(record));
+      if (record.getType() != tlv::REPLY_RECORD) {
+        try {
+          addPayloadMap(record.getPayload(), m_dag->add(record));
+        }
+        catch (const std::runtime_error& e) {
+          NDN_LOG_TRACE("Adding PayloadMap failed because of: " << e.what());
+        }
+      }
       dagHarvest();
     }
   );
@@ -106,17 +114,16 @@ LedgerModule::onDataSubmission(const Data& data)
 void
 LedgerModule::onQuery(const Interest& query)
 {
-  NDN_LOG_TRACE("Received Query " << query);
   // need to validate query format
   if (query.getForwardingHint().empty()) {
     // non-related, discard
     return;
   }
-  
+
+  NDN_LOG_TRACE("Received Query " << query); 
   auto interestName = query.getName();
-  // interest for internal data structure or exact data match
-  if (interestName.get(-1).isKeyword() &&
-      !query.getCanBePrefix())
+  // interest for exact data match
+  if (!query.getCanBePrefix())
   {
     // internal object name always start from /32=
     replyOrSendNack(interestName);
@@ -189,6 +196,36 @@ LedgerModule::onQuery(const Interest& query)
       NDN_LOG_TRACE("Ledger replies with: " << data->getName());
       m_face.put(*data);
     }
+  }
+}
+
+// there may exist some race conditions, but in most cases they won't happen
+void
+LedgerModule::BackoffAndReply(std::chrono::milliseconds time)
+{
+  std::this_thread::sleep_for(time);
+
+  Record newReply;
+  newReply.setType(tlv::REPLY_RECORD);
+
+  auto nonInterlocked = m_dag->harvest(m_config.policyThreshold, false);
+  // two conditions: 1/ not a reply record; 2/ I haven't directly replied before
+  for (auto& record : nonInterlocked) {
+    if (m_repliedRecords.find(record.getName()) == m_repliedRecords.end() &&
+        record.getType() != tlv::REPLY_RECORD) {
+      newReply.addPointer(record.getName());
+      m_repliedRecords.insert(record.getName());
+    }
+  }
+
+  // publish records only if the reply record has pointers
+  if (newReply.getPointers().size() > 1) {
+    Name newReplyName = m_sync->publishRecord(newReply);
+    newReply.setName(newReplyName);
+    // add to DAG
+    NDN_LOG_DEBUG("Generating new [Reply] Record " << newReply.getName());
+    m_dag->add(newReply);
+    dagHarvest();
   }
 }
 
@@ -294,12 +331,16 @@ LedgerModule::dagHarvest()
 {
   // harvest record that collects enough citations (e.g., 3)
   // this ensures the waitlist be relatively small
-  auto recordList = m_dag->harvest(m_config.policyThreshold);
+  auto recordList = m_dag->harvest(m_config.policyThreshold, true);
   // put those record into 
   if (recordList.size() > 0) {
     NDN_LOG_DEBUG("The following Records have been interlocked");
-    for (auto& i : recordList) {
-      NDN_LOG_DEBUG("   " << i.getName());
+    for (auto& r : recordList) {
+      NDN_LOG_DEBUG("   " << r.getName());
+      // if applicable, remove from the replied set
+      if (m_repliedRecords.find(r.getName()) != m_repliedRecords.end()) {
+        m_repliedRecords.erase(r.getName());
+      }
     }
   }
 }

@@ -38,6 +38,9 @@ public:
   void
   onQuery(const Interest& query);
 
+  void
+  BackoffAndReply(std::chrono::milliseconds time);
+
 CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   AppendStatus onDataSubmission(const Data& data);
@@ -46,16 +49,10 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   registerPrefix();
 
   void
-  registerPrefixContinuation(const Name& name);
-
-  void
   afterValidation(const Data& data);
 
   void
   onRegisterFailed(const std::string& reason);
-
-  bool
-  isValidQuery(Name queryName);
 
   void
   addPayloadMap(const span<const uint8_t>& payload, const Name& mapTo);
@@ -92,7 +89,8 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   // dag module
   std::unique_ptr<dag::policy::InterlockPolicy> m_policy;
   std::unique_ptr<dag::DagModule> m_dag;
-
+  // this shouldn't keep growing, so it's safe to put into the memory
+  std::set<Name> m_repliedRecords;
 };
 
 } // namespace cledger::ledger

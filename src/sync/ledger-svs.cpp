@@ -40,13 +40,13 @@ LedgerSVSBase::LedgerSVSBase(const Name& syncPrefix,
 Name
 LedgerSVSBase::getDataName(const NodeID& nid, const SeqNo& seqNo)
 {
-  return Name(nid).appendNumber(seqNo);
+  return Name(nid).append(m_syncPrefix).appendNumber(seqNo);
 }
 
 Name
 LedgerSVSBase::getMyDataName(const SeqNo& seqNo)
-{ 
-  return Name(m_syncPrefix).append(m_id).appendNumber(seqNo);
+{
+  return Name(m_dataPrefix).appendNumber(seqNo);
 }
 
 } // namespace cledger::sync

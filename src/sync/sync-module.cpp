@@ -12,7 +12,7 @@ SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps
   , m_yieldCb(yield)
 {
   m_svs = std::make_shared<LedgerSVSBase>(m_syncOptions.prefix, 
-                                          Name(m_syncOptions.prefix).append(m_syncOptions.id),
+                                          m_syncOptions.id,
                                           m_face, std::bind(&SyncModule::onMissingData, this, _1), m_secOptions,
                                           std::make_shared<LedgerSVSDataStore>(m_storageIntf));
 }
@@ -20,8 +20,7 @@ SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps
 std::tuple<NodeID, SeqNo>
 SyncModule::parseDataName(const Name& name)
 {
-  return std::make_tuple<NodeID, SeqNo>(name.getPrefix(-1)
-                                            .getSubName(m_syncOptions.prefix.size()),
+  return std::make_tuple<NodeID, SeqNo>(name.getPrefix(-1 - m_syncOptions.prefix.size()),
                                         name.get(-1).toNumber());
 }
 
@@ -55,9 +54,14 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
     return searchStorage(n);
   };
 
-  NDN_LOG_TRACE("trying getting data " << m_svs->getDataName(nid, s));
+  NDN_LOG_TRACE("Trying getting data " << m_svs->getDataName(nid, s));
   m_svs->fetchData(nid, s, [this, acc, searchAccOrStorage] (const ndn::Data& data) {
-    NDN_LOG_DEBUG("getting data " << data.getName());
+    NDN_LOG_DEBUG("Getting data " << data.getName());
+
+    NDN_LOG_TRACE("[" << data.getName() << "]: Printing acc...");
+    for (auto& d : *acc) {
+      NDN_LOG_TRACE("     " << d.getName());
+    }
 
     if (!searchAccOrStorage(data.getName())) acc->push_front(data);
 
@@ -72,11 +76,11 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
     for (auto& p : record.getPointers()) {
       if (searchAccOrStorage(p)) {
         // then we don't need to care
-        NDN_LOG_TRACE(p << " already exists");
+        NDN_LOG_TRACE("[" << data.getName() << "]: Pointed record " << p << " already exists");
       }
       else {
         allExist = false;
-        NDN_LOG_DEBUG("discover " << p);
+        NDN_LOG_TRACE("[" << data.getName() << "]: Discover " << p);
         // we need to fetch it
         auto tuple = parseDataName(p);
         recursiveFetcher(std::get<0>(tuple), std::get<1>(tuple), acc);
@@ -98,7 +102,7 @@ Name
 SyncModule::publishRecord(Record& record)
 { 
   SeqNo seq = m_svs->publishData(*record.prepareContent(), ndn::time::milliseconds(3000));
-  auto puiblishedName = m_svs->getDataName(Name(m_syncOptions.prefix).append(m_syncOptions.id), seq);
+  auto puiblishedName = m_svs->getDataName(m_syncOptions.id, seq);
   NDN_LOG_DEBUG("Published " << puiblishedName);
   return puiblishedName;
 }

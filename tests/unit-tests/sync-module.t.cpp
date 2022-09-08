@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(R1R2InOrder)
 
   // learn gensis record r1
   Record r1;
-  r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(R1R2InOrder)
 
   // learn gensis record r2
   Record r2;
-  r2.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r2.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r2.addPointer(r1.getName());
   std::string str2 = "Dummy General Record";
   r2.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(R2Only)
 
   // learn gensis record r1
   Record r1;
-  r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(R2Only)
 
   // learn gensis record r2
   Record r2;
-  r2.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r2.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r2.addPointer(r1.getName());
   std::string str2 = "Dummy General Record";
   r2.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(R3Only)
 
   // learn gensis record r1
   Record r1;
-  r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
@@ -153,14 +153,14 @@ BOOST_AUTO_TEST_CASE(R3Only)
 
   // learn gensis record r2
   Record r2;
-  r2.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r2.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r2.addPointer(r1.getName());
   std::string str2 = "Dummy General Record";
   r2.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
   auto data2 = makeData(seq, id2, *r2.prepareContent(), secOps);
 
   Record r3;
-  r3.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r3.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r3.addPointer(r2.getName());
   r3.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
   auto data3 = makeData(seq, id2, *r3.prepareContent(), secOps);
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(Rectangular)
 
   // learn gensis record r1
   Record r1;
-  r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
@@ -220,20 +220,20 @@ BOOST_AUTO_TEST_CASE(Rectangular)
 
   // learn gensis record r2
   Record r2;
-  r2.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r2.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r2.addPointer(r1.getName());
   std::string str2 = "Dummy General Record";
   r2.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
   auto data2 = makeData(seq, id2, *r2.prepareContent(), secOps);
 
   Record r3;
-  r3.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r3.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r3.addPointer(r1.getName());
   r3.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
   auto data3 = makeData(seq, id2, *r3.prepareContent(), secOps);
 
   Record r4;
-  r4.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r4.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r4.addPointer(r3.getName());
   r4.addPointer(r2.getName());
   r4.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
 
   // learn gensis record r1
   Record r1;
-  r1.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r1.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   std::string str = "Dummy Genesis Record";
@@ -294,21 +294,21 @@ BOOST_AUTO_TEST_CASE(Rectangular2)
 
   // learn gensis record r2
   Record r2;
-  r2.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r2.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r2.addPointer(r1.getName());
   std::string str2 = "Dummy General Record";
   r2.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
   auto data2 = makeData(seq, id2, *r2.prepareContent(), secOps);
 
   Record r3;
-  r3.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r3.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r3.addPointer(r1.getName());
   r3.addPointer(r2.getName());
   r3.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
   auto data3 = makeData(seq, id2, *r3.prepareContent(), secOps);
 
   Record r4;
-  r4.setName(Name(m_syncPrefix).append(id2).appendNumber(++seq));
+  r4.setName(Name(id2).append(m_syncPrefix).appendNumber(++seq));
   r4.addPointer(r3.getName());
   r4.addPointer(r2.getName());
   r4.setPayload(span<const uint8_t>(reinterpret_cast<const uint8_t*>(str2.data()), str2.size()));
