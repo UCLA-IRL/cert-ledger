@@ -212,7 +212,7 @@ LedgerModule::publishReply()
   for (auto& record : nonInterlocked) {
     if (m_repliedRecords.find(record.getName()) == m_repliedRecords.end() &&
         record.getType() != tlv::REPLY_RECORD) {
-      NDN_LOG_TRACE("Catching " << record.getName() << " for reply");    
+      NDN_LOG_TRACE("Catching " << record.getName() << " for reply");
       newReply.addPointer(record.getName());
       m_repliedRecords.insert(record.getName());
     }
