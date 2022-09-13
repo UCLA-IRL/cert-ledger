@@ -8,6 +8,7 @@
 #include <chrono>
 #include <deque>
 #include <iostream>
+#include <experimental/random>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
@@ -45,12 +46,14 @@ main(int argc, char* argv[])
   terminateSignals.async_wait(handleSignal);
 
   std::string configFilePath(CLEDGER_SYSCONFDIR "/cledger/cledger.config");
+  std::string backoffPeriodStr(std::to_string(3600));
 
   namespace po = boost::program_options;
   po::options_description optsDesc("Options");
   optsDesc.add_options()
   ("help,h", "print this help message and exit")
-  ("config-file,c", po::value<std::string>(&configFilePath)->default_value(configFilePath), "path to configuration file");
+  ("config-file,c", po::value<std::string>(&configFilePath)->default_value(configFilePath), "path to configuration file")
+  ("backoff-period,b", po::value<std::string>(&backoffPeriodStr)->default_value(backoffPeriodStr), "backoff period (in seconds) of generating reply record");
 
   po::variables_map vm;
   try {
@@ -74,9 +77,12 @@ main(int argc, char* argv[])
   }
 
   LedgerModule ledger(face, keyChain, configFilePath);
-  std::thread thread_reply([&ledger] {  
+  auto backoffPeriod = std::chrono::seconds(std::stoul(backoffPeriodStr));
+  backoffPeriod += std::experimental::randint(1, 10) / 100 * backoffPeriod;
+  std::thread thread_reply([&ledger, backoffPeriod] {  
     while (true) {
-      ledger.BackoffAndReply(std::chrono::seconds(10));
+      std::this_thread::sleep_for(backoffPeriod);
+      ledger.publishReply();
     }
   });
   face.processEvents();

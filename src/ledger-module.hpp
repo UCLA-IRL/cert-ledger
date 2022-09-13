@@ -39,7 +39,7 @@ public:
   onQuery(const Interest& query);
 
   void
-  BackoffAndReply(std::chrono::milliseconds time);
+  publishReply();
 
 CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 

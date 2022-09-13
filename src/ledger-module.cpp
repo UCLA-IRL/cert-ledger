@@ -200,9 +200,8 @@ LedgerModule::onQuery(const Interest& query)
 
 // there may exist some race conditions, but in most cases they won't happen
 void
-LedgerModule::BackoffAndReply(std::chrono::milliseconds time)
+LedgerModule::publishReply()
 {
-  std::this_thread::sleep_for(time);
   NDN_LOG_TRACE("Attempting to generate reply record...");
 
   Record newReply;
