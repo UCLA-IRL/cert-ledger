@@ -96,9 +96,9 @@ main(int argc, char* argv[])
     ("help,h",           "produce help message")
     ("pretty,p",         po::bool_switch(&isPretty), "display the record or nack in human readable format")
     ("identity,i",       po::bool_switch(&isIdentityName),
-                         "treat the NAME argument as an identity name (e.g., /ndn/edu/ucla/alice)")
+                         "treat the NAME argument as an identity name (e.g., /ndn/edu/ucla/cs/tianyuan)")
     ("key,k",            po::bool_switch(&isKeyName),
-                         "treat the NAME argument as a key name (e.g., /ndn/edu/ucla/alice/ksk-123456789)")
+                         "treat the NAME argument as a key name (e.g., /ndn/edu/ucla/cs/tianyuan/KEY/%25%F3Jki%09%9E%9D)")
     ("file,f",           po::bool_switch(&isFileName),
                          "treat the NAME argument as the name of a file containing a base64-encoded "
                          "certificate, '-' for stdin")
@@ -132,6 +132,11 @@ main(int argc, char* argv[])
 
   if (vm.count("name") == 0) {
     std::cerr << "ERROR: you must specify a name" << std::endl;
+    return 2;
+  }
+
+  if (vm.count("ledger-prefix") == 0) {
+    std::cerr << "ERROR: you must specify a ledger prefix" << std::endl;
     return 2;
   }
 

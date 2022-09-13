@@ -42,23 +42,25 @@ handleSignal(const boost::system::error_code& error, int signalNum)
 }
 
 static void 
-registerPrefix(const Certificate& caCert, const registerContinuation continuation)
+registerPrefix(const Name& clientName, const registerContinuation continuation)
 {
-  Name caPrefix = ndn::security::extractIdentityFromCertName(caCert.getName());
   face.registerPrefix(
-    caPrefix,
-    [caCert, continuation] (const Name& name) {
-      // provide revoker's own certificate
+    clientName,
+    [clientName, continuation] (const Name& name) {
+      // provide client's own certificate
       // notice: this only register FIB to Face, not NFD.
-      face.setInterestFilter(caCert.getName(),
-			  [caCert] (auto&&, const auto& i) {
-					 face.put(caCert);
+
+      auto clientCert = keyChain.getPib().getIdentity(clientName)
+                                         .getDefaultKey().getDefaultCertificate();
+      face.setInterestFilter(clientCert.getName(),
+			  [clientCert] (auto&&, const auto& i) {
+					 face.put(clientCert);
 				}
 			);
 			continuation();
     },
-    [caPrefix] (auto&&, const auto& reason) { 
-			std::cerr << "Prefix registeration of " << caPrefix << "failed.\n"
+    [] (auto& name, const auto& reason) { 
+			std::cerr << "Prefix registeration of " << name << "failed.\n"
 			          << "Reason: " << reason << "\nQuit\n";
 		}
   );
@@ -139,25 +141,31 @@ main(int argc, char* argv[])
   bool isIdentityName = false;
   bool isKeyName = false;
   bool isFileName = false;
-  bool isPretty = false;
   std::string ledgerPrefix;
+  std::string clientPrefix;
 
   po::options_description description(
-    "Usage: cledger-ca [-h] [-p] [-l LEDGERPREFIX] [-i|-k|-f] [-n] NAME\n"
+    "Usage: cledger-ca [-h] [-l LEDGERPREFIX] [-c CLIENTPREFIX] [-i|-k|-f] [-n] NAME\n"
     "\n"
     "Options");
   description.add_options()
   ("help,h",           "produce help message")
-  ("pretty,p",         po::bool_switch(&isPretty), "display the revocation record in human readable format")
   ("ledger-prefix,l",  po::value<std::string>(&ledgerPrefix),
                          "ledger prefix (e.g., /example/LEDGER)")
+  ("client-prefix,c",  po::value<std::string>(&clientPrefix),
+                         "client prefix (e.g., /example/client)")
   ("identity,i",       po::bool_switch(&isIdentityName),
-                         "treat the NAME argument as an identity name (e.g., /ndn/edu/ucla/alice)")
+                        "treat the NAME argument as an identity name (e.g., /ndn/edu/ucla/cs/tianyuan)")
   ("key,k",            po::bool_switch(&isKeyName),
-                       "treat the NAME argument as a key name (e.g., /ndn/edu/ucla/alice/ksk-123456789)")
+                        "treat the NAME argument as a key name (e.g., /ndn/edu/ucla/cs/tianyuan/KEY/%25%F3Jki%09%9E%9D)")
   ("file,f",           po::bool_switch(&isFileName),
-                       "treat the NAME argument as the name of a file containing a base64-encoded "
-                       "certificate, '-' for stdin")
+                        "treat the NAME argument as the name of a file containing a base64-encoded "
+                        "certificate, '-' for stdin")
+  ("name,n",           po::value<std::string>(&name),
+                        "unless overridden by -i/-k/-f, the name of the certificate to be revoked "
+                        "(e.g., /ndn/edu/ucla/cs/tianyuan/KEY/%25%F3Jki%09%9E%9D/NDNCERT/v=1662276808210)")
+  ("validator,d",      po::value<std::string>(&validatorFilePath),
+                        "the file path to load the ndn-cxx validator (e.g., trust-schema.conf)")
   ;
   po::positional_options_description p;
   p.add("name", 1);
@@ -183,6 +191,21 @@ main(int argc, char* argv[])
     return 2;
   }
 
+  if (vm.count("ledger-prefix") == 0) {
+    std::cerr << "ERROR: you must specify a ledger prefix" << std::endl;
+    return 2;
+  }
+
+  if (vm.count("client-prefix") == 0) {
+    std::cerr << "ERROR: you must specify a client prefix" << std::endl;
+    return 2;
+  }
+
+  if (vm.count("validator") == 0) {
+    std::cerr << "ERROR: you must specify a validator" << std::endl;
+    return 2;
+  }
+
   int nIsNameOptions = isIdentityName + isKeyName + isFileName;
   if (nIsNameOptions > 1) {
     std::cerr << "ERROR: at most one of '--identity', '--key', "
@@ -199,39 +222,16 @@ main(int argc, char* argv[])
                     isIdentityName, isKeyName, nIsNameOptions == 0);
   }
 
-  auto certNotBefore = certificate.getValidityPeriod().getPeriod().first;
-	auto certNotAfter = certificate.getValidityPeriod().getPeriod().second;
-	if (certNotBefore > notBefore || certNotAfter < notBefore)
-	{
-		std::cerr << "ERROR: the notBefore is outside of certificate ValidityPeriod: "
-							<< ndn::time::toString(certNotBefore) << "-"
-							<< ndn::time::toString(certNotAfter) << std::endl;
-		return 2;		
-	}
-
-  std::shared_ptr<Data> recordData(certificate);
-
-  if (isPretty) {
-    std::cout << record::Record(*recordData) << std::endl;
-  }
-	else {
-    using namespace ndn::security::transform;
-    bufferSource(recordData->wireEncode()) >> base64Encode(true) >> streamSink(std::cout);
-	}
-
+  auto recordData = std::make_shared<Data>(certificate);
   // submit the issued certificate to Ledger
 	if (!ledgerPrefix.empty()) {
-		Name ledgerName(ledgerPrefix);
 		// use record KeyLocator as prefix
 		Name keyLocator = recordData->getKeyLocator().value().getName();
 		Name caPrefix = ndn::security::extractIdentityFromCertName(keyLocator);
 		validator.load(validatorFilePath);
-
-    Certificate caCert = util::getCertificateFromPib(nStep, keyChain.getPib(), keyLocator,
-      false, false, true);
-		registerPrefix(caCert,
-	    [caPrefix, ledgerName, recordData]() {
-		    submitRecord(caPrefix, ledgerName, recordData);
+		registerPrefix(Name(clientPrefix),
+	    [clientPrefix, ledgerPrefix, recordData]() {
+		    submitRecord(Name(clientPrefix), Name(ledgerPrefix), recordData);
 		  }
 		);
 	}
@@ -243,5 +243,5 @@ main(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-  return cledger::ca::main(argc, argv);
+  return cledger::client::main(argc, argv);
 }

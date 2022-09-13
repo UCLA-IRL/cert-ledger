@@ -14,3 +14,9 @@ def build(bld):
         target='../bin/ndncledger-ledger',
         source='ndncledger-ledger.cpp',
         use='ndn-cledger')
+
+    bld.program(
+        name='ndncledger-client',
+        target='../bin/ndncledger-client',
+        source='ndncledger-client.cpp',
+        use='ndn-cledger')
