@@ -16,7 +16,10 @@ public:
   add(const Record& record);
 
   std::list<Record>
-  harvest(const uint32_t threshold, bool remove = false);
+  harvestAbove(const uint32_t threshold, bool remove = false);
+
+  std::list<Record>
+  harvestBelow(const uint32_t threshold);
 
   std::set<Name>
   getWaitList(const uint32_t value)

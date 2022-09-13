@@ -94,7 +94,26 @@ DagModule::getAncestors(EdgeState state)
 }
 
 std::list<Record>
-DagModule::harvest(const uint32_t threshold, bool remove)
+DagModule::harvestBelow(const uint32_t threshold)
+{
+  std::list<Record> ret;
+  std::list<Name> stateNames;
+  for (auto& map : m_waitlist) {
+    std::list<Name> rm;
+    if (map.first < threshold)  {
+      for (auto& s : map.second) {
+        auto state = getOrConstruct(s);
+        ret.push_back(state.record);
+        rm.push_back(s);
+      }
+      for (auto& n : rm) map.second.erase(n);
+    }
+  }
+  return ret;
+}
+
+std::list<Record>
+DagModule::harvestAbove(const uint32_t threshold, bool remove)
 {
   std::list<Record> ret;
   for (auto& map : m_waitlist) {

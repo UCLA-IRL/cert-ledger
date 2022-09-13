@@ -1,6 +1,7 @@
 #include "checker.hpp"
 #include "record.hpp"
 #include "error.hpp"
+#include "util.hpp"
 #include <ndn-cxx/security/signing-helpers.hpp>
 namespace cledger::checker {
 
@@ -32,10 +33,10 @@ Checker::dispatchInterest(const std::shared_ptr<CheckerState>& checkerState,
 
   m_face.expressInterest(*checkerState->makeInterest(ledgerPrefix),
     [this, checkerState] (auto&&, auto& data) {
-      // naming conventiion check
+      // naming convention check
       m_validator.validate(data,
-        [this, checkerState, data] (const Data&) {
-          NDN_LOG_DEBUG("Data conforms to trust schema");
+        [this, checkerState, data] (const Data& d) {
+        NDN_LOG_DEBUG("Data " << d.getName() << " conforms to trust schema");
           return onValidationSuccess(checkerState, data);
         },
         [this, checkerState, data] (const Data&, const ndn::security::ValidationError& error) {
@@ -58,9 +59,19 @@ Checker::onValidationSuccess(const std::shared_ptr<CheckerState>& checkerState, 
 {
   Name dataName = data.getName();
   if (dataName.get(-1).isTimestamp() && dataName.get(-2).toUri() == "data") {
-    return checkerState->onData(data);
+    std::vector<Data> dataVector;
+    decodeContent(dataVector, data.getContent());
+    NDN_LOG_DEBUG(dataVector.size() << " Data were encapuslated");
+    util::validateMultipleData(m_validator, dataVector,
+      [checkerState, data] (auto& d) { 
+        checkerState->onData(data);
+      },
+      [checkerState, data] (auto&&, auto& e) { 
+        checkerState->onFailure(Error(Error::Code::VALIDATION_ERROR, e.getInfo()));
+      }
+    );
   }
-  if (Nack::isValidName(dataName)) {
+  else if (Nack::isValidName(dataName)) {
     Nack nack;
     nack.fromData(data);
     return checkerState->onNack(nack);
@@ -74,5 +85,26 @@ void
 Checker::onValidationFailure(const std::shared_ptr<CheckerState>& checkerState, const ndn::security::ValidationError& error)
 {
   return checkerState->onFailure(Error(Error::Code::VALIDATION_ERROR, error.getInfo()));
+}
+
+void
+Checker::decodeContent(std::vector<Data>& dataVector, const Block& content)
+{
+  content.parse();
+  for (const auto &item : content.elements()) {
+    switch (item.type()) {
+      case ndn::tlv::Data:
+        dataVector.push_back(Data(item));
+        break;
+      default:
+        if (ndn::tlv::isCriticalType(item.type())) {
+          NDN_THROW(Error(Error::Code::PROTO_SPECIFIC, "Unrecognized TLV Type" + std::to_string(item.type())));
+        }
+        else {
+          //ignore
+        }
+        break;
+    }
+  }
 }
 } // namespace cledger::checker

@@ -2,8 +2,8 @@
 #define CLEDGER_CHECKER_HPP
 
 #include "checker-state.hpp"
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/face.hpp>
+#include "cledger-common.hpp"
+
 #include <ndn-cxx/security/validator-config.hpp>
 
 namespace cledger::checker {
@@ -29,6 +29,9 @@ private:
 
   void
   onValidationFailure(const std::shared_ptr<CheckerState>& checkerState, const ndn::security::ValidationError& error);
+
+  void
+  decodeContent(std::vector<Data>& dataVector, const Block& content);
   ndn::Face& m_face;
   ndn::security::Validator& m_validator;
 };

@@ -129,15 +129,14 @@ LedgerModule::onQuery(const Interest& query)
     replyOrSendNack(interestName);
   }
   // query of a certificate or record
-  else if (Certificate::isValidName(interestName.getPrefix(-1)) &&
-           interestName.get(-1).toUri() == "32=record")
+  else if (Certificate::isValidName(interestName.set(-4, Name::Component("KEY"))))
   {
-    NDN_LOG_TRACE("A Record Query for " << interestName.getPrefix(-1));
+    NDN_LOG_TRACE("A Record Query for " << interestName.set(-4, Name::Component("KEY")));
     // 1. get the cert data (payload) with cert name
     // 2. map cert data to edge state name
     try {
       Block content(ndn::tlv::Content);
-      auto payloadblock = m_storage->getBlock(interestName.getPrefix(-1));
+      auto payloadblock = m_storage->getBlock(interestName.set(-4, Name::Component("KEY")));
       auto mapName = dag::toMapName(make_span<const uint8_t>(payloadblock.wire(), payloadblock.size()));
 
       NDN_LOG_TRACE("Finding PayloadMap... " << mapName);
@@ -161,7 +160,7 @@ LedgerModule::onQuery(const Interest& query)
       for (auto& des : m_policy->select(state)) {
         if (count++ < m_config.policyThreshold) {
           NDN_LOG_TRACE("Finding Descendant Record... " << dag::fromStateName(des));
-          encoder(content, dag::fromStateName(state.stateName));
+          encoder(content, dag::fromStateName(des));
         }
       }
       
@@ -204,22 +203,24 @@ void
 LedgerModule::BackoffAndReply(std::chrono::milliseconds time)
 {
   std::this_thread::sleep_for(time);
+  NDN_LOG_TRACE("Attempting to generate reply record...");
 
   Record newReply;
   newReply.setType(tlv::REPLY_RECORD);
 
-  auto nonInterlocked = m_dag->harvest(m_config.policyThreshold, false);
+  auto nonInterlocked = m_dag->harvestBelow(m_config.policyThreshold);
   // two conditions: 1/ not a reply record; 2/ I haven't directly replied before
   for (auto& record : nonInterlocked) {
     if (m_repliedRecords.find(record.getName()) == m_repliedRecords.end() &&
         record.getType() != tlv::REPLY_RECORD) {
+      NDN_LOG_TRACE("Catching " << record.getName() << " for reply");    
       newReply.addPointer(record.getName());
       m_repliedRecords.insert(record.getName());
     }
   }
 
   // publish records only if the reply record has pointers
-  if (newReply.getPointers().size() > 1) {
+  if (newReply.getPointers().size() > 0) {
     Name newReplyName = m_sync->publishRecord(newReply);
     newReply.setName(newReplyName);
     // add to DAG
@@ -331,7 +332,7 @@ LedgerModule::dagHarvest()
 {
   // harvest record that collects enough citations (e.g., 3)
   // this ensures the waitlist be relatively small
-  auto recordList = m_dag->harvest(m_config.policyThreshold, true);
+  auto recordList = m_dag->harvestAbove(m_config.policyThreshold, true);
   // put those record into 
   if (recordList.size() > 0) {
     NDN_LOG_DEBUG("The following Records have been interlocked");

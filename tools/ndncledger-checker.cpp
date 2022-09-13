@@ -1,4 +1,5 @@
 #include "checker.hpp"
+#include "util.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -23,161 +24,6 @@ static ndn::ValidatorConfig validator{face};
 static ndn::KeyChain keyChain;
 static std::shared_ptr<Checker> checker;
 static ssize_t nStep = 0;
-
-template<typename T>
-T
-loadFromFile(const std::string& filename)
-{
-  try {
-    if (filename == "-") {
-      return ndn::io::loadTlv<T>(std::cin, ndn::io::BASE64);
-    }
-
-    std::ifstream file(filename);
-    if (!file) {
-      NDN_THROW(std::runtime_error("Cannot open '" + filename + "'"));
-    }
-    return ndn::io::loadTlv<T>(file, ndn::io::BASE64);
-  }
-  catch (const ndn::io::Error& e) {
-    NDN_THROW_NESTED(std::runtime_error("Cannot load '" + filename +
-                                        "': malformed TLV or not in base64 format (" + e.what() + ")"));
-  }
-}
-
-Name
-captureKeyName(ssize_t& nStep, ndn::security::pib::Identity& identity)
-{
-  size_t count = 0;
-  std::cerr << "***************************************\n"
-            << "Step " << nStep++ << ": KEY SELECTION" << std::endl;
-  for (const auto& key : identity.getKeys()) {
-    std::cerr << "> Index: " << count++ << std::endl
-              << ">> Key Name:";
-    if (key == identity.getDefaultKey()) {
-      std::cerr << "  +->* ";
-    }
-    else {
-      std::cerr << "  +->  ";
-    }
-    std::cerr << key.getName() << std::endl;
-  }
-
-  std::cerr << "Please type in the key's index that you want to select:\n";
-  std::string indexStr = "";
-  std::string indexStrLower = "";
-  size_t keyIndex;
-  getline(std::cin, indexStr);
-
-  indexStrLower = indexStr;
-  boost::algorithm::to_lower(indexStrLower);
-	try {
-		keyIndex = std::stoul(indexStr);
-	}
-	catch (const std::exception&) {
-		std::cerr << "Your input is not valid index. Exit" << std::endl;
-		exit(1);
-	}
-
-	if (keyIndex >= count) {
-		std::cerr << "Your input is not an existing index. Exit" << std::endl;
-		exit(1);
-	}
-	else {
-		auto itemIterator = identity.getKeys().begin();
-		std::advance(itemIterator, keyIndex);
-		auto targetKeyItem = *itemIterator;
-		return targetKeyItem.getName();
-	}
-}
-
-Name
-captureCertName(ssize_t& nStep, ndn::security::pib::Key& key)
-{
-  size_t count = 0;
-  std::cerr << "***************************************\n"
-            << "Step " << nStep++ << ": CERTIFICATE SELECTION" << std::endl;
-  for (const auto& cert : key.getCertificates()) {
-    std::cerr << "> Index: " << count++ << std::endl
-              << ">> Certificate Name:";
-    if (cert == key.getDefaultCertificate()) {
-      std::cerr << "  +->* ";
-    }
-    else {
-      std::cerr << "  +->  ";
-    }
-    std::cerr << cert.getName() << std::endl;
-  }
-
-  std::cerr << "Please type in the key's index that you want to select:\n";
-  std::string indexStr = "";
-  std::string indexStrLower = "";
-  size_t certIndex;
-  getline(std::cin, indexStr);
-
-  indexStrLower = indexStr;
-  boost::algorithm::to_lower(indexStrLower);
-	try {
-		certIndex = std::stoul(indexStr);
-	}
-	catch (const std::exception&) {
-		std::cerr << "Your input is not valid index. Exit" << std::endl;
-		exit(1);
-	}
-
-	if (certIndex >= count) {
-		std::cerr << "Your input is not an existing index. Exit" << std::endl;
-		exit(1);
-	}
-	else {
-		auto itemIterator = key.getCertificates().begin();
-		std::advance(itemIterator, certIndex);
-		auto targetCertItem = *itemIterator;
-		return targetCertItem.getName();
-	}
-}
-
-/**
- * Modified from ndn-cxx
- */
-ndn::security::Certificate
-getCertificateFromPib(ssize_t& nStep,
-                      const ndn::security::pib::Pib& pib, const Name& name,
-                      bool isIdentityName, bool isKeyName, bool isCertName)
-{
-  if (isIdentityName) {
-    auto identity = pib.getIdentity(name);
-    if (identity.getKeys().size() > 1) {
-      return getCertificateFromPib(nStep, pib,
-          captureKeyName(nStep, identity), false, true, false);
-    }
-    else {
-      return getCertificateFromPib(nStep, pib,
-        identity.getDefaultKey().getName(), false, true, false);    
-    }
-  }
-  else if (isKeyName) {
-    auto key = pib.getIdentity(ndn::security::extractIdentityFromKeyName(name))
-                  .getKey(name);
-		if (key.getCertificates().size() > 1) {
-			return getCertificateFromPib(nStep, pib,
-        captureCertName(nStep, key), false, false, true);
-		}
-    else {
-      return getCertificateFromPib(nStep, pib,
-        key.getDefaultCertificate().getName(), false, false, true);
-    }
-  }
-  else if (isCertName) {
-    return pib.getIdentity(ndn::security::extractIdentityFromCertName(name))
-           .getKey(ndn::security::extractKeyNameFromCertName(name))
-           .getCertificate(name);
-  }
-  // should never be called
-  return pib.getIdentity(ndn::security::extractIdentityFromCertName(name))
-           .getKey(ndn::security::extractKeyNameFromCertName(name))
-           .getCertificate(name);
-}
 
 static void
 handleSignal(const boost::system::error_code& error, int signalNum)
@@ -243,12 +89,12 @@ main(int argc, char* argv[])
   std::string ledgerPrefix;
 
   po::options_description description(
-    "Usage: ndncledger-checker [-h] [-p] [-b NOTBEFORE] [-l LEDGERPREFIX] [-d VALIDATOR ] [-i|-k|-f] [-n] NAME\n"
+    "Usage: ndncledger-checker [-h] [-p] [-l LEDGERPREFIX] [-d VALIDATOR ] [-i|-k|-f] [-n] NAME\n"
     "\n"
     "Options");
   description.add_options()
     ("help,h",           "produce help message")
-    ("pretty,p",         po::bool_switch(&isPretty), "display the revocation record or nack in human readable format")
+    ("pretty,p",         po::bool_switch(&isPretty), "display the record or nack in human readable format")
     ("identity,i",       po::bool_switch(&isIdentityName),
                          "treat the NAME argument as an identity name (e.g., /ndn/edu/ucla/alice)")
     ("key,k",            po::bool_switch(&isKeyName),
@@ -258,7 +104,7 @@ main(int argc, char* argv[])
                          "certificate, '-' for stdin")
     ("name,n",           po::value<std::string>(&name),
                          "unless overridden by -i/-k/-f, the name of the certificate to be revoked "
-                         "(e.g., /ndn/edu/ucla/KEY/cs/alice/ksk-1234567890/ID-CERT/%FD%FF%FF%FF%FF%FF%FF%FF)")
+                         "(e.g., /ndn/edu/ucla/cs/tianyuan/KEY/%25%F3Jki%09%9E%9D/NDNCERT/v=1662276808210)")
     ("ledger-prefix,l",   po::value<std::string>(&ledgerPrefix),
                          "ledger prefix (e.g., /example/LEDGER)")
     ("validator,d",      po::value<std::string>(&validatorFilePath),
@@ -298,10 +144,10 @@ main(int argc, char* argv[])
 
   ndn::security::Certificate certificate;
   if (isFileName) {
-    certificate = loadFromFile<ndn::security::Certificate>(name);
+    certificate = util::loadFromFile<ndn::security::Certificate>(name);
   }
   else {
-    certificate = getCertificateFromPib(nStep, keyChain.getPib(), name,
+    certificate = util::getCertificateFromPib(nStep, keyChain.getPib(), name,
                     isIdentityName, isKeyName, nIsNameOptions == 0);
   }
   std::cerr << "Checking " << certificate.getName() << "...\n";

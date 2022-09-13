@@ -74,8 +74,13 @@ main(int argc, char* argv[])
   }
 
   LedgerModule ledger(face, keyChain, configFilePath);
-  // ledger.run();
+  std::thread thread_reply([&ledger] {  
+    while (true) {
+      ledger.BackoffAndReply(std::chrono::seconds(10));
+    }
+  });
   face.processEvents();
+  thread_reply.join();
   return 0;
 }
 

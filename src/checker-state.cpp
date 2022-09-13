@@ -18,7 +18,7 @@ std::shared_ptr<Interest>
 CheckerState::makeInterest(const Name& ledgerPrefix)
 {
   Name interestName = m_data.getName();
-  interestName.appendKeyword("record");
+  interestName.set(-4, Name::Component("RECORD"));
   auto interest = std::make_shared<Interest>(interestName);
   interest->setMustBeFresh(true);
   interest->setCanBePrefix(true);

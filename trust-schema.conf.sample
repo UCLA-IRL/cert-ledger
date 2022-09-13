@@ -16,17 +16,46 @@ rule
 
 rule
 {
-  id "record data"
+  id "record query-response"
   for data
   filter
   {
     type name
-    regex ^<>*<record><data><>$
+    regex ^<>*<RECORD><><><><data><>$
   }
   checker
   {
-    type hierarchical
+    type customized
     sig-type ecdsa-sha256
+    key-locator
+    {
+      type name
+      name /ndn/site1
+      relation is-prefix-of
+    }
+  }
+}
+
+
+rule
+{
+  id "dag record"
+  for data
+  filter
+  {
+    type name
+    regex ^<>*<ndn><site1><LEDGER><SYNC><>$
+  }
+  checker
+  {
+    type customized
+    sig-type ecdsa-sha256
+    key-locator
+    {
+      type name
+      name /ndn/site1
+      relation is-prefix-of
+    }
   }
 }
 
@@ -41,8 +70,14 @@ rule
   }
   checker
   {
-    type hierarchical
+    type customized
     sig-type ecdsa-sha256
+    key-locator
+    {
+      type name
+      name /ndn/site1
+      relation is-prefix-of
+    }
   }
 }
 
