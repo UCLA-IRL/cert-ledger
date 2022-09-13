@@ -78,10 +78,9 @@ main(int argc, char* argv[])
 
   LedgerModule ledger(face, keyChain, configFilePath);
   auto backoffPeriod = std::chrono::seconds(std::stoul(backoffPeriodStr));
-  backoffPeriod += std::experimental::randint(1, 10) / 100 * backoffPeriod;
   std::thread thread_reply([&ledger, backoffPeriod] {  
     while (true) {
-      std::this_thread::sleep_for(backoffPeriod);
+      std::this_thread::sleep_for(std::experimental::randint(100, 110) / 100 * backoffPeriod);
       ledger.publishReply();
     }
   });
