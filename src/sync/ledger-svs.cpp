@@ -1,7 +1,6 @@
 #include "sync/ledger-svs.hpp"
 
 namespace cledger::sync {
-NDN_LOG_INIT(cledger.sync);
 
 LedgerSVSDataStore::LedgerSVSDataStore(storage::Interface storageIntf)
   : m_storageIntf(storageIntf)

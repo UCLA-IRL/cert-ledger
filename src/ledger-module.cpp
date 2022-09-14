@@ -65,9 +65,15 @@ LedgerModule::registerPrefix()
   Name prefix = m_config.ledgerPrefix;
   // let's first use "LEDGER" in protocol
   prefix.append("LEDGER");
-  auto prefixId = m_face.setInterestFilter(
+  auto prefixId = m_face.registerPrefix(
     prefix,
-    std::bind(&LedgerModule::onQuery, this, _2),
+    [this] (auto&&) {
+      for (auto& z : m_config.recordZones) {
+        auto filterId = m_face.setInterestFilter(z, [this] (auto&&, const auto& i) { onQuery(i); });
+        NDN_LOG_TRACE("Registering filter for recordZone " << z);
+        m_handle.handleFilter(filterId);
+      }
+    },
     [this] (auto&&, const auto& reason) { onRegisterFailed(reason); }
   );
   m_handle.handlePrefix(prefixId);
