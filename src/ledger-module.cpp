@@ -40,6 +40,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_syncOps.prefix = syncPrefix;
   m_syncOps.id = Name(m_config.ledgerPrefix).append(m_config.instanceSuffix);
   m_secOps.interestSigner->signingInfo = m_config.interestSigner;
+  m_secOps.interestSigner->signingInfo.setSignedInterestFormat(ndn::security::SignedInterestFormat::V03);
   m_secOps.dataSigner->signingInfo = m_config.dataSigner;
   m_sync = std::make_unique<sync::SyncModule>(m_syncOps, m_secOps, m_face,
     m_storage->getInterface(),
@@ -55,12 +56,6 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
       dagHarvest();
     }
   );
-
-  // self publishing
-  auto cert = m_keyChain.getPib().getIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix))
-                                 .getDefaultKey()
-                                 .getDefaultCertificate();
-  afterValidation(cert);
 }
 
 void
@@ -70,17 +65,20 @@ LedgerModule::registerPrefix()
   Name prefix = m_config.ledgerPrefix;
   // let's first use "LEDGER" in protocol
   prefix.append("LEDGER");
-  // NDN_LOG_TRACE("here");
-  auto prefixId = m_face.registerPrefix(
+  auto prefixId = m_face.setInterestFilter(
     prefix,
-    [&] (const Name& name) {
-      // register for each record Zone
-      // notice: this only register FIB to Face, not NFD.
-      for (auto& zone : m_config.recordZones) {
-        auto filterId = m_face.setInterestFilter(zone, [this] (auto&&, const auto& i) { onQuery(i); });
-        NDN_LOG_TRACE("Registering filter for recordZone " << zone);
-        m_handle.handleFilter(filterId);
-      }
+    std::bind(&LedgerModule::onQuery, this, _2),
+    [this] (auto&&, const auto& reason) { onRegisterFailed(reason); }
+  );
+  m_handle.handlePrefix(prefixId);
+
+  auto cert = m_keyChain.getPib().getIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix))
+                                 .getDefaultKey()
+                                 .getDefaultCertificate();
+  prefixId = m_face.setInterestFilter(
+    ndn::security::extractKeyNameFromCertName(cert.getName()),
+    [this, cert] (auto&&, auto& i) {
+      m_face.put(cert);
     },
     [this] (auto&&, const auto& reason) { onRegisterFailed(reason); }
   );
@@ -120,7 +118,7 @@ LedgerModule::onQuery(const Interest& query)
     return;
   }
 
-  NDN_LOG_TRACE("Received Query " << query); 
+  NDN_LOG_DEBUG("Received Query " << query); 
   auto interestName = query.getName();
   // interest for exact data match
   if (!query.getCanBePrefix())

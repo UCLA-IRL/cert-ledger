@@ -10,7 +10,6 @@ LedgerSVSDataStore::LedgerSVSDataStore(storage::Interface storageIntf)
 std::shared_ptr<const Data>
 LedgerSVSDataStore::find(const Interest& interest)
 {
-  NDN_LOG_TRACE("Finding... " << interest.getName());
   try {
     auto data = std::make_shared<const Data>(m_storageIntf.getter(interest.getName()));
     return data;
@@ -23,7 +22,6 @@ LedgerSVSDataStore::find(const Interest& interest)
 void
 LedgerSVSDataStore::insert(const Data& data)
 {
-  NDN_LOG_TRACE("Inserting... " << data.getName());
   m_storageIntf.adder(data.getName(), data.wireEncode());
 }
 

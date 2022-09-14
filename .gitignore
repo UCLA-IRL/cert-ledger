@@ -34,3 +34,4 @@ __pycache__/
 *.cert
 test_db/
 *.ndncert
+*.sample.*
