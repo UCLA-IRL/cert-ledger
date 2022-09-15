@@ -9,6 +9,7 @@ struct EdgeState
   enum Status {
     INITIALIZED = 0,
     LOADED = 2,
+    INTERLOCKED = 3,
   };
   Name stateName;
 

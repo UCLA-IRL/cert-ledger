@@ -45,9 +45,10 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_sync = std::make_unique<sync::SyncModule>(m_syncOps, m_secOps, m_face,
     m_storage->getInterface(),
     [this] (const Record& record) {
+      auto stateName = m_dag->add(record);
       if (record.getType() != tlv::REPLY_RECORD) {
         try {
-          addPayloadMap(record.getPayload(), m_dag->add(record));
+          addPayloadMap(record.getPayload(), stateName);
         }
         catch (const std::runtime_error& e) {
           NDN_LOG_TRACE("Adding PayloadMap failed because of: " << e.what());

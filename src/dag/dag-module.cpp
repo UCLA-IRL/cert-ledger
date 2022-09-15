@@ -20,6 +20,7 @@ DagModule::add(const Record& record)
       onNewRecord(state);
       return state.stateName;
     case EdgeState::LOADED:
+    case EdgeState::INTERLOCKED:
       // duplicate, reject
       return state.stateName;
     default:
@@ -99,14 +100,11 @@ DagModule::harvestBelow(const uint32_t threshold)
   std::list<Record> ret;
   std::list<Name> stateNames;
   for (auto& map : m_waitlist) {
-    std::list<Name> rm;
     if (map.first < threshold)  {
       for (auto& s : map.second) {
         auto state = getOrConstruct(s);
         ret.push_back(state.record);
-        rm.push_back(s);
       }
-      for (auto& n : rm) map.second.erase(n);
     }
   }
   return ret;
@@ -122,6 +120,8 @@ DagModule::harvestAbove(const uint32_t threshold, bool remove)
       for (auto& s : map.second) {
         auto state = getOrConstruct(s);
         ret.push_back(state.record);
+        state.status = EdgeState::INTERLOCKED;
+        update(state);
         if (remove) rm.push_back(s);
       }
       for (auto& n : rm) map.second.erase(n);
@@ -189,6 +189,9 @@ void
 DagModule::evaluateWaitlist(EdgeState& state)
 {
   NDN_LOG_TRACE("Evaluating waitlist for " << state.stateName);
+
+  if (state.status == EdgeState::INTERLOCKED) return;
+
   for (auto& l : m_waitlist) {
     auto prev = l.second.find(state.stateName);
     if (prev != l.second.end()) {

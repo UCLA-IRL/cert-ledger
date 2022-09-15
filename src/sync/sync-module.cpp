@@ -91,6 +91,7 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
       // clean the acc
       for (auto& d : *acc) {
         m_storageIntf.adder(d.getName(), d.wireEncode());
+        NDN_LOG_TRACE("Yielding " << d.getName());
         m_yieldCb(Record(d.getName(), d.getContent()));
       }
       acc->clear();
