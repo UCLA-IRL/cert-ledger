@@ -45,8 +45,10 @@ LedgerOptions::praseNotification(const Interest& notification)
 std::shared_ptr<Interest>
 LedgerOptions::makeFetcher(ClientOptions& client)
 {
+  client.setNonce2(ndn::random::generateSecureWord64());
   Name name = Name(client.getPrefix()).append("msg").append(m_topic)
-                                      .appendNumber(client.getNonce());
+                                      .appendNumber(client.getNonce())
+                                      .appendNumber(client.getNonce2());
   auto fetcher = std::make_shared<Interest>(name);
   auto fwHint = client.getForwardingHint();
   if (!fwHint.empty()) {
@@ -57,7 +59,7 @@ LedgerOptions::makeFetcher(ClientOptions& client)
 
 std::shared_ptr<Data>
 LedgerOptions::makeNotificationAck(ClientOptions& client,
-                               const std::list<AppendStatus>& statusList)
+                                   const std::list<AppendStatus>& statusList)
 {
   auto notification = client.makeNotification();
   auto data = std::make_shared<Data>(notification->getName());

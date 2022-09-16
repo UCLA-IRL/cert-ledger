@@ -4,12 +4,7 @@ namespace cledger::append {
 
 Handle::~Handle()
 {
-  for (auto& handle : m_interestFilterHandles) {
-    handle.cancel();
-  }
-  for (auto& handle : m_registeredPrefixHandles) {
-    handle.unregister();
-  }
+  unregisterFilters().unregisterPrefixes();
 }
 
 Handle&
@@ -23,6 +18,24 @@ Handle&
 Handle::handleFilter(const ndn::InterestFilterHandle& filter)
 {
   m_interestFilterHandles.push_back(filter);
+  return *this;
+}
+
+Handle&
+Handle::unregisterFilters()
+{
+  for (auto& handle : m_interestFilterHandles) {
+    handle.cancel();
+  }
+  return *this;
+}
+
+Handle&
+Handle::unregisterPrefixes()
+{
+  for (auto& handle : m_registeredPrefixHandles) {
+    handle.unregister();
+  }
   return *this;
 }
 

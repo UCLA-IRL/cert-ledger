@@ -4,7 +4,7 @@
 namespace cledger::append {
 namespace tlv = appendtlv;
 
-NDN_LOG_INIT(ndnrevoke.append);
+NDN_LOG_INIT(cledger.append);
 
 Client::Client(const Name& prefix, ndn::Face& face,
                ndn::KeyChain& keyChain, ndn::security::Validator& validator)
@@ -30,12 +30,13 @@ Client::dispatchNotification(const std::shared_ptr<ClientOptions>& options, cons
 {
   auto interest = options->makeNotification();
   if (options->exhaustRetries()) {
-    options->onFailure(data, Error(Error::Code::TIMEOUT, interest->getName().toUri()));
+    options->onFailure(data, Error(Error::Code::TIMEOUT, interest->getName().toUri() + " not acked"));
     return;
   }
   NDN_LOG_TRACE("Sending out notification " << *interest);
   m_face.expressInterest(*interest, 
     [this, options, data] (auto&&, const auto& notificationAck) {
+      m_handle.unregisterFilters();
       m_validator.validate(notificationAck, 
         [this, options, data, notificationAck] (const Data&) {
           NDN_LOG_DEBUG("ACK conforms to trust schema");
@@ -71,10 +72,17 @@ Client::appendData(const Name& topic, const std::list<Data>& data,
   Name filterName = options->makeInterestFilter();
   auto filterId = m_face.setInterestFilter(filterName,
     [this, options, data] (auto&&, const auto& i) {
+      if (options->getNonce2() > 0) {
+        NDN_LOG_WARN("Already matched with " << options->getNonce2());
+        return;
+      }
+      else {
+        options->setNonce2(i.getName().get(-1).toNumber());
+      }
       auto submission = options->makeSubmission(data);
       m_keyChain.sign(*submission, ndn::signingByIdentity(options->getPrefix()));
       m_face.put(*submission);
-      NDN_LOG_TRACE("Submitting " << *submission);  
+      NDN_LOG_TRACE("Submitting " << *submission);
     }
   );
   // handle the unregsiter task in destructor
@@ -94,7 +102,7 @@ Client::onValidationSuccess(const std::shared_ptr<ClientOptions>& options, const
       continue;
     }
     else {
-      NDN_LOG_TRACE("There are individual submissions failed by CT");
+      NDN_LOG_TRACE("There are individual submissions failed by ledger");
     }
   }
   m_retryCount = 0;

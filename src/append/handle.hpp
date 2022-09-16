@@ -20,6 +20,12 @@ public:
   Handle&
   handleFilter(const ndn::InterestFilterHandle& filter);
 
+  Handle&
+  unregisterFilters();
+
+  Handle&
+  unregisterPrefixes();
+
 CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::list<ndn::RegisteredPrefixHandle> m_registeredPrefixHandles;
   std::list<ndn::InterestFilterHandle> m_interestFilterHandles;

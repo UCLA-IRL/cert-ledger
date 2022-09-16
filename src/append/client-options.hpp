@@ -57,6 +57,18 @@ public:
     return m_nonce;
   }
 
+  void
+  setNonce2(uint64_t nonce2)
+  {
+    m_nonce2 = nonce2;
+  }
+
+  uint64_t
+  getNonce2() const
+  {
+    return m_nonce2;
+  }
+
   bool
   exhaustRetries()
   {
@@ -96,7 +108,9 @@ public:
 private:
   Name m_topic;
   Name m_prefix;
-  uint64_t m_nonce;
+  uint64_t m_nonce = 0;
+  // nonce2 should only be set by ledger side
+  uint64_t m_nonce2 = 0;
   ssize_t m_retryCount = 0;
 
   onSuccessCallback m_sCb;

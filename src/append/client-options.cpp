@@ -31,7 +31,8 @@ ClientOptions::makeSubmission(const std::list<Data>& dataList)
 {
   // Data: /<m_prefix>/msg/<topic>/<nonce>
   Name name = Name(getPrefix()).append("msg").append(m_topic)
-                               .appendNumber(getNonce());
+                               .appendNumber(getNonce())
+                               .appendNumber(getNonce2());
   auto data = std::make_shared<Data>(name);
   Block content(ndn::tlv::Content);
   int dataCount = 0;
