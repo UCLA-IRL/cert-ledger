@@ -25,7 +25,10 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   Name topic = Name(m_config.ledgerPrefix).append("LEDGER").append("append");
 
   // initiliaze CA facing prefixes
-  m_appendCt = std::make_unique<append::Ledger>(m_config.ledgerPrefix, topic, m_face, m_keyChain, m_validator);
+  m_appendCt = std::make_unique<append::Ledger>(
+    Name(m_config.ledgerPrefix).append(m_config.instanceSuffix), 
+    topic, m_face, m_keyChain, m_validator
+  );
   m_appendCt->listen(std::bind(&LedgerModule::onDataSubmission, this, _1));
 
   // initialize backend storage module
