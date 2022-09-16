@@ -113,12 +113,12 @@ submitRecord(const Name& caPrefix, const Name& ledgerName, const std::shared_ptr
 				}
 			}
 			std::cerr << "Quit.\n";
-			exit(1);
+      face.getIoService().stop();
 		},
 		[errorMsg] (auto&&, auto& error) {
 			std::cerr << errorMsg << error.getInfo()
 								<< "\nQuit.\n";
-			exit(1);
+      face.getIoService().stop();
 		}
 	);
 }
