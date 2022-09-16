@@ -88,6 +88,7 @@ LedgerModule::registerPrefix()
   prefixId = m_face.setInterestFilter(
     ndn::security::extractKeyNameFromCertName(cert.getName()),
     [this, cert] (auto&&, auto& i) {
+      NDN_LOG_TRACE("Serving own certificate: " << cert.getName());
       m_face.put(cert);
     },
     [this] (auto&&, const auto& reason) { onRegisterFailed(reason); }
