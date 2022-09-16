@@ -27,6 +27,8 @@ using YieldRecordCallback = std::function<void(const Record&)>;
 class SyncModule
 {
 public:
+  const ssize_t MAX_RETRIES = 3;
+
   explicit
   SyncModule(const SyncOptions &options, const SecurityOptions& secOps, ndn::Face& face,
              storage::Interface storageIntf, const YieldRecordCallback& yield);

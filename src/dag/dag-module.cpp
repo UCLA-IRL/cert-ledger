@@ -47,7 +47,10 @@ DagModule::getAncestors(EdgeState state)
     auto parent = getOrConstruct(toStateName(ptr));
     // if this is pending, update its descendents
     if (parent.status == EdgeState::INITIALIZED) {
-      NDN_LOG_TRACE(parent.stateName << " is a pending state, stop here...");
+      NDN_LOG_TRACE(parent.stateName << " is a pending ancestor, stop here...\n"
+                    "Adding " << state.stateName << "into descendants..");
+      parent.descendants.insert(state.stateName);
+      update(parent);
     }
     else {
       // we gonna expand this ptr in the next round.
@@ -76,7 +79,10 @@ DagModule::getAncestors(EdgeState state)
         }
 
         if (parent.status == EdgeState::INITIALIZED) {
-          NDN_LOG_TRACE(parent.stateName << " is a pending state, stop here...");
+          NDN_LOG_TRACE(parent.stateName << " is a pending state, stop here...\n"
+                        "Adding " << state.stateName << "into descendants..");
+          parent.descendants.insert(state.stateName);
+          update(parent);
         }
         else {
           nextFrontier.push_back(parent.stateName);
@@ -167,6 +173,12 @@ DagModule::onNewRecord(EdgeState& state)
   // if this is a genesis record
   if (!state.record.isGenesis()) {
     evaluateAncestors(state);
+  }
+
+  // resolve all pending descendants
+  for (auto& desc : state.descendants) {
+    auto descState = getOrConstruct(desc);
+    evaluateWaitlist(descState);
   }
   return *this;
 }

@@ -102,7 +102,8 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
       }
       acc->clear();
     }
-  });
+  },
+  MAX_RETRIES);
 }
 
 Name
