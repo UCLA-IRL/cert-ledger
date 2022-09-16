@@ -54,6 +54,12 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
     return searchStorage(n);
   };
 
+  // check again if exist in acc or storage
+  if (searchAccOrStorage(m_svs->getDataName(nid, s))) {
+    NDN_LOG_TRACE("Already fetched " << m_svs->getDataName(nid, s));
+    return;
+  }
+
   NDN_LOG_TRACE("Trying getting data " << m_svs->getDataName(nid, s));
   m_svs->fetchData(nid, s, [this, acc, searchAccOrStorage] (const ndn::Data& data) {
     NDN_LOG_DEBUG("Getting data " << data.getName());
