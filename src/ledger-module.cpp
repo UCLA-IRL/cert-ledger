@@ -49,17 +49,17 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
     m_storage->getInterface(),
     [this] (const Record& record) {
       auto stateName = m_dag->add(record);
-      auto dataBlock = Block(record.getPayload());
-      Data data(dataBlock);
-      // put raw data into storage
-      try {
-        m_storage->addBlock(data.getName(), dataBlock);
-      }
-      catch (const std::runtime_error& e) {
-        NDN_LOG_DEBUG("Duplicate Data " << data.getName());
-        return;
-      }
       if (record.getType() != tlv::REPLY_RECORD) {
+        auto dataBlock = Block(record.getPayload());
+        Data data(dataBlock);
+        // put raw data into storage
+        try {
+          m_storage->addBlock(data.getName(), dataBlock);
+        }
+        catch (const std::runtime_error& e) {
+          NDN_LOG_DEBUG("Duplicate Data " << data.getName());
+          return;
+        }
         try {
           addPayloadMap(record.getPayload(), stateName);
         }
