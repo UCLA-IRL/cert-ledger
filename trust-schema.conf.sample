@@ -90,11 +90,16 @@ rule
     type name
     regex ^<>*<notify><>$
   }
-  key-locator
+  checker
   {
-    type name
-    name /ndn/site1
-    relation is-prefix-of
+    type customized
+    sig-type ecdsa-sha256
+    key-locator
+    {
+      type name
+      name /ndn/site1
+      relation is-prefix-of
+    }
   }
 }
 
