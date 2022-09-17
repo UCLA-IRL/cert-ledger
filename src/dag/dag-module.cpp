@@ -178,7 +178,10 @@ DagModule::onNewRecord(EdgeState& state)
   // resolve all pending descendants
   for (auto& desc : state.descendants) {
     auto descState = getOrConstruct(desc);
-    evaluateWaitlist(descState);
+    // if this is a genesis record
+    if (!descState.record.isGenesis()) {
+      evaluateAncestors(descState);
+    }
   }
   return *this;
 }
