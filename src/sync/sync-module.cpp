@@ -28,14 +28,15 @@ void
 SyncModule::onMissingData(const std::vector<MissingDataInfo>& vectors)
 { 
   // an accumlator to collect all missing records along the way
-  auto acc = std::make_shared<std::list<Data>>();
   for (auto& v : vectors) {
-    recursiveFetcher(v.nodeId, v.high, acc); 
+    for (SeqNo curr = v.low; curr <= v.high; curr++) {
+      recursiveFetcher(m_svs->getDataName(v.nodeId, curr));
+    }
   }
 }
 
 void
-SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::list<Data>> acc)
+SyncModule::fetcher(const NodeID& nid, const SeqNo& s)
 {
   auto searchStorage = [this] (const Name& n) {
     try {
@@ -47,60 +48,63 @@ SyncModule::recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<
     }
   };
 
-  auto searchAccOrStorage = [searchStorage, acc] (const Name& n) {
-    for (auto& r : *acc) {
-      if (r.getName() == n) return true;
-    }
-    return searchStorage(n);
-  };
-
   // check again if exist in acc or storage
-  if (searchAccOrStorage(m_svs->getDataName(nid, s))) {
+  if (searchStorage(m_svs->getDataName(nid, s))) {
     NDN_LOG_TRACE("Already fetched " << m_svs->getDataName(nid, s));
     return;
   }
 
   NDN_LOG_TRACE("Trying getting data " << m_svs->getDataName(nid, s));
-  m_svs->fetchData(nid, s, [this, acc, searchAccOrStorage] (const ndn::Data& data) {
+  m_svs->fetchData(nid, s, [this, searchStorage] (const ndn::Data& data) {
     NDN_LOG_DEBUG("Getting data " << data.getName());
 
-    NDN_LOG_TRACE("[" << data.getName() << "]: Printing acc...");
-    for (auto& d : *acc) {
-      NDN_LOG_TRACE("     " << d.getName());
+    m_storageIntf.adder(data.getName(), data.wireEncode());
+    NDN_LOG_TRACE("Yielding " << data.getName());
+    m_yieldCb(Record(data.getName(), data.getContent()));
+
+  },
+  MAX_RETRIES);
+}
+void
+SyncModule::recursiveFetcher(const Name& recordName)
+{
+  auto searchStorage = [this] (const Name& n) {
+    try {
+      m_storageIntf.getter(n);
+      return true;
+    }
+    catch (std::exception& e) {
+      return false;
+    }
+  };
+
+  // check again if exist in acc or storage
+  if (searchStorage(recordName)) {
+    NDN_LOG_TRACE("Already fetched " << recordName);
+    return;
+  }
+
+  NDN_LOG_TRACE("Trying getting data " << recordName);
+  auto tuple = parseDataName(recordName);
+  m_svs->fetchData(std::get<0>(tuple), std::get<1>(tuple), [this, searchStorage] (const ndn::Data& data) {
+    NDN_LOG_DEBUG("Getting data " << data.getName());
+
+    if (!searchStorage(data.getName())) {
+      m_storageIntf.adder(data.getName(), data.wireEncode());
     }
 
-    if (!searchAccOrStorage(data.getName())) acc->push_front(data);
-
-    // has to parse the content at this time
-    Record record(data.getName(), data.getContent());
+    NDN_LOG_TRACE("Yielding " << data.getName());
+    Record record = Record(data.getName(), data.getContent());
+    m_yieldCb(record);
+  
     if (record.isGenesis()) {
       NDN_LOG_INFO(data.getName() << " is an new genesis record");
     }
-
-    // check the pointer first
-    bool allExist = true;
-    for (auto& p : record.getPointers()) {
-      if (searchAccOrStorage(p)) {
-        // then we don't need to care
-        NDN_LOG_TRACE("[" << data.getName() << "]: Pointed record " << p << " already exists");
+    else {
+      // keep fetching
+      for (auto& pointer : record.getPointers()) {
+        recursiveFetcher(pointer);
       }
-      else {
-        allExist = false;
-        NDN_LOG_TRACE("[" << data.getName() << "]: Discover " << p);
-        // we need to fetch it
-        auto tuple = parseDataName(p);
-        recursiveFetcher(std::get<0>(tuple), std::get<1>(tuple), acc);
-      }
-    }
-
-    if (allExist) {
-      // clean the acc
-      for (auto& d : *acc) {
-        m_storageIntf.adder(d.getName(), d.wireEncode());
-        NDN_LOG_TRACE("Yielding " << d.getName());
-        m_yieldCb(Record(d.getName(), d.getContent()));
-      }
-      acc->clear();
     }
   },
   MAX_RETRIES);

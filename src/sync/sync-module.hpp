@@ -50,7 +50,10 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   onMissingData(const std::vector<MissingDataInfo>& vectors);
 
   void
-  recursiveFetcher(const NodeID& nid, const SeqNo& s, std::shared_ptr<std::list<Data>> acc);
+  recursiveFetcher(const Name& recordName);
+
+  void
+  fetcher(const NodeID& nid, const SeqNo& s);
 
   SyncOptions m_syncOptions;
   SecurityOptions m_secOptions;
