@@ -170,7 +170,7 @@ DagModule::onNewRecord(EdgeState& state)
   state.status = EdgeState::LOADED;
   update(state);
   evaluateWaitlist(state);
-  // if this is a genesis record
+  // if this is not a genesis record
   if (!state.record.isGenesis()) {
     evaluateAncestors(state);
   }
@@ -179,6 +179,7 @@ DagModule::onNewRecord(EdgeState& state)
   for (auto& desc : state.descendants) {
     auto descState = getOrConstruct(desc);
     // if this is a genesis record
+    NDN_LOG_TRACE("Resolving pending descendants" << descState.stateName);
     if (!descState.record.isGenesis()) {
       evaluateAncestors(descState);
     }
