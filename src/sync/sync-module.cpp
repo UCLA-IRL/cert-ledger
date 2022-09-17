@@ -55,7 +55,7 @@ SyncModule::fetcher(const NodeID& nid, const SeqNo& s)
   }
 
   NDN_LOG_TRACE("Trying getting data " << m_svs->getDataName(nid, s));
-  m_svs->fetchData(nid, s, [this, searchStorage] (const ndn::Data& data) {
+  m_svs->fetchData(nid, s, [this] (const ndn::Data& data) {
     NDN_LOG_DEBUG("Getting data " << data.getName());
 
     m_storageIntf.adder(data.getName(), data.wireEncode());
@@ -88,15 +88,13 @@ SyncModule::recursiveFetcher(const Name& recordName)
   auto tuple = parseDataName(recordName);
   m_svs->fetchData(std::get<0>(tuple), std::get<1>(tuple), [this, searchStorage] (const ndn::Data& data) {
     NDN_LOG_DEBUG("Getting data " << data.getName());
+    Record record = Record(data.getName(), data.getContent());
 
     if (!searchStorage(data.getName())) {
       m_storageIntf.adder(data.getName(), data.wireEncode());
+      NDN_LOG_TRACE("Yielding " << data.getName());
+      m_yieldCb(record);
     }
-
-    NDN_LOG_TRACE("Yielding " << data.getName());
-    Record record = Record(data.getName(), data.getContent());
-    m_yieldCb(record);
-  
     if (record.isGenesis()) {
       NDN_LOG_INFO(data.getName() << " is an new genesis record");
     }
