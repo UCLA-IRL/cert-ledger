@@ -44,6 +44,7 @@ public:
   // no protocol side impact, purely for filtering Ledger side unnecessary record look up.
   std::vector<Name> recordZones;
   std::string storageType;
+  std::string storagePath;
   std::string policyType;
   uint32_t policyThreshold = -1;
   std::string schemaFile;

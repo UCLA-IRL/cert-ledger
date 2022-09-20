@@ -69,6 +69,9 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   dagHarvest();
 
+  void
+  updateStatesTracker(const Name& stateName, bool interlocked = false);
+
   ndn::Face& m_face;
   LedgerConfig m_config;
   ndn::KeyChain& m_keyChain;

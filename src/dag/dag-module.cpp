@@ -143,6 +143,8 @@ DagModule::getOrConstruct(const Name& name)
     EdgeState s;
     s.stateName = Name(n);
     s.status = EdgeState::INITIALIZED;
+    s.created = time::system_clock::now() + 1_ns;
+    s.interlocked = time::system_clock::now();
     return s;
   };
   try {

@@ -10,7 +10,8 @@ namespace storage {
 class LedgerLevelDB : public LedgerStorage
 {
 public:
-  LedgerLevelDB(const Name& ledgerName = Name(), const std::string& path = "");
+  LedgerLevelDB(const Name& ledgerName = Name(), const std::string& path = ".ndn-cledger");
+
   ~LedgerLevelDB();
   const static std::string STORAGE_TYPE;
 
@@ -28,8 +29,8 @@ public:
   getInterface() override;
 
 private:
-  leveldb::DB* db;
-  leveldb::Options options;
+  std::string m_path;
+  leveldb::Options m_options;
 };
 
 } // namespace storage

@@ -7,7 +7,9 @@ static const std::string stateNameHeader = "/32=EdgeState";
 enum : uint32_t {
   TLV_EDGE_STATE_TYPE= 311,
   TLV_EDGE_STATE_STATUS = 312,
-  TLV_EDGE_STATE_DESCENDANTS = 313
+  TLV_EDGE_STATE_DESCENDANTS = 313,
+  TLV_EDGE_STATE_CREATED_T = 314,
+  TLV_EDGE_STATE_INTERLOCK_T = 315
 };
 
 Name
@@ -40,6 +42,9 @@ encodeEdgeState(EdgeState& state)
     block.push_back(ndn::makeBinaryBlock(TLV_EDGE_STATE_DESCENDANTS, 
       span<const uint8_t>(nameBuffer.data(), nameBuffer.size())));
   }
+
+  block.push_back(ndn::makeStringBlock(TLV_EDGE_STATE_CREATED_T, time::toIsoString(state.created)));
+  block.push_back(ndn::makeStringBlock(TLV_EDGE_STATE_INTERLOCK_T, time::toIsoString(state.interlocked)));
   block.encode();
   return block;
 }
@@ -69,6 +74,12 @@ decodeEdgeState(Block& block)
           state.descendants.insert(Name(ptr));
         }
         break;
+      case TLV_EDGE_STATE_CREATED_T:
+        state.created = time::fromIsoString(ndn::readString(item));
+        break;
+      case TLV_EDGE_STATE_INTERLOCK_T:
+        state.interlocked = time::fromIsoString(ndn::readString(item));
+        break;
       default:
         if (ndn::tlv::isCriticalType(item.type())) {
           NDN_THROW(std::runtime_error("Unrecognized TLV Type: " + std::to_string(item.type())));
@@ -91,6 +102,10 @@ operator<<(std::ostream& os, const EdgeState& state)
   }
   for (auto& d : state.descendants) {
     os << "   Descendant: " << d << "\n";
+  }
+  os << "   Created At: " << ndn::time::toIsoString(state.created) << "\n";
+  if (state.created < state.interlocked) {
+    os << "   Interlocked At: " << ndn::time::toIsoString(state.interlocked) << "\n";
   }
   return os;
 }

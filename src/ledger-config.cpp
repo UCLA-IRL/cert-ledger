@@ -12,6 +12,8 @@ const std::string CONFIG_INSTANCE_SUFFIX = "instance-suffix";
 const std::string CONFIG_NACK_FRESHNESS_PERIOD = "nack-freshness-period";
 const std::string CONFIG_RECORD_ZONES = "record-zones";
 const std::string CONFIG_STORAGE = "storage";
+const std::string CONFIG_STORAGE_TYPE = "storage-type";
+const std::string CONFIG_STORAGE_PATH = "storage-path";
 const std::string CONFIG_INTERLOCK_POLICY = "interlock-policy";
 const std::string CONFIG_INTERLOCK_POLICY_TYPE = "policy-type";
 const std::string CONFIG_INTERLOCK_POLICY_THRESHOLD = "policy-threshold";
@@ -59,10 +61,26 @@ LedgerConfig::load(const std::string& fileName)
     NDN_THROW(std::runtime_error("No recordZone configured."));
   }
   // Storage
-  storageType = configJson.get(CONFIG_STORAGE, "");
-  if (storageType.empty()) {
-    storageType = "storage-memory";
+  auto storageConfig = configJson.get_child_optional(CONFIG_STORAGE);
+  if (storageConfig) {
+    for (const auto& item : *storageConfig) {
+      if (item.first == CONFIG_STORAGE_TYPE) {
+        storageType = item.second.data();
+      }
+      else if (item.first == CONFIG_STORAGE_PATH) {
+        storagePath = item.second.data();
+      }
+      else {
+        NDN_THROW(std::runtime_error("Unrecognized keyword " + item.first));
+      }
+    }
   }
+  else {
+    storageType = "storage-memory";
+    storagePath = "";
+  }
+
+
   // Interlock policy
   auto interlockPolicy = configJson.get_child_optional(CONFIG_INTERLOCK_POLICY);
   if (interlockPolicy) {

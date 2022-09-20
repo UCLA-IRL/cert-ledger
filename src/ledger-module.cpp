@@ -1,6 +1,7 @@
 #include "ledger-module.hpp"
 #include "nack.hpp"
 #include "dag/interlock-policy-descendants.hpp"
+#include "dag/edge-state-list.hpp"
 #include "dag/payload-map.hpp"
 
 #include <ndn-cxx/security/signing-helpers.hpp>
@@ -36,11 +37,23 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_appendCt->listen(std::bind(&LedgerModule::onDataSubmission, this, _1));
 
   // initialize backend storage module
-  m_storage = storage::LedgerStorage::createLedgerStorage(m_config.storageType, m_config.ledgerPrefix, "");
+  m_storage = storage::LedgerStorage::createLedgerStorage(m_config.storageType, m_config.ledgerPrefix, m_config.storagePath);
 
   // dag engine
   m_policy = dag::policy::InterlockPolicy::createInterlockPolicy(m_config.policyType, "");
   m_dag = std::make_unique<dag::DagModule>(m_storage->getInterface(), m_policy->getInterface());
+
+  // initialize a global edge state list
+  dag::EdgeStateList statesTracker;
+  statesTracker.key = dag::globalTracker;
+  statesTracker.listName = dag::toStateListName(statesTracker.key);
+  statesTracker.nextList = dag::getStateListNull();
+  try {
+    m_storage->addBlock(statesTracker.listName, dag::encodeEdgeStateList(statesTracker));
+  }
+  catch (const std::runtime_error& e){
+    NDN_LOG_WARN("read from an existing global tracker");
+  }
 
   // initialize sync module
   Name syncPrefix = Name(m_config.ledgerPrefix).append("LEDGER").append("SYNC");
@@ -303,6 +316,9 @@ LedgerModule::afterValidation(const Data& data)
   // add to DAG
   NDN_LOG_INFO("Generating new Record " << newRecord.getName());
   addPayloadMap(newRecord.getPayload(), m_dag->add(newRecord));
+
+  // add to global edge state list
+  updateStatesTracker(dag::toStateName(name));
   dagHarvest();
 }
 
@@ -364,7 +380,34 @@ LedgerModule::dagHarvest()
       if (m_repliedRecords.find(r.getName()) != m_repliedRecords.end()) {
         m_repliedRecords.erase(r.getName());
       }
+      updateStatesTracker(dag::toStateName(r.getName()), true);
     }
   }
 }
+
+void
+LedgerModule::updateStatesTracker(const Name& stateName, bool interlocked)
+{
+  Name trackerName = dag::toStateListName(dag::globalTracker);
+  auto trackerBlock = m_storage->getBlock(trackerName);
+  dag::EdgeStateList statesTracker = dag::decodeEdgeStateList(trackerBlock);
+
+  if (statesTracker.value.find(stateName) == statesTracker.value.end()) {
+    statesTracker.value.insert(stateName);
+  }
+  else if (interlocked) {
+    auto stateBlock = m_storage->getBlock(stateName);
+    dag::EdgeState state = dag::decodeEdgeState(stateBlock);
+    state.interlocked = time::system_clock::now();
+    m_storage->deleteBlock(stateName);
+    m_storage->addBlock(stateName, dag::encodeEdgeState(state));
+  }
+  else {
+    NDN_LOG_ERROR("Neither state to add nor interlock status to update");
+    return;
+  }
+  m_storage->deleteBlock(trackerName);
+  m_storage->addBlock(trackerName, dag::encodeEdgeStateList(statesTracker));
+}
+
 } // namespace cledger::ledger

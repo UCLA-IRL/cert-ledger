@@ -17,6 +17,9 @@ struct EdgeState
   std::set<Name> descendants;
 
   Status status;
+
+  time::system_clock::time_point created;
+  time::system_clock::time_point interlocked;
 };
 
 Name

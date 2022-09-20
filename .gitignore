@@ -35,3 +35,4 @@ __pycache__/
 test_db/
 *.ndncert
 *.sample.*
+.*/

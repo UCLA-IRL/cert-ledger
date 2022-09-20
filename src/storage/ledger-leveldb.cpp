@@ -8,33 +8,46 @@ CLEDGER_REGISTER_STORAGE(LedgerLevelDB);
 
 LedgerLevelDB::LedgerLevelDB(const Name& ledgerName, const std::string& path)
   : LedgerStorage()
+  , m_path(path)
 {
   // open and initialize the leveldb database
-  options.create_if_missing = true;
-  leveldb::Status status = leveldb::DB::Open(options, path, &db);
-  if(!status.ok()){
+  m_options.create_if_missing = true;
+  // do a trial first
+  leveldb::DB* db;
+  leveldb::Status status = leveldb::DB::Open(m_options, path, &db);
+  if(!status.ok()) {
+    delete db;
     NDN_THROW(std::runtime_error("leveldb cannot be opened/created."));
   }
+  delete db;
 }
 
 LedgerLevelDB::~LedgerLevelDB()
 {
-  delete db;
 }
 
 void
 LedgerLevelDB::addBlock(const Name& name, const Block& block)
 {
   std::string value;
-  leveldb::Status s = db->Get(leveldb::ReadOptions(), name.toUri(), &value);
-  if (s.ok()){
+  leveldb::DB* db;
+  leveldb::Status status = leveldb::DB::Open(m_options, m_path, &db);
+  if(!status.ok()) {
+    delete db;
+    NDN_THROW(std::runtime_error("leveldb cannot be opened/created."));
+  }
+  status = db->Get(leveldb::ReadOptions(), name.toUri(), &value);
+  if (status.ok()){
+    delete db;
     NDN_THROW(std::runtime_error("Block for " + name.toUri() + " already exists"));
   }
   std::string data_str = std::string(reinterpret_cast<const char*>(block.wire()), block.size());
-  s = db->Put(leveldb::WriteOptions(), name.toUri(), data_str);
-  if (!s.ok()){
+  status = db->Put(leveldb::WriteOptions(), name.toUri(), data_str);
+  if (!status.ok()){
+    delete db;
     NDN_THROW(std::runtime_error("DB cannot append new block: "+ name.toUri()));
   }
+  delete db;
 }
 
 Block
@@ -42,25 +55,43 @@ LedgerLevelDB::getBlock(const Name& name)
 {
   std::string data_str;
   Data ret;
-  leveldb::Status s = db->Get(leveldb::ReadOptions(), name.toUri(), &data_str);
-  if (!s.ok()){
+  leveldb::DB* db;
+  leveldb::Status status = leveldb::DB::Open(m_options, m_path, &db);
+  if(!status.ok()) {
+    delete db;
+    NDN_THROW(std::runtime_error("leveldb cannot be opened/created."));
+  }
+  status = db->Get(leveldb::ReadOptions(), name.toUri(), &data_str);
+  if (!status.ok()){
+    delete db;
     NDN_THROW(std::runtime_error("Block for " + name.toUri() + " does not exists"));
   }
+  delete db;
   return Block(make_span<const uint8_t>(reinterpret_cast<const uint8_t*>(data_str.data()), data_str.size()));
+  
 }
 
 void
 LedgerLevelDB::deleteBlock(const Name& name)
 {
   std::string data_str;
-  leveldb::Status s = db->Get(leveldb::ReadOptions(), name.toUri(), &data_str);
-  if (!s.ok()){
+  leveldb::DB* db;
+  leveldb::Status status = leveldb::DB::Open(m_options, m_path, &db);
+  if(!status.ok()) {
+    delete db;
+    NDN_THROW(std::runtime_error("leveldb cannot be opened/created."));
+  }
+  status = db->Get(leveldb::ReadOptions(), name.toUri(), &data_str);
+  if (!status.ok()){
+    delete db;
     NDN_THROW(std::runtime_error("Block for " + name.toUri() + " does not exists"));
   }
-  s=db->Delete(leveldb::WriteOptions(), name.toUri());
-  if (!s.ok()){
+  status = db->Delete(leveldb::WriteOptions(), name.toUri());
+  if (!status.ok()){
+    delete db;
     NDN_THROW(std::runtime_error("DB cannot delete the block: " + name.toUri()));
   }
+  delete db;
 }
 
 Interface
