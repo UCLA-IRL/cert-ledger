@@ -29,7 +29,7 @@ public:
   getInterface() override;
 
 private:
-  std::string m_path;
+  leveldb::DB* m_db;
   leveldb::Options m_options;
 };
 
