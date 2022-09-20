@@ -16,12 +16,15 @@ def options(opt):
     optgrp = opt.add_option_group('ndn-cledger Options')
     optgrp.add_option('--with-tests', action='store_true', default=False,
                       help='Build unit tests')
-
+    optgrp.add_option('--with-benchmark', action='store_true', default=False,
+                      help='Build with benchmark logger')
+    
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
                'default-compiler-flags', 'boost', 'leveldb'])
 
     conf.env.WITH_TESTS = conf.options.with_tests
+    conf.env.WITH_BENCHMARK = conf.options.with_benchmark
 
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'], uselib_store='NDN_CXX',
                    pkg_config_path=os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR))
@@ -51,6 +54,7 @@ def configure(conf):
     conf.env.prepend_value('STLIBPATH', ['.'])
 
     conf.define_cond('HAVE_TESTS', conf.env.WITH_TESTS)
+    conf.define_cond('WITH_BENCHMARK', conf.env.WITH_BENCHMARK)
     conf.define('SYSCONFDIR', conf.env.SYSCONFDIR)
     # The config header will contain all defines that were added using conf.define()
     # or conf.define_cond().  Everything that was added directly to conf.env.DEFINES

@@ -80,7 +80,7 @@ DagModule::getAncestors(EdgeState state)
 
         if (parent.status == EdgeState::INITIALIZED) {
           NDN_LOG_TRACE(parent.stateName << " is a pending state, stop here...\n"
-                        "Adding " << state.stateName << "into descendants..");
+                        "Adding " << state.stateName << " into descendants..");
           parent.descendants.insert(state.stateName);
           update(parent);
         }
@@ -179,7 +179,7 @@ DagModule::onNewRecord(EdgeState& state)
   for (auto& desc : state.descendants) {
     auto descState = getOrConstruct(desc);
     // if this is a genesis record
-    NDN_LOG_TRACE("Resolving pending descendants" << descState.stateName);
+    NDN_LOG_TRACE("Resolving pending descendants " << descState.stateName);
     if (!descState.record.isGenesis()) {
       evaluateAncestors(descState);
     }

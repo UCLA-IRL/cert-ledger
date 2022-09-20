@@ -11,7 +11,11 @@
 
 namespace cledger::ledger {
 
+#ifdef CLEDGER_WITH_BENCHMARK
+NDN_LOG_INIT(cledger.benchmark.ledger);
+#else
 NDN_LOG_INIT(cledger.ledger);
+#endif
 
 LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath)
   : m_face(face)
@@ -242,7 +246,7 @@ LedgerModule::publishReply()
     Name newReplyName = m_sync->publishRecord(newReply);
     newReply.setName(newReplyName);
     // add to DAG
-    NDN_LOG_DEBUG("Generating new [Reply] Record " << newReply.getName());
+    NDN_LOG_INFO("Generating new [Reply] Record " << newReply.getName());
     m_dag->add(newReply);
     dagHarvest();
   }
@@ -257,7 +261,7 @@ LedgerModule::onRegisterFailed(const std::string& reason)
 void
 LedgerModule::afterValidation(const Data& data)
 {
-  NDN_LOG_TRACE("Receiving validated Data " << data.getName());
+  NDN_LOG_INFO("Receiving validated Data " << data.getName());
   // put raw data into storage
   try {
     m_storage->addBlock(data.getName(), data.wireEncode());
@@ -297,7 +301,7 @@ LedgerModule::afterValidation(const Data& data)
   Name name = m_sync->publishRecord(newRecord);
   newRecord.setName(name);
   // add to DAG
-  NDN_LOG_DEBUG("Generating new Record " << newRecord.getName());
+  NDN_LOG_INFO("Generating new Record " << newRecord.getName());
   addPayloadMap(newRecord.getPayload(), m_dag->add(newRecord));
   dagHarvest();
 }
@@ -353,9 +357,9 @@ LedgerModule::dagHarvest()
   auto recordList = m_dag->harvestAbove(m_config.policyThreshold, true);
   // put those record into 
   if (recordList.size() > 0) {
-    NDN_LOG_DEBUG("The following Records have been interlocked");
+    NDN_LOG_INFO("The following Records have been interlocked");
     for (auto& r : recordList) {
-      NDN_LOG_DEBUG("   " << r.getName());
+      NDN_LOG_INFO("   " << r.getName());
       // if applicable, remove from the replied set
       if (m_repliedRecords.find(r.getName()) != m_repliedRecords.end()) {
         m_repliedRecords.erase(r.getName());

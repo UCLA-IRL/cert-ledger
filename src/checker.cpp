@@ -5,7 +5,11 @@
 #include <ndn-cxx/security/signing-helpers.hpp>
 namespace cledger::checker {
 
+#ifdef CLEDGER_WITH_BENCHMARK
+NDN_LOG_INIT(cledger.benchmark.checker);
+#else
 NDN_LOG_INIT(cledger.checker);
+#endif
 
 Checker::Checker(ndn::Face& face, ndn::security::Validator& validator)
   : m_face(face)
@@ -31,12 +35,14 @@ Checker::dispatchInterest(const std::shared_ptr<CheckerState>& checkerState,
     return checkerState->onFailure(Error(Error::Code::TIMEOUT, "Running out of retries"));
   }
 
-  m_face.expressInterest(*checkerState->makeInterest(ledgerPrefix),
+  auto interest = checkerState->makeInterest(ledgerPrefix);
+  NDN_LOG_INFO("Expressing Interest " << *interest << " ...");
+  m_face.expressInterest(*interest,
     [this, checkerState] (auto&&, auto& data) {
       // naming convention check
       m_validator.validate(data,
         [this, checkerState, data] (const Data& d) {
-        NDN_LOG_DEBUG("Data " << d.getName() << " conforms to trust schema");
+        NDN_LOG_INFO("Data " << d.getName() << " conforms to trust schema");
           return onValidationSuccess(checkerState, data);
         },
         [this, checkerState, data] (const Data&, const ndn::security::ValidationError& error) {

@@ -4,7 +4,11 @@
 namespace cledger::append {
 namespace tlv = appendtlv;
 
+#ifdef CLEDGER_WITH_BENCHMARK
+NDN_LOG_INIT(cledger.benchmark.append);
+#else
 NDN_LOG_INIT(cledger.append);
+#endif
 
 Client::Client(const Name& prefix, ndn::Face& face,
                ndn::KeyChain& keyChain, ndn::security::Validator& validator)
@@ -33,13 +37,13 @@ Client::dispatchNotification(const std::shared_ptr<ClientOptions>& options, cons
     options->onFailure(data, Error(Error::Code::TIMEOUT, interest->getName().toUri() + " not acked"));
     return;
   }
-  NDN_LOG_TRACE("Sending out notification " << *interest);
+  NDN_LOG_INFO("Sending out notification " << *interest);
   m_face.expressInterest(*interest, 
     [this, options, data] (auto&&, const auto& notificationAck) {
       m_handle.unregisterFilters();
       m_validator.validate(notificationAck, 
         [this, options, data, notificationAck] (const Data&) {
-          NDN_LOG_DEBUG("ACK conforms to trust schema");
+          NDN_LOG_INFO("ACK conforms to trust schema");
           onValidationSuccess(options, data, notificationAck);
         },
         [this, options, data, notificationAck] (const Data&, const ndn::security::ValidationError& error) {
@@ -47,7 +51,7 @@ Client::dispatchNotification(const std::shared_ptr<ClientOptions>& options, cons
         });
     }, 
     [options, data] (auto& i, auto& n) {
-      NDN_LOG_ERROR("Notification Nack: " << n.getReason()); 
+      NDN_LOG_INFO("Notification Nack: " << n.getReason()); 
       options->onFailure(data, Error(Error::Code::NACK, i.getName().toUri()));
     },
     [this, options, data] (const auto&) { dispatchNotification(options, data);}
@@ -82,12 +86,12 @@ Client::appendData(const Name& topic, const std::list<Data>& data,
       auto submission = options->makeSubmission(data);
       m_keyChain.sign(*submission, ndn::signingByIdentity(options->getPrefix()));
       m_face.put(*submission);
-      NDN_LOG_TRACE("Submitting " << *submission);
+      NDN_LOG_DEBUG("Submitting " << *submission);
     }
   );
   // handle the unregsiter task in destructor
   m_handle.handleFilter(filterId);
-  NDN_LOG_TRACE("Registering filter for " << filterName);
+  NDN_LOG_DEBUG("Registering filter for " << filterName);
   dispatchNotification(options, data);
   return options->getNonce();
 }
@@ -102,7 +106,7 @@ Client::onValidationSuccess(const std::shared_ptr<ClientOptions>& options, const
       continue;
     }
     else {
-      NDN_LOG_TRACE("There are individual submissions failed by ledger");
+      NDN_LOG_INFO("There are individual submissions failed by ledger");
     }
   }
   m_retryCount = 0;
