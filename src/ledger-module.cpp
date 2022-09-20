@@ -28,6 +28,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   registerPrefix(); 
   
   Name topic = Name(m_config.ledgerPrefix).append("LEDGER").append("append");
+  NDN_LOG_INFO("Start initialization...");
 
   // initiliaze CA facing prefixes
   m_appendCt = std::make_unique<append::Ledger>(
@@ -52,7 +53,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
     m_storage->addBlock(statesTracker.listName, dag::encodeEdgeStateList(statesTracker));
   }
   catch (const std::runtime_error& e){
-    NDN_LOG_WARN("read from an existing global tracker");
+    NDN_LOG_WARN("Read from an existing global tracker");
   }
 
   // initialize sync module
