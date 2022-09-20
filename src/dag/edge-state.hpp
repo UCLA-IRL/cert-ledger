@@ -4,6 +4,8 @@
 #include "record.hpp"
 namespace cledger::dag {
 
+const std::string stateNameHeader = "/32=EdgeState";
+
 struct EdgeState
 {
   enum Status {

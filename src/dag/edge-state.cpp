@@ -2,8 +2,6 @@
 
 namespace cledger::dag {
 
-static const std::string stateNameHeader = "/32=EdgeState";
-
 enum : uint32_t {
   TLV_EDGE_STATE_TYPE= 311,
   TLV_EDGE_STATE_STATUS = 312,
@@ -97,6 +95,7 @@ std::ostream&
 operator<<(std::ostream& os, const EdgeState& state)
 {
   os << "Edge State Name: " << state.stateName << "\n";
+  os << "   Record Payload Data Name:" << Data(Block(state.record.getPayload())).getName() << "\n";
   for (auto& p : state.record.getPointers()) {
     os << "   Pointer: " << p << "\n";
   }

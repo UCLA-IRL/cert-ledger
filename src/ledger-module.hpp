@@ -67,6 +67,9 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   replyOrSendNack(const Name& name);
 
   void
+  sendResponse(const Name& name, const Block& block, bool realtime = false);
+
+  void
   dagHarvest();
 
   void

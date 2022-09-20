@@ -2,10 +2,6 @@
 
 namespace cledger::dag {
 
-static const std::string stateListNameHeader = "/32=EdgeStateList";
-
-static const std::string stateListNull = "/32=EdgeStateList/null";
-
 enum : uint32_t {
   TLV_EDGE_STATE_LIST_TYPE = 351,
   TLV_EDGE_STATE_LIST_NAME = 352,

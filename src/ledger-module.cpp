@@ -94,7 +94,7 @@ LedgerModule::registerPrefix()
 {
   // register prefixes
   Name prefix = m_config.ledgerPrefix;
-  // let's first use "LEDGER" in protocol
+  // handle record zone
   prefix.append("LEDGER");
   auto prefixId = m_face.registerPrefix(
     prefix,
@@ -109,6 +109,7 @@ LedgerModule::registerPrefix()
   );
   m_handle.handlePrefix(prefixId);
 
+  // serving own certificate
   auto cert = m_keyChain.getPib().getIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix))
                                  .getDefaultKey()
                                  .getDefaultCertificate();
@@ -121,6 +122,25 @@ LedgerModule::registerPrefix()
     [this] (auto&&, const auto& reason) { onRegisterFailed(reason); }
   );
   m_handle.handlePrefix(prefixId);
+
+  // serving internal data structure: EdgeState and EdgeStateList
+  auto dsResponder = [this] (auto& name) {
+    auto filterId = m_face.setInterestFilter(
+      name,
+      [this] (auto&&, auto& i) {
+        try {
+          auto block = m_storage->getBlock(i.getName());
+          sendResponse(i.getName(), block, true);
+        }
+        catch (const std::runtime_error&) {
+          sendNack(i.getName());
+        }
+      }
+    );
+    m_handle.handleFilter(filterId);    
+  };
+  dsResponder(dag::stateNameHeader);
+  dsResponder(dag::stateListNameHeader);
 }
 
 AppendStatus
@@ -199,16 +219,7 @@ LedgerModule::onQuery(const Interest& query)
           encoder(content, dag::fromStateName(des));
         }
       }
-      
-      Name dataName(query.getName());
-      dataName.append("data").appendTimestamp();
-      Data data(dataName);
-      // this deserves some considerations
-      data.setFreshnessPeriod(m_config.nackFreshnessPeriod);
-      data.setContent(content);
-      m_keyChain.sign(data, signingByIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix)));
-      NDN_LOG_TRACE("Ledger replies with: " << data.getName());
-      m_face.put(data);
+      sendResponse(query.getName(), content);
     }
     catch (const std::exception& e) {
       NDN_LOG_DEBUG("Ledger storage cannot get the Data for reason: " << e.what());
@@ -224,12 +235,7 @@ LedgerModule::onQuery(const Interest& query)
     catch (std::exception& e) {
       NDN_LOG_DEBUG("Ledger storage cannot get the Data for reason: " << e.what());
       // reply with app layer nack
-      Nack nack;
-      auto data = nack.prepareData(query.getName(), time::toUnixTimestamp(time::system_clock::now()));
-      data->setFreshnessPeriod(m_config.nackFreshnessPeriod);
-      m_keyChain.sign(*data, signingByIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix)));
-      NDN_LOG_TRACE("Ledger replies with: " << data->getName());
-      m_face.put(*data);
+      sendNack(query.getName());
     }
   }
 }
@@ -408,6 +414,20 @@ LedgerModule::updateStatesTracker(const Name& stateName, bool interlocked)
   }
   m_storage->deleteBlock(trackerName);
   m_storage->addBlock(trackerName, dag::encodeEdgeStateList(statesTracker));
+}
+
+void
+LedgerModule::sendResponse(const Name& name, const Block& block, bool realtime)
+{
+  Name dataName(name);
+  dataName.append("data").appendTimestamp();
+  Data data(dataName);
+  // this deserves some considerations
+  data.setFreshnessPeriod((realtime? 100_ms : m_config.nackFreshnessPeriod));
+  data.setContent(makeBinaryBlock(ndn::tlv::Content, block));
+  m_keyChain.sign(data, signingByIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix)));
+  NDN_LOG_TRACE("Ledger replies with: " << data.getName());
+  m_face.put(data);
 }
 
 } // namespace cledger::ledger

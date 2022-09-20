@@ -4,6 +4,8 @@
 #include "edge-state.hpp"
 namespace cledger::dag {
 
+const std::string stateListNameHeader = "/32=EdgeStateList";
+const std::string stateListNull = "/32=EdgeStateList/null";
 const uint32_t globalTracker = 0;
 
 struct EdgeStateList
