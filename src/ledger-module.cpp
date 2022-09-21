@@ -24,6 +24,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
 {
   // load the config and create storage
   m_config.load(configPath);
+  m_instancePrefix = Name(m_config.ledgerPrefix).append(m_config.instanceSuffix);
   m_validator.load(m_config.schemaFile);
   registerPrefix(); 
   
@@ -32,8 +33,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
 
   // initiliaze CA facing prefixes
   m_appendCt = std::make_unique<append::Ledger>(
-    Name(m_config.ledgerPrefix).append(m_config.instanceSuffix), 
-    topic, m_face, m_keyChain, m_validator
+    m_instancePrefix, topic, m_face, m_keyChain, m_validator
   );
   m_appendCt->listen(std::bind(&LedgerModule::onDataSubmission, this, _1));
 
@@ -59,7 +59,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   // initialize sync module
   Name syncPrefix = Name(m_config.ledgerPrefix).append("LEDGER").append("SYNC");
   m_syncOps.prefix = syncPrefix;
-  m_syncOps.id = Name(m_config.ledgerPrefix).append(m_config.instanceSuffix);
+  m_syncOps.id = m_instancePrefix;
   m_secOps.interestSigner->signingInfo = m_config.interestSigner;
   m_secOps.interestSigner->signingInfo.setSignedInterestFormat(ndn::security::SignedInterestFormat::V03);
   m_secOps.dataSigner->signingInfo = m_config.dataSigner;
@@ -111,7 +111,7 @@ LedgerModule::registerPrefix()
   m_handle.handlePrefix(prefixId);
 
   // serving own certificate
-  auto cert = m_keyChain.getPib().getIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix))
+  auto cert = m_keyChain.getPib().getIdentity(m_instancePrefix)
                                  .getDefaultKey()
                                  .getDefaultCertificate();
   prefixId = m_face.setInterestFilter(
@@ -123,25 +123,6 @@ LedgerModule::registerPrefix()
     [this] (auto&&, const auto& reason) { onRegisterFailed(reason); }
   );
   m_handle.handlePrefix(prefixId);
-
-  // serving internal data structure: EdgeState and EdgeStateList
-  auto dsResponder = [this] (auto& name) {
-    auto filterId = m_face.setInterestFilter(
-      name,
-      [this] (auto&&, auto& i) {
-        try {
-          auto block = m_storage->getBlock(i.getName());
-          sendResponse(i.getName(), block, true);
-        }
-        catch (const std::runtime_error&) {
-          sendNack(i.getName());
-        }
-      }
-    );
-    m_handle.handleFilter(filterId);    
-  };
-  dsResponder(dag::stateNameHeader);
-  dsResponder(dag::stateListNameHeader);
 }
 
 AppendStatus
@@ -179,11 +160,22 @@ LedgerModule::onQuery(const Interest& query)
 
   NDN_LOG_DEBUG("Received Query " << query); 
   auto interestName = query.getName();
-  // interest for exact data match
-  if (!query.getCanBePrefix())
-  {
-    // internal object name always start from /32=
+  if (!query.getCanBePrefix()) {
+    // interest for exact data match
     replyOrSendNack(interestName);
+  }
+  else if (interestName.get(m_instancePrefix.size()) == 
+           Name::Component::fromEscapedString("32=internal")) {
+     // internal object query always start from /32=internal/32={objName}
+    auto objName = interestName.getSubName(m_instancePrefix.size() + 1);
+    NDN_LOG_TRACE("An Internal Object Query for " << objName);
+    try {
+      auto block = m_storage->getBlock(objName);
+      sendResponse(interestName, block, true);
+    }
+    catch (const std::runtime_error&) {
+      sendNack(interestName);
+    }
   }
   // query of a certificate or record
   else if (Certificate::isValidName(interestName.set(-4, Name::Component("KEY"))))
@@ -353,7 +345,7 @@ LedgerModule::sendNack(const Name& name)
   Nack nack;
   auto data = nack.prepareData(name, time::toUnixTimestamp(time::system_clock::now()));
   data->setFreshnessPeriod(m_config.nackFreshnessPeriod);
-  m_keyChain.sign(*data, signingByIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix)));
+  m_keyChain.sign(*data, signingByIdentity(m_instancePrefix));
   NDN_LOG_TRACE("Ledger replies with: " << data->getName());
   m_face.put(*data);
 }
@@ -426,7 +418,7 @@ LedgerModule::sendResponse(const Name& name, const Block& block, bool realtime)
   // this deserves some considerations
   data.setFreshnessPeriod((realtime? 100_ms : m_config.nackFreshnessPeriod));
   data.setContent(makeBinaryBlock(ndn::tlv::Content, block));
-  m_keyChain.sign(data, signingByIdentity(Name(m_config.ledgerPrefix).append(m_config.instanceSuffix)));
+  m_keyChain.sign(data, signingByIdentity(m_instancePrefix));
   NDN_LOG_TRACE("Ledger replies with: " << data.getName());
   m_face.put(data);
 }

@@ -95,7 +95,7 @@ std::ostream&
 operator<<(std::ostream& os, const EdgeState& state)
 {
   os << "Edge State Name: " << state.stateName << "\n";
-  os << "   Record Payload Data Name:" << Data(Block(state.record.getPayload())).getName() << "\n";
+  os << "   Record Payload Data Name: " << Data(Block(state.record.getPayload())).getName() << "\n";
   for (auto& p : state.record.getPointers()) {
     os << "   Pointer: " << p << "\n";
   }
