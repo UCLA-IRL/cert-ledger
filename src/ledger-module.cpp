@@ -67,6 +67,7 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
     m_storage->getInterface(),
     [this] (const Record& record) {
       auto stateName = m_dag->add(record);
+      updateStatesTracker(stateName);
       if (record.getType() != tlv::REPLY_RECORD) {
         auto dataBlock = Block(record.getPayload());
         Data data(dataBlock);
