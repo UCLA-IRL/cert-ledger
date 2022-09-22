@@ -1,7 +1,7 @@
 #include "checker.hpp"
 #include "record.hpp"
 #include "error.hpp"
-#include "util.hpp"
+#include "util/validate-multiple.hpp"
 #include <ndn-cxx/security/signing-helpers.hpp>
 namespace cledger::checker {
 

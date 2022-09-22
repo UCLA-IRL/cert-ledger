@@ -1,5 +1,6 @@
 #include "checker.hpp"
-#include "util.hpp"
+#include "util/io.hpp"
+#include "util/validate-multiple.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/program_options/options_description.hpp>

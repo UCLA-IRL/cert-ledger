@@ -1,7 +1,30 @@
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * Copyright (c) 2013-2022 Regents of the University of California.
+ *
+ * This file is part of ndn-cxx library (NDN C++ library with eXperimental eXtensions).
+ *
+ * ndn-cxx library is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later version.
+ *
+ * ndn-cxx library is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+ *
+ * You should have received copies of the GNU General Public License and GNU Lesser
+ * General Public License along with ndn-cxx, e.g., in COPYING.md file.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ *
+ * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
+ */
+
+#ifndef CLEDGER_UTIL_IO_HPP
+#define CLEDGER_UTIL_IO_HPP
+
 #include <iostream>
 
 #include "cledger-common.hpp"
-#include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/io.hpp>
 #include <ndn-cxx/security/transform/base64-encode.hpp>
@@ -9,10 +32,6 @@
 #include <ndn-cxx/security/transform/stream-sink.hpp>
 namespace cledger::util {
 
-/**
- * Copied from ndn-cxx
- * @brief Load a TLV-encoded, base64-armored object from a file named @p filename.
- */
 template<typename T>
 T
 loadFromFile(const std::string& filename)
@@ -34,9 +53,6 @@ loadFromFile(const std::string& filename)
   }
 }
 
-/**
- * Modified from ndn-cxx
- */
 ndn::security::Certificate
 getCertificateFromPib(ssize_t& nStep,
                       const ndn::security::pib::Pib& pib, const Name& name,
@@ -48,12 +64,5 @@ captureKeyName(ssize_t& nStep, ndn::security::pib::Identity& identity);
 Name
 captureCertName(ssize_t& nStep, ndn::security::pib::Key& key);
 
-
-
-void
-validateMultipleData(ndn::security::Validator& validator,
-                     const std::vector<Data>& dataVector, 
-                     const ndn::security::DataValidationSuccessCallback& successCb,
-                     const ndn::security::DataValidationFailureCallback& failureCb);
-
-} // namespace ndnrevoke::util
+} // namespace cledger::util
+#endif // CLEDGER_UTIL_IO_HPP
