@@ -55,15 +55,18 @@ checkRecords(const Certificate& cert, const Name& ledgerName,
       if (isPretty) {
         std::cerr << i << std::endl;
       }
+      face.getIoService().stop();
     },
     [isPretty] (auto&&, auto& i) {
       // should be a data packet
       if (isPretty) {
         std::cerr << i << std::endl;
       }
+      face.getIoService().stop();
     },
     [] (auto&&, auto& i) {
       std::cerr << "ERROR: Failed because of: " << i << std::endl;
+       face.getIoService().stop();
     }
   );
 }
