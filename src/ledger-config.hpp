@@ -38,15 +38,15 @@ public:
 
   Name ledgerPrefix;
   Name instanceSuffix;
-  ndn::time::milliseconds nackFreshnessPeriod;
+  ndn::time::milliseconds freshnessPeriod;
   // operator should list the namespace(s) that this Ledger is responsible of.
   // Ledger won't do look up for records that are that belong to any of the record Zone.
   // no protocol side impact, purely for filtering Ledger side unnecessary record look up.
   std::vector<Name> recordZones;
-  std::string storageType;
-  std::string storagePath;
-  std::string policyType;
-  uint32_t policyThreshold = -1;
+  std::string storageType = "storage-memory";
+  std::string storagePath = "";
+  std::string policyType = "policy-descendants";
+  uint32_t policyThreshold = 1;
   std::string schemaFile;
 
   ndn::security::SigningInfo interestSigner;

@@ -358,7 +358,7 @@ LedgerModule::sendNack(const Name& name)
   // reply with app layer nack
   Nack nack;
   auto data = nack.prepareData(name, time::toUnixTimestamp(time::system_clock::now()));
-  data->setFreshnessPeriod(m_config.nackFreshnessPeriod);
+  data->setFreshnessPeriod(m_config.freshnessPeriod);
   m_keyChain.sign(*data, signingByIdentity(m_instancePrefix));
   NDN_LOG_TRACE("Ledger replies with: " << data->getName());
   m_face.put(*data);
@@ -431,6 +431,7 @@ LedgerModule::sendResponse(const Name& name, const Block& block, bool realtime)
 
   util::segment::Producer::Options opts;
   opts.maxSegmentSize = m_config.maxSegmentSize;
+  opts.freshnessPeriod = m_config.freshnessPeriod;
   opts.signingInfo = signingByIdentity(m_instancePrefix);
 
   auto producer = std::make_shared<util::segment::Producer>(

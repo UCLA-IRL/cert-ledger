@@ -1,7 +1,7 @@
 {
   "ledger-prefix": "/ndn/site1",
   "instance-suffix": "/instance1",
-  "nack-freshness-period": "10",
+  "freshness-period": "10",
   "record-zones":
   [
     "/ndn/site1", "/ndn/site2"

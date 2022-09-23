@@ -9,7 +9,7 @@ namespace cledger::ledger {
 
 const std::string CONFIG_LEDGER_PREFIX = "ledger-prefix";
 const std::string CONFIG_INSTANCE_SUFFIX = "instance-suffix";
-const std::string CONFIG_NACK_FRESHNESS_PERIOD = "nack-freshness-period";
+const std::string CONFIG_FRESHNESS_PERIOD = "freshness-period";
 const std::string CONFIG_RECORD_ZONES = "record-zones";
 const std::string CONFIG_STORAGE = "storage";
 const std::string CONFIG_STORAGE_TYPE = "storage-type";
@@ -51,8 +51,8 @@ LedgerConfig::load(const std::string& fileName)
   if (instanceSuffix.empty()) {
     NDN_THROW(std::runtime_error("Cannot parse instance-suffix from the config file"));
   }
-  // Nack Freshness Period
-  nackFreshnessPeriod = time::seconds(configJson.get(CONFIG_NACK_FRESHNESS_PERIOD, 3600));
+  // Freshness Period
+  freshnessPeriod = time::seconds(configJson.get(CONFIG_FRESHNESS_PERIOD, 3600));
   // Record Zones
   recordZones.clear();
   auto recordZonePrefixJson = configJson.get_child_optional(CONFIG_RECORD_ZONES);
@@ -67,44 +67,15 @@ LedgerConfig::load(const std::string& fileName)
   // Storage
   auto storageConfig = configJson.get_child_optional(CONFIG_STORAGE);
   if (storageConfig) {
-    for (const auto& item : *storageConfig) {
-      if (item.first == CONFIG_STORAGE_TYPE) {
-        storageType = item.second.data();
-      }
-      else if (item.first == CONFIG_STORAGE_PATH) {
-        storagePath = item.second.data();
-      }
-      else {
-        NDN_THROW(std::runtime_error("Unrecognized keyword " + item.first));
-      }
-    }
+    storageConfig->get(CONFIG_STORAGE_TYPE, "storage-memory");
+    storageConfig->get(CONFIG_STORAGE_PATH, "");
   }
-  else {
-    storageType = "storage-memory";
-    storagePath = "";
-  }
-
 
   // Interlock policy
   auto interlockPolicy = configJson.get_child_optional(CONFIG_INTERLOCK_POLICY);
   if (interlockPolicy) {
-    for (const auto& item : *interlockPolicy) {
-      if (item.first == CONFIG_INTERLOCK_POLICY_TYPE) {
-        if (!policyType.empty()) {
-          NDN_THROW(std::runtime_error("There is already a policy type " + policyType));
-        }
-        policyType = item.second.data();
-      }
-      else if (item.first == CONFIG_INTERLOCK_POLICY_THRESHOLD) {
-        if (policyThreshold > uint32_t(-1)) {
-          NDN_THROW(std::runtime_error("There is already a policy threshold " + std::to_string(policyThreshold)));
-        }
-        policyThreshold = std::stoul(item.second.data());
-      }
-      else {
-        NDN_THROW(std::runtime_error("Unrecognized keyword"));
-      }
-    }
+    policyType = interlockPolicy->get(CONFIG_INTERLOCK_POLICY_TYPE, "policy-descendants");
+    policyThreshold = interlockPolicy->get(CONFIG_INTERLOCK_POLICY_THRESHOLD, 1);
   }
   else {
     NDN_THROW(std::runtime_error("No interlock policy configured."));
@@ -140,4 +111,4 @@ LedgerConfig::load(const std::string& fileName)
   }
 }
 
-} // namespace ndnrevoke::ct
+} // namespace cledger::ledger

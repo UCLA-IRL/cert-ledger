@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE(LedgerConfigFile)
   config.load("tests/unit-tests/config-files/config-ledger-1");
   BOOST_CHECK_EQUAL(config.ledgerPrefix, Name("/ndn/site1"));
   BOOST_CHECK_EQUAL(config.instanceSuffix, Name("/instance1"));
-  BOOST_CHECK_EQUAL(config.nackFreshnessPeriod, time::seconds(10));
+  BOOST_CHECK_EQUAL(config.freshnessPeriod, time::seconds(10));
   BOOST_CHECK_EQUAL(config.recordZones.size(), 2);
   BOOST_CHECK_EQUAL(config.recordZones.front(), Name("/ndn/site1"));
   BOOST_CHECK_EQUAL(config.recordZones.back(), Name("/ndn/site2"));
