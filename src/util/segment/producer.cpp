@@ -61,7 +61,7 @@ Producer::Producer(const Name& prefix, Face& face, KeyChain& keyChain, const Blo
     });
     m_interestFilterHandles.push_back(filterId);
   },
-  [this] (const Name& prefix, const auto& reason) {
+  [] (const Name& prefix, const auto& reason) {
     NDN_LOG_ERROR("SegmentProducer failed to register prefix '" << prefix << "' (" << reason << ")");
   });
   m_registeredPrefixHandles.push_back(prefixId);
