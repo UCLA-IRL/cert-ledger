@@ -51,6 +51,9 @@ public:
 
   ndn::security::SigningInfo interestSigner;
   ndn::security::SigningInfo dataSigner;
+
+  size_t maxSegmentSize = 8000;
+  ndn::time::milliseconds sessionLength = time::seconds(30);
 };
 
 } // namespace cledger::ledger

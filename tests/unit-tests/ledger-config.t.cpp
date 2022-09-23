@@ -20,6 +20,8 @@ BOOST_AUTO_TEST_CASE(LedgerConfigFile)
   BOOST_CHECK_EQUAL(config.policyType, "policy-descendants");
   BOOST_CHECK_EQUAL(config.policyThreshold, 3);
   BOOST_CHECK_EQUAL(config.interestSigner.getSignerType(), ndn::security::SigningInfo::SignerType::SIGNER_TYPE_HMAC);
+  BOOST_CHECK_EQUAL(config.maxSegmentSize, 2000);
+  BOOST_CHECK_EQUAL(config.sessionLength, ndn::time::seconds(60));
 }
 
 BOOST_AUTO_TEST_CASE(LedgerConfigFileWithErrors)

@@ -430,6 +430,7 @@ LedgerModule::sendResponse(const Name& name, const Block& block, bool realtime)
   versionedName.append("data").appendVersion();
 
   util::segment::Producer::Options opts;
+  opts.maxSegmentSize = m_config.maxSegmentSize;
   opts.signingInfo = signingByIdentity(m_instancePrefix);
 
   auto producer = std::make_shared<util::segment::Producer>(
@@ -440,7 +441,7 @@ LedgerModule::sendResponse(const Name& name, const Block& block, bool realtime)
 
   NDN_LOG_DEBUG("Ledger starts a session hosting segmented " << versionedName);
   // I don't why but it works
-  m_scheduler.schedule(time::seconds(60), [versionedName, producer] {
+  m_scheduler.schedule(m_config.sessionLength, [versionedName, producer] {
     NDN_LOG_DEBUG("Ledger stops a session hosting segmented " << versionedName);
   });
 }

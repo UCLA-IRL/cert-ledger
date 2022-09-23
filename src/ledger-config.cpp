@@ -23,6 +23,10 @@ const std::string CONFIG_SYNC = "sync";
 const std::string CONFIG_SYNC_INTEREST_SIGNING = "interest-signing";
 const std::string CONFIG_SYNC_DATA_SIGNING = "data-signing";
 
+const std::string CONFIG_SEGMENT = "segment";
+const std::string CONFIG_SEGMENT_SIZE_MAX = "max-segment-size";
+const std::string CONFIG_SEGMENT_SESSION_LENGTH = "session-length";
+
 void
 LedgerConfig::load(const std::string& fileName)
 {
@@ -48,7 +52,7 @@ LedgerConfig::load(const std::string& fileName)
     NDN_THROW(std::runtime_error("Cannot parse instance-suffix from the config file"));
   }
   // Nack Freshness Period
-  nackFreshnessPeriod = time::seconds(configJson.get(CONFIG_NACK_FRESHNESS_PERIOD, 86400));
+  nackFreshnessPeriod = time::seconds(configJson.get(CONFIG_NACK_FRESHNESS_PERIOD, 3600));
   // Record Zones
   recordZones.clear();
   auto recordZonePrefixJson = configJson.get_child_optional(CONFIG_RECORD_ZONES);
@@ -110,7 +114,7 @@ LedgerConfig::load(const std::string& fileName)
   if (schemaFile.empty()) {
     NDN_THROW(std::runtime_error("Cannot parse trust schema from the config file"));
   }
-  // sync
+  // Sync
   auto syncConfig = configJson.get_child_optional(CONFIG_SYNC);
   if (syncConfig) {
     for (const auto& item : *syncConfig) {
@@ -127,6 +131,12 @@ LedgerConfig::load(const std::string& fileName)
   }
   else {
     NDN_THROW(std::runtime_error("Cannot parse sync config from the config file"));
+  }
+  // Segmentation
+  auto segmentConfig = configJson.get_child_optional(CONFIG_SEGMENT);
+  if (segmentConfig) {
+    maxSegmentSize = segmentConfig->get(CONFIG_SEGMENT_SIZE_MAX, 8000);
+    sessionLength = time::seconds(segmentConfig->get(CONFIG_SEGMENT_SESSION_LENGTH, 30));
   }
 }
 
