@@ -47,20 +47,17 @@ handleSignal(const boost::system::error_code& error, int signalNum)
 
 static void
 checkRecords(const Certificate& cert, const Name& ledgerName,
-             ndn::security::Validator& validator, bool isPretty)
+             ndn::security::Validator& validator)
 {
   checker = std::make_shared<Checker>(face, validator);
   checker->doCheck(ledgerName, cert, 
-    [isPretty] (auto&&, auto& block) {
-      // should be a data packet
-      // if (isPretty) {
-      //   std::cerr << i << std::endl;
-      // }
+    [] (auto&&, auto& block) {
+      std::cerr << "SUCCESS! " << std::endl;
       face.getIoService().stop();
     },
     [] (auto&&, auto& i) {
       std::cerr << "ERROR: Failed because of: " << i << std::endl;
-       face.getIoService().stop();
+      face.getIoService().stop();
     }
   );
 }
@@ -82,7 +79,6 @@ main(int argc, char* argv[])
   bool isIdentityName = false;
   bool isKeyName = false;
   bool isFileName = false;
-  bool isPretty = false;
   std::string ledgerPrefix;
 
   po::options_description description(
@@ -91,7 +87,6 @@ main(int argc, char* argv[])
     "Options");
   description.add_options()
     ("help,h",           "produce help message")
-    ("pretty,p",         po::bool_switch(&isPretty), "display the record or nack in human readable format")
     ("identity,i",       po::bool_switch(&isIdentityName),
                          "treat the NAME argument as an identity name (e.g., /ndn/edu/ucla/cs/tianyuan)")
     ("key,k",            po::bool_switch(&isKeyName),
@@ -154,7 +149,7 @@ main(int argc, char* argv[])
   }
   std::cerr << "Checking " << certificate.getName() << "...\n";
   validator.load(validatorFilePath);
-  checkRecords(certificate, Name(ledgerPrefix), validator, isPretty);
+  checkRecords(certificate, Name(ledgerPrefix), validator);
   face.processEvents();
   return 0;
 }
