@@ -12,10 +12,12 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 namespace cledger::ledger {
 
 static ndn::Face face;
+static ndn::Scheduler scheduler{face.getIoService()};
 static ndn::KeyChain keyChain;
 
 static void
@@ -37,6 +39,15 @@ handleSignal(const boost::system::error_code& error, int signalNum)
   exit(1);
 }
 
+static void
+scheduleWrapper(time::seconds backoffPeriod, ndn::scheduler::EventCallback eventCb)
+{
+  auto randomized = std::experimental::randint(100, 110) / 100 * backoffPeriod;
+  scheduler.schedule(randomized, [backoffPeriod, eventCb] {
+    scheduleWrapper(backoffPeriod, eventCb);
+    eventCb();
+  });
+}
 static int
 main(int argc, char* argv[])
 {
@@ -77,15 +88,9 @@ main(int argc, char* argv[])
   }
 
   LedgerModule ledger(face, keyChain, configFilePath);
-  auto backoffPeriod = std::chrono::seconds(std::stoul(backoffPeriodStr));
-  std::thread thread_reply([&ledger, backoffPeriod] {  
-    while (true) {
-      std::this_thread::sleep_for(std::experimental::randint(100, 110) / 100 * backoffPeriod);
-      ledger.publishReply();
-    }
-  });
+  auto backoffPeriod = time::seconds(std::stoul(backoffPeriodStr));
+  scheduleWrapper(backoffPeriod, [&ledger] {ledger.publishReply();});
   face.processEvents();
-  thread_reply.join();
   return 0;
 }
 

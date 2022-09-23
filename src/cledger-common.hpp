@@ -18,9 +18,11 @@
 #include <ndn-cxx/util/optional.hpp>
 #include <ndn-cxx/util/sha256.hpp>
 #include <ndn-cxx/util/time.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 #include <ndn-cxx/security/validator-config.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/signing-info.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assert.hpp>
@@ -43,6 +45,8 @@
 
 namespace cledger {
 
+using ndn::Face;
+using ndn::KeyChain;
 using ndn::Block;
 using ndn::Buffer;
 using ndn::Data;
@@ -52,9 +56,13 @@ using ndn::SignatureInfo;
 using ndn::security::Certificate;
 using ndn::util::Sha256;
 using ndn::span;
+using ndn::Scheduler;
 using ndn::optional;
 using ndn::nullopt;
 using JsonSection = boost::property_tree::ptree;
+using ndn::security::SigningInfo;
+using ndn::security::Validator;
+using ndn::security::ValidationError;
 
 using ndn::make_span;
 

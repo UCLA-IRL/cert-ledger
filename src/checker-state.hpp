@@ -10,8 +10,7 @@
 
 namespace cledger::checker {
 
-using onNackCallback = std::function<void(const Data&, const Nack&)>;
-using onDataCallback = std::function<void(const Data&, const Data&)>;
+using onSuccessCallback = std::function<void(const Data&, const Block&)>;
 using onFailureCallback = std::function<void(const Data&, const Error&)>;
 
 class CheckerState : boost::noncopyable
@@ -21,8 +20,7 @@ public:
 
   explicit
   CheckerState(const Data& data,
-               const onNackCallback onNack, 
-               const onDataCallback onData, 
+               const onSuccessCallback onSuccess, 
                const onFailureCallback onFailure);
   
   std::shared_ptr<Interest>
@@ -35,15 +33,9 @@ public:
   }
 
   void
-  onNack(const Nack& nack)
+  onSuccess(const Block& block)
   {
-    return m_nCb(m_data, nack);
-  }
-
-  void
-  onData(const Data& data)
-  {
-    return m_dCb(m_data, data);
+    return m_sCb(m_data, block);
   }
 
   void
@@ -54,8 +46,7 @@ public:
 
 private:
   Data m_data;
-  onNackCallback m_nCb;
-  onDataCallback m_dCb;
+  onSuccessCallback m_sCb;
   onFailureCallback m_fCb;
   ssize_t m_retryCount = 0;
 };

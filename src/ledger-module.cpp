@@ -3,6 +3,7 @@
 #include "dag/interlock-policy-descendants.hpp"
 #include "dag/edge-state-list.hpp"
 #include "dag/payload-map.hpp"
+#include "util/segment/producer.hpp"
 
 #include <ndn-cxx/security/signing-helpers.hpp>
 #include <ndn-cxx/security/verification-helpers.hpp>
@@ -123,7 +124,32 @@ LedgerModule::registerPrefix()
     },
     [this] (auto&&, const auto& reason) { onRegisterFailed(reason); }
   );
-  m_handle.handlePrefix(prefixId);
+
+  auto handleInternalObject = [this] (std::string className) {
+    auto prefixId = m_face.setInterestFilter(
+    Name(m_instancePrefix).appendKeyword("internal").append(Name(className)),
+    [this] (auto&&, auto& i) {
+      auto interestName = i.getName();
+      if (i.getCanBePrefix() &&
+          interestName.get(m_instancePrefix.size()) == 
+          Name::Component::fromEscapedString("32=internal")) {
+        // internal object query always start from /32=internal/32={objName}
+        auto objName = interestName.getSubName(m_instancePrefix.size() + 1);
+        NDN_LOG_TRACE("An Internal Object Query for " << objName);
+        try {
+          auto block = m_storage->getBlock(objName);
+          sendResponse(interestName, block, true);
+        }
+        catch (const std::runtime_error&) {
+          sendNack(interestName);
+        }
+      }
+    },
+    [this] (auto&&, const auto& reason) { onRegisterFailed(reason); });
+    m_handle.handlePrefix(prefixId);
+  };
+  handleInternalObject(dag::stateListNameHeader);
+  handleInternalObject(dag::stateNameHeader);
 }
 
 AppendStatus
@@ -154,29 +180,15 @@ void
 LedgerModule::onQuery(const Interest& query)
 {
   // need to validate query format
+  auto interestName = query.getName();
   if (query.getForwardingHint().empty()) {
-    // non-related, discard
     return;
   }
 
   NDN_LOG_DEBUG("Received Query " << query); 
-  auto interestName = query.getName();
   if (!query.getCanBePrefix()) {
     // interest for exact data match
     replyOrSendNack(interestName);
-  }
-  else if (interestName.get(m_instancePrefix.size()) == 
-           Name::Component::fromEscapedString("32=internal")) {
-     // internal object query always start from /32=internal/32={objName}
-    auto objName = interestName.getSubName(m_instancePrefix.size() + 1);
-    NDN_LOG_TRACE("An Internal Object Query for " << objName);
-    try {
-      auto block = m_storage->getBlock(objName);
-      sendResponse(interestName, block, true);
-    }
-    catch (const std::runtime_error&) {
-      sendNack(interestName);
-    }
   }
   // query of a certificate or record
   else if (Certificate::isValidName(interestName.set(-4, Name::Component("KEY"))))
@@ -213,10 +225,11 @@ LedgerModule::onQuery(const Interest& query)
           encoder(content, dag::fromStateName(des));
         }
       }
+      content.encode();
       sendResponse(query.getName(), content);
     }
     catch (const std::exception& e) {
-      NDN_LOG_DEBUG("Ledger storage cannot get the Data for reason: " << e.what());
+      NDN_LOG_DEBUG("Query Processing failed because of: " << e.what());
       sendNack(query.getName());
     }
   }
@@ -413,15 +426,23 @@ LedgerModule::updateStatesTracker(const Name& stateName, bool interlocked)
 void
 LedgerModule::sendResponse(const Name& name, const Block& block, bool realtime)
 {
-  Name dataName(name);
-  dataName.append("data").appendTimestamp();
-  Data data(dataName);
-  // this deserves some considerations
-  data.setFreshnessPeriod((realtime? 100_ms : m_config.nackFreshnessPeriod));
-  data.setContent(makeBinaryBlock(ndn::tlv::Content, block));
-  m_keyChain.sign(data, signingByIdentity(m_instancePrefix));
-  NDN_LOG_TRACE("Ledger replies with: " << data.getName());
-  m_face.put(data);
+  Name versionedName(name);
+  versionedName.append("data").appendVersion();
+
+  util::segment::Producer::Options opts;
+  opts.signingInfo = signingByIdentity(m_instancePrefix);
+
+  auto producer = std::make_shared<util::segment::Producer>(
+    versionedName, m_face, m_keyChain, block, opts
+  );
+  auto data = producer->getDataStore()[0];
+  m_face.put(*data);
+
+  NDN_LOG_DEBUG("Ledger starts a session hosting segmented " << versionedName);
+  // I don't why but it works
+  m_scheduler.schedule(time::seconds(60), [versionedName, producer] {
+    NDN_LOG_DEBUG("Ledger stops a session hosting segmented " << versionedName);
+  });
 }
 
 } // namespace cledger::ledger

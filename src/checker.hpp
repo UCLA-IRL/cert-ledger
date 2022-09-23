@@ -3,6 +3,8 @@
 
 #include "checker-state.hpp"
 #include "cledger-common.hpp"
+#include "util/segment/consumer.hpp"
+#include "util/segment/pipeline-interests-fixed.hpp"
 
 #include <ndn-cxx/security/validator-config.hpp>
 
@@ -16,8 +18,7 @@ public:
 
   void
   doCheck(const Name ledgerPrefix, const Data& data,
-          const onNackCallback onNack, 
-          const onDataCallback onData, 
+          const onSuccessCallback onSuccess, 
           const onFailureCallback onFailure);
 
 private:
@@ -32,8 +33,12 @@ private:
 
   void
   decodeContent(std::vector<Data>& dataVector, const Block& content);
+
   ndn::Face& m_face;
   ndn::security::Validator& m_validator;
+  util::segment::Options m_options;
+  std::shared_ptr<util::segment::PipelineInterestsFixed> m_pipeline;
+  std::shared_ptr<util::segment::Consumer> m_consumer;
 };
 
 } // namespace cledger::checker

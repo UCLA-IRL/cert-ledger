@@ -83,6 +83,28 @@ rule
 
 rule
 {
+  id "obj data"
+  for data
+  filter
+  {
+    type name
+    regex ^<>*<data><><>$
+  }
+  checker
+  {
+    type customized
+    sig-type ecdsa-sha256
+    key-locator
+    {
+      type name
+      name /ndn/site1
+      relation is-prefix-of
+    }
+  }
+}
+
+rule
+{
   id "append d2"
   for data
   filter

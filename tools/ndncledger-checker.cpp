@@ -51,18 +51,11 @@ checkRecords(const Certificate& cert, const Name& ledgerName,
 {
   checker = std::make_shared<Checker>(face, validator);
   checker->doCheck(ledgerName, cert, 
-    [isPretty] (auto&&, auto& i) {
-      // should be a nack data
-      if (isPretty) {
-        std::cerr << i << std::endl;
-      }
-      face.getIoService().stop();
-    },
-    [isPretty] (auto&&, auto& i) {
+    [isPretty] (auto&&, auto& block) {
       // should be a data packet
-      if (isPretty) {
-        std::cerr << i << std::endl;
-      }
+      // if (isPretty) {
+      //   std::cerr << i << std::endl;
+      // }
       face.getIoService().stop();
     },
     [] (auto&&, auto& i) {
@@ -93,7 +86,7 @@ main(int argc, char* argv[])
   std::string ledgerPrefix;
 
   po::options_description description(
-    "Usage: ndncledger-checker [-h] [-p] [-l LEDGERPREFIX] [-d VALIDATOR ] [-i|-k|-f] [-n] NAME\n"
+    "Usage: ndncledger-checker [-h] [-p] -l LEDGERPREFIX -d VALIDATOR [-i|-k|-f] [-n] NAME\n"
     "\n"
     "Options");
   description.add_options()

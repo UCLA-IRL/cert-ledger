@@ -1,0 +1,107 @@
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * Copyright (c) 2016-2022, Regents of the University of California,
+ *                          Colorado State University,
+ *                          University Pierre & Marie Curie, Sorbonne University.
+ *
+ * This file is part of ndn-tools (Named Data Networking Essential Tools).
+ * See AUTHORS.md for complete list of ndn-tools authors and contributors.
+ *
+ * ndn-tools is free software: you can redistribute it and/or modify it under the terms
+ * of the GNU General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * ndn-tools is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * ndn-tools, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
+ *
+ * @author Wentao Shang
+ * @author Steve DiBenedetto
+ * @author Andrea Tosatto
+ * @author Davide Pesavento
+ * @author Klaus Schneider
+ * @author Tianyuan Yu
+ */
+
+#ifndef CLEDGER_UTIL_SEGMENT_PRODUCER_HPP
+#define CLEDGER_UTIL_SEGMENT_PRODUCER_HPP
+
+#include "util/segment/segment-common.hpp"
+
+namespace cledger::util::segment {
+
+/**
+ * @brief Segmented & versioned data publisher
+ *
+ * Packetizes and publishes data from an input stream as `/prefix/<version>/<segment number>`.
+ * Unless another value is provided, the current time is used as the version number.
+ * The packet store always has at least one item, even when the input is empty.
+ */
+class Producer : noncopyable
+{
+public:
+  struct Options
+  {
+    SigningInfo signingInfo;
+    time::milliseconds freshnessPeriod = 10_s;
+    size_t maxSegmentSize = 8000;
+  };
+
+public:
+  /**
+   * @brief Create the producer
+   * @param prefix prefix used to publish data; if the last component is not a valid
+   *               version number, the current system time is used as version number.
+   */
+  Producer(const Name& prefix, Face& face, KeyChain& keyChain, const Block& block,
+           const Options& opts);
+
+  ~Producer();
+
+  const std::vector<shared_ptr<Data>>&
+  getDataStore() const
+  {
+    return m_store;
+  }
+
+private:
+  /**
+   * @brief Split the input stream in data packets and save them to the store
+   *
+   * Create data packets reading all the characters from the input stream until EOF or an
+   * error occurs. Each data packet has a maximum payload size of `m_options.maxSegmentSize`
+   * bytes and is stored in the vector `m_store`. An empty data packet is created and stored
+   * if the input stream is empty.
+   *
+   * @return Number of data packets contained in the store after the operation
+   */
+  void
+  populateStore(const Block& block);
+
+  /**
+   * @brief Respond with the requested segment of content
+   */
+  void
+  processSegmentInterest(const Interest& interest);
+
+  std::vector<shared_ptr<Data>> m_store;
+
+private:
+  Name m_prefix;
+  Name m_versionedPrefix;
+  Face& m_face;
+  KeyChain& m_keyChain;
+  const Options m_options;
+
+  std::list<ndn::RegisteredPrefixHandle> m_registeredPrefixHandles;
+  std::list<ndn::InterestFilterHandle> m_interestFilterHandles;
+};
+
+} // namespace cledger::util::segment
+
+#endif // CLEDGER_UTIL_SEGMENT_PRODUCER_HPP

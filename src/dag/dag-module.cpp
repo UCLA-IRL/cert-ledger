@@ -29,10 +29,10 @@ DagModule::add(const Record& record)
   return state.stateName;
 }
 
-std::list<EdgeState>
+std::list<Name>
 DagModule::getAncestors(EdgeState state) 
 {
-  std::list<EdgeState> ret;
+  std::list<Name> ret;
   std::vector<Name> ancestors;
   // every frontier must be expandable (ie. not a pending record)
   std::vector<Name> frontier;
@@ -43,8 +43,10 @@ DagModule::getAncestors(EdgeState state)
 
   // start
   for (auto& ptr : state.record.getPointers()) {
-    ancestors.push_back(toStateName(ptr));
     auto parent = getOrConstruct(toStateName(ptr));
+    if (parent.status != EdgeState::INTERLOCKED) {
+      ancestors.push_back(parent.stateName);
+    }
     // if this is pending, update its descendents
     if (parent.status == EdgeState::INITIALIZED) {
       NDN_LOG_TRACE(parent.stateName << " is a pending ancestor, stop here...\n"
@@ -52,9 +54,9 @@ DagModule::getAncestors(EdgeState state)
       parent.descendants.insert(state.stateName);
       update(parent);
     }
-    else {
+    else if (parent.status != EdgeState::INTERLOCKED) {
       // we gonna expand this ptr in the next round.
-      frontier.push_back(toStateName(ptr));
+      frontier.push_back(parent.stateName);
     }
   }
   currAncestors = ancestors.size();
@@ -74,7 +76,7 @@ DagModule::getAncestors(EdgeState state)
             break;
           }
         }
-        if (!hasSeen) {
+        if (!hasSeen && parent.status != EdgeState::INTERLOCKED) {
           ancestors.push_back(parent.stateName);
         }
 
@@ -84,7 +86,7 @@ DagModule::getAncestors(EdgeState state)
           parent.descendants.insert(state.stateName);
           update(parent);
         }
-        else {
+        else if (parent.status != EdgeState::INTERLOCKED) {
           nextFrontier.push_back(parent.stateName);
         }
       }
@@ -95,7 +97,7 @@ DagModule::getAncestors(EdgeState state)
   }
 
   for (auto& a : ancestors) {
-    ret.push_front(getOrConstruct(a));
+    ret.push_front(a);
   }
   return ret;
 }
@@ -195,11 +197,12 @@ DagModule::evaluateAncestors(EdgeState& state)
   NDN_LOG_TRACE("Checking ancestors for " << state.stateName);
   auto ancestors = getAncestors(state);
   for (auto& a : ancestors) {
-    NDN_LOG_TRACE("Adding a descendant " << state.stateName << " for " << a.stateName
-                  << ", current descendant size is " << a.descendants.size());
-    a.descendants.insert(state.stateName);
-    update(a);
-    evaluateWaitlist(a);
+    auto aState = getOrConstruct(a);
+    NDN_LOG_TRACE("Adding a descendant " << state.stateName << " for " << a
+                  << ", current descendant size is " << aState.descendants.size());
+    aState.descendants.insert(state.stateName);
+    update(aState);
+    evaluateWaitlist(aState);
   }
 }
 

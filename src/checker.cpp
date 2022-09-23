@@ -14,16 +14,16 @@ NDN_LOG_INIT(cledger.checker);
 Checker::Checker(ndn::Face& face, ndn::security::Validator& validator)
   : m_face(face)
   , m_validator(validator)
+  , m_pipeline(std::make_shared<util::segment::PipelineInterestsFixed>(m_face, m_options))
 {
 }
 
 void
 Checker::doCheck(const Name ledgerPrefix, const Data& data,
-                 const onNackCallback onNack, 
-                 const onDataCallback onData, 
+                 const onSuccessCallback onSuccess, 
                  const onFailureCallback onFailure)
 {
-  auto state = std::make_shared<CheckerState>(data, onNack, onData, onFailure);
+  auto state = std::make_shared<CheckerState>(data, onSuccess, onFailure);
   dispatchInterest(state, ledgerPrefix);
 }
 
@@ -52,7 +52,7 @@ Checker::dispatchInterest(const std::shared_ptr<CheckerState>& checkerState,
       );
     },
     [checkerState] (auto& i, auto&&) {
-      return checkerState->onFailure(Error(Error::Code::NACK, i.getName().toUri()));
+       return checkerState->onFailure(Error(Error::Code::NACK, i.getName().toUri()));
     },
     [this, checkerState, ledgerPrefix] (const auto&) {
        return dispatchInterest(checkerState, ledgerPrefix);
@@ -64,23 +64,29 @@ void
 Checker::onValidationSuccess(const std::shared_ptr<CheckerState>& checkerState, const Data& data)
 {
   Name dataName = data.getName();
-  if (dataName.get(-1).isTimestamp() && dataName.get(-2).toUri() == "data") {
-    std::vector<Data> dataVector;
-    decodeContent(dataVector, data.getContent());
-    NDN_LOG_DEBUG(dataVector.size() << " Data were encapuslated");
-    util::validateMultipleData(m_validator, dataVector,
-      [checkerState, data] (auto& d) { 
-        checkerState->onData(data);
-      },
-      [checkerState, data] (auto&&, auto& e) { 
-        checkerState->onFailure(Error(Error::Code::VALIDATION_ERROR, e.getInfo()));
+  if (dataName.get(-2).isVersion() && dataName.get(-3).toUri() == "data") {
+    // run segment consumer
+    m_consumer = std::make_shared<util::segment::Consumer>(m_validator, 
+      [this, checkerState] (auto& block) {
+        std::vector<Data> dataVector;
+        decodeContent(dataVector, block);
+        NDN_LOG_DEBUG(dataVector.size() << " Data were encapuslated");
+        util::validateMultipleData(m_validator, dataVector,
+          [checkerState, block] (auto& d) { 
+            checkerState->onSuccess(block);
+          },
+          [checkerState] (auto&&, auto& e) { 
+            checkerState->onFailure(Error(Error::Code::VALIDATION_ERROR, e.getInfo()));
+          }
+        );
       }
     );
+    m_consumer->run(dataName.getPrefix(-1), m_pipeline);
   }
   else if (Nack::isValidName(dataName)) {
     Nack nack;
     nack.fromData(data);
-    return checkerState->onNack(nack);
+    return checkerState->onFailure(Error(Error::Code::NACK, "Application Layer Nack " + data.getName().toUri())); 
   }
   else {
     return checkerState->onFailure(Error(Error::Code::PROTO_SPECIFIC, "Uncognized data format")); 

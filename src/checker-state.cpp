@@ -4,12 +4,10 @@
 namespace cledger::checker {
 
 CheckerState::CheckerState(const Data& data,
-                           const onNackCallback onNack, 
-                           const onDataCallback onData, 
+                           const onSuccessCallback onSuccess, 
                            const onFailureCallback onFailure)
   : m_data(data)
-  , m_nCb(onNack)
-  , m_dCb(onData)
+  , m_sCb(onSuccess)
   , m_fCb(onFailure)
 {
 }

@@ -39,7 +39,7 @@ public:
   }
 
 CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  std::list<EdgeState>
+  std::list<Name>
   getAncestors(EdgeState state);
 
   EdgeState
