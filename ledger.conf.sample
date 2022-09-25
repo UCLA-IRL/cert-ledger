@@ -2,11 +2,6 @@
   "ledger-prefix": "/ndn/site1",
   "instance-suffix": "/instance1",
   "freshness-period": "10",
-  "storage":
-  {
-    "storage-type": "storage-leveldb",
-    "storage-path": ".test-db"
-  },
   "record-zones":
   [
     "/ndn/site1", "/ndn/site2"
