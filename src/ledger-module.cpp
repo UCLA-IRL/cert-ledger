@@ -416,7 +416,7 @@ LedgerModule::updateStatesTracker(const Name& stateName, bool interlocked)
     m_storage->addBlock(stateName, dag::encodeEdgeState(state));
   }
   else {
-    NDN_LOG_WARN("Tracker sees a non-interlocked EdgeState, ignore this if in failure recovery");
+    NDN_LOG_WARN("Tracker refused to update a non-interlocked EdgeState, ignore this if in failure recovery...");
     return;
   }
   m_storage->deleteBlock(trackerName);
