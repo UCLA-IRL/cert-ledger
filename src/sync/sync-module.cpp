@@ -48,20 +48,25 @@ SyncModule::fetcher(const NodeID& nid, const SeqNo& s)
     }
   };
 
-  // check again if exist in acc or storage
+  // check if exist in storage
   if (searchStorage(m_svs->getDataName(nid, s))) {
     NDN_LOG_TRACE("Already fetched " << m_svs->getDataName(nid, s));
     return;
   }
 
   NDN_LOG_TRACE("Trying getting data " << m_svs->getDataName(nid, s));
-  m_svs->fetchData(nid, s, [this] (const ndn::Data& data) {
+  m_svs->fetchData(nid, s, [this, searchStorage] (const ndn::Data& data) {
     NDN_LOG_DEBUG("Getting data " << data.getName());
-
-    m_storageIntf.adder(data.getName(), data.wireEncode());
-    NDN_LOG_TRACE("Yielding " << data.getName());
-    m_yieldCb(Record(data.getName(), data.getContent()));
-
+    // check again if exist in storage
+    if (searchStorage(data.getName())) {
+      NDN_LOG_TRACE("Already fetched " << data.getName());
+      return;
+    }
+    else {
+      m_storageIntf.adder(data.getName(), data.wireEncode());
+      NDN_LOG_TRACE("Yielding " << data.getName());
+      m_yieldCb(Record(data.getName(), data.getContent()));
+    }
   },
   MAX_RETRIES);
 }
