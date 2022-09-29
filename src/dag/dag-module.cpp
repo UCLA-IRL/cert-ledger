@@ -111,6 +111,9 @@ DagModule::harvestBelow(const uint32_t threshold)
     if (map.first < threshold)  {
       for (auto& s : map.second) {
         auto state = getOrConstruct(s);
+        if (state.status == EdgeState::LOADED) {
+          ret.push_back(state.record);
+        }
         ret.push_back(state.record);
       }
     }
