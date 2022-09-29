@@ -127,10 +127,12 @@ DagModule::harvestAbove(const uint32_t threshold, bool remove)
     if (map.first >= threshold)  {
       for (auto& s : map.second) {
         auto state = getOrConstruct(s);
-        ret.push_back(state.record);
-        state.status = EdgeState::INTERLOCKED;
-        update(state);
-        if (remove) rm.push_back(s);
+        if (state.status == EdgeState::LOADED) {
+          ret.push_back(state.record);
+          state.status = EdgeState::INTERLOCKED;
+          update(state);
+          if (remove) rm.push_back(s);
+        }
       }
       for (auto& n : rm) map.second.erase(n);
     }
