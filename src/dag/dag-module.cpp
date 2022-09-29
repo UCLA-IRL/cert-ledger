@@ -114,7 +114,6 @@ DagModule::harvestBelow(const uint32_t threshold)
         if (state.status == EdgeState::LOADED) {
           ret.push_back(state.record);
         }
-        ret.push_back(state.record);
       }
     }
   }
