@@ -24,26 +24,4 @@ LedgerSVSDataStore::insert(const Data& data)
   m_storageIntf.adder(data.getName(), data.wireEncode());
 }
 
-LedgerSVSBase::LedgerSVSBase(const Name& syncPrefix,
-                             const Name& nodePrefix,
-                             ndn::Face& face,
-                             const UpdateCallback& updateCallback,
-                             const SecurityOptions& securityOptions,
-                             std::shared_ptr<LedgerSVSDataStore> dataStore)
-  : SVSyncBase(syncPrefix, Name(nodePrefix).append(syncPrefix), nodePrefix,
-               face, updateCallback, securityOptions, std::move(dataStore))
-{}
-
-Name
-LedgerSVSBase::getDataName(const NodeID& nid, const SeqNo& seqNo)
-{
-  return Name(nid).append(m_syncPrefix).appendNumber(seqNo);
-}
-
-Name
-LedgerSVSBase::getMyDataName(const SeqNo& seqNo)
-{
-  return Name(m_dataPrefix).appendNumber(seqNo);
-}
-
 } // namespace cledger::sync

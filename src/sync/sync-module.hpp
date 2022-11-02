@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <ndn-svs/svsync-base.hpp>
+#include <ndn-svs/svspubsub.hpp>
 
 namespace cledger::sync {
 
@@ -21,8 +22,12 @@ using ndn::svs::SecurityOptions;
 using ndn::svs::UpdateCallback;
 using ndn::svs::MissingDataInfo;
 using ndn::svs::DataStore;
+using ndn::svs::SVSPubSub;
 
 using YieldRecordCallback = std::function<void(const Record&)>;
+
+
+
 
 class SyncModule
 {
@@ -36,32 +41,20 @@ public:
   Name
   publishRecord(Record& record);
 
-  std::shared_ptr<LedgerSVSBase>
-  getSyncBase()
-  {
-    return m_svs;
-  }
+  Name
+  getNextName();
 
 CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  std::tuple<NodeID, SeqNo>
-  parseDataName(const Name& name);
-
-  void
-  onMissingData(const std::vector<MissingDataInfo>& vectors);
-
-  void
-  recursiveFetcher(const Name& recordName);
-
-  void
-  fetcher(const NodeID& nid, const SeqNo& s);
 
   SyncOptions m_syncOptions;
   SecurityOptions m_secOptions;
   ndn::Face& m_face;
 
-  std::shared_ptr<LedgerSVSBase> m_svs;
+  std::shared_ptr<SVSPubSub> m_ps;
   storage::Interface m_storageIntf;
   YieldRecordCallback m_yieldCb;
+
+  SeqNo m_seqNo = 0;
 };
 
 } // namespace cledger::sync

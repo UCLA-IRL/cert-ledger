@@ -41,24 +41,6 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   storage::Interface m_storageIntf;
 };
 
-class LedgerSVSBase : public SVSyncBase
-{
-public:
-  LedgerSVSBase(const Name& syncPrefix,
-                const Name& nodePrefix,
-                ndn::Face& face,
-                const UpdateCallback& updateCallback,
-                const SecurityOptions& securityOptions,
-                std::shared_ptr<LedgerSVSDataStore> dataStore);
-
-  Name
-  getDataName(const NodeID& nid, const SeqNo& seqNo) override;
-
-  Name
-  getMyDataName(const SeqNo& seqNo);
-};
-
-
 } // namespace cledger::sync
 
 #endif // CLEDGER_SYNC_LEDGER_SVS_HPP

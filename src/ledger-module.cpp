@@ -19,9 +19,10 @@ NDN_LOG_INIT(cledger.benchmark.ledger);
 NDN_LOG_INIT(cledger.ledger);
 #endif
 
-LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath)
+LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath, time::milliseconds replyPeriod)
   : m_face(face)
   , m_keyChain(keyChain)
+  , m_replyPeriod(replyPeriod)
 {
   // load the config and create storage
   m_config.load(configPath);
@@ -67,6 +68,9 @@ LedgerModule::LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::
   m_sync = std::make_unique<sync::SyncModule>(m_syncOps, m_secOps, m_face,
     m_storage->getInterface(),
     [this] (const Record& record) {
+      // refresh the timer anyway
+      refreshReplyTimer();
+
       auto stateName = m_dag->add(record);
       updateStatesTracker(stateName);
       if (record.getType() != tlv::REPLY_RECORD) {
@@ -314,7 +318,7 @@ LedgerModule::afterValidation(const Data& data)
     newRecord.setType(tlv::GENESIS_RECORD);
     // a gensis record must be its first SVS publication,
     // therefore we can guess the name
-    auto genesisName = m_sync->getSyncBase()->getMyDataName(1);
+    auto genesisName = m_sync->getNextName();
     NDN_LOG_DEBUG("Referencing to [Genesis] " << genesisName);
     newRecord.setPointers({genesisName});
   }
@@ -447,4 +451,14 @@ LedgerModule::sendResponse(const Name& name, const Block& block, bool realtime)
   });
 }
 
+void
+LedgerModule::refreshReplyTimer()
+{
+  if (m_replyEvent) {
+    m_replyEvent.cancel();
+  }
+  m_replyEvent = m_scheduler.schedule(m_replyPeriod, [this] {
+    publishReply();
+  });
+}
 } // namespace cledger::ledger

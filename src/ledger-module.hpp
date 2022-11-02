@@ -21,7 +21,7 @@ using appendtlv::AppendStatus;
 class LedgerModule : boost::noncopyable
 {
 public:
-  LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath);
+  LedgerModule(ndn::Face& face, ndn::KeyChain& keyChain, const std::string& configPath, time::milliseconds replyPeriod = 3600_s);
 
   const std::unique_ptr<storage::LedgerStorage>&
   getLedgerStorage()
@@ -75,6 +75,9 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   updateStatesTracker(const Name& stateName, bool interlocked = false);
 
+  void
+  refreshReplyTimer();
+
   ndn::Face& m_face;
   LedgerConfig m_config;
   Scheduler m_scheduler{m_face.getIoService()};
@@ -99,6 +102,10 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::unique_ptr<dag::DagModule> m_dag;
   // this shouldn't keep growing, so it's safe to put into the memory
   std::set<Name> m_repliedRecords;
+
+  // reply management
+  time::milliseconds m_replyPeriod;
+  ndn::scheduler::EventId m_replyEvent;
 };
 
 } // namespace cledger::ledger

@@ -39,15 +39,6 @@ handleSignal(const boost::system::error_code& error, int signalNum)
   exit(1);
 }
 
-static void
-scheduleWrapper(time::seconds backoffPeriod, ndn::scheduler::EventCallback eventCb)
-{
-  auto randomized = std::experimental::randint(100, 110) / 100 * backoffPeriod;
-  scheduler.schedule(randomized, [backoffPeriod, eventCb] {
-    scheduleWrapper(backoffPeriod, eventCb);
-    eventCb();
-  });
-}
 static int
 main(int argc, char* argv[])
 {
@@ -64,7 +55,7 @@ main(int argc, char* argv[])
   optsDesc.add_options()
   ("help,h", "print this help message and exit")
   ("config-file,c", po::value<std::string>(&configFilePath)->default_value(configFilePath), "path to configuration file")
-  ("backoff-period,b", po::value<std::string>(&backoffPeriodStr)->default_value(backoffPeriodStr), "backoff period (in seconds) of generating reply record");
+  ("backoff-period,b", po::value<std::string>(&backoffPeriodStr)->default_value(backoffPeriodStr), "backoff period (in millseconds) of generating reply record");
 
   po::variables_map vm;
   try {
@@ -87,9 +78,7 @@ main(int argc, char* argv[])
     return 0;
   }
 
-  LedgerModule ledger(face, keyChain, configFilePath);
-  auto backoffPeriod = time::seconds(std::stoul(backoffPeriodStr));
-  scheduleWrapper(backoffPeriod, [&ledger] {ledger.publishReply();});
+  LedgerModule ledger(face, keyChain, configFilePath, ndn::time::milliseconds(std::stoul(backoffPeriodStr)));
   face.processEvents();
   return 0;
 }
