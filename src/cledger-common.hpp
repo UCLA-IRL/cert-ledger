@@ -57,8 +57,9 @@ using ndn::security::Certificate;
 using ndn::util::Sha256;
 using ndn::span;
 using ndn::Scheduler;
-using ndn::optional;
-using ndn::nullopt;
+// ndn-cxx moves to C++17 therefore ndn::optional and ndn::nullopt deprecated
+using std::optional;
+using std::nullopt;
 using JsonSection = boost::property_tree::ptree;
 using ndn::security::SigningInfo;
 using ndn::security::Validator;
