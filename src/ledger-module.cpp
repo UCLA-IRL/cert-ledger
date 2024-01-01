@@ -203,7 +203,7 @@ LedgerModule::onQuery(const Interest& query)
     try {
       Block content(ndn::tlv::Content);
       auto payloadblock = m_storage->getBlock(interestName.set(-4, Name::Component("KEY")));
-      auto mapName = dag::toMapName(make_span<const uint8_t>(payloadblock.wire(), payloadblock.size()));
+      auto mapName = dag::toMapName(make_span<const uint8_t>(payloadblock.data(), payloadblock.size()));
 
       NDN_LOG_TRACE("Finding PayloadMap... " << mapName);
       auto mapblock = m_storage->getBlock(mapName);
@@ -307,7 +307,7 @@ LedgerModule::afterValidation(const Data& data)
   // name is given by SVS, don't set it
 
   auto dataTlv = data.wireEncode();
-  newRecord.setPayload(make_span<const uint8_t>(dataTlv.wire(), dataTlv.size()));
+  newRecord.setPayload(make_span<const uint8_t>(dataTlv.data(), dataTlv.size()));
   for (auto& i : m_dag->getWaitList(0)) {
     NDN_LOG_DEBUG("Referencing to [Generic] " << dag::fromStateName(i));
     pointers.push_back(dag::fromStateName(i));

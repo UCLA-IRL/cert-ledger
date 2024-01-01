@@ -80,7 +80,7 @@ CLEDGER_PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   ndn::Face& m_face;
   LedgerConfig m_config;
-  Scheduler m_scheduler{m_face.getIoService()};
+  Scheduler m_scheduler{m_face.getIoContext()};
   Name m_instancePrefix;
   ndn::KeyChain& m_keyChain;
   ndn::ValidatorConfig m_validator{m_face};

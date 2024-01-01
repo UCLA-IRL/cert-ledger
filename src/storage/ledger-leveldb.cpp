@@ -30,7 +30,7 @@ LedgerLevelDB::addBlock(const Name& name, const Block& block)
   if (status.ok()){
     NDN_THROW(std::runtime_error("Block for " + name.toUri() + " already exists"));
   }
-  std::string data_str = std::string(reinterpret_cast<const char*>(block.wire()), block.size());
+  std::string data_str = std::string(reinterpret_cast<const char*>(block.data()), block.size());
   status = m_db->Put(leveldb::WriteOptions(), name.toUri(), data_str);
   if (!status.ok()){
     NDN_THROW(std::runtime_error("DB cannot append new block: "+ name.toUri()));

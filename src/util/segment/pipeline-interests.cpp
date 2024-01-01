@@ -105,7 +105,7 @@ PipelineInterests::onFailure(const std::string& reason)
   cancel();
 
   if (m_onFailure)
-    m_face.getIoService().post([this, reason] { m_onFailure(reason); });
+    m_face.getIoContext().post([this, reason] { m_onFailure(reason); });
 }
 
 std::string

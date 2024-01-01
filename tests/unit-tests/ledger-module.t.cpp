@@ -4,7 +4,7 @@
 
 namespace cledger::tests {
 
-using ndn::util::DummyClientFace;
+using ndn::DummyClientFace;
 using ledger::LedgerModule;
 
 BOOST_FIXTURE_TEST_SUITE(TestLedgerModule, SVSCoreIdentityTimeFixture)
@@ -60,21 +60,21 @@ BOOST_AUTO_TEST_CASE(Merged)
   r1.setType(tlv::GENESIS_RECORD);
   r1.addPointer(r1.getName());
   auto certTlv = clientId3.getDefaultKey().getDefaultCertificate().wireEncode();
-  r1.setPayload(make_span<const uint8_t>(certTlv.wire(), certTlv.size()));
+  r1.setPayload(make_span<const uint8_t>(certTlv.data(), certTlv.size()));
   auto data1 = makeData(seq, m_id, *r1.prepareContent(), secOps);
 
   Record r2;
   r1.setName(Name(m_syncPrefix).append(m_id).appendNumber(++seq));
   r2.addPointer(r1.getName());
   certTlv = clientId4.getDefaultKey().getDefaultCertificate().wireEncode();
-  r2.setPayload(make_span<const uint8_t>(certTlv.wire(), certTlv.size()));
+  r2.setPayload(make_span<const uint8_t>(certTlv.data(), certTlv.size()));
   auto data2 = makeData(seq, m_id, *r1.prepareContent(), secOps);
 
   Record r3;
   r1.setName(Name(m_syncPrefix).append(m_id).appendNumber(++seq));
   r3.addPointer(r1.getName());
   certTlv = clientId5.getDefaultKey().getDefaultCertificate().wireEncode();
-  r3.setPayload(make_span<const uint8_t>(certTlv.wire(), certTlv.size()));
+  r3.setPayload(make_span<const uint8_t>(certTlv.data(), certTlv.size()));
   auto data3 = makeData(seq, m_id, *r2.prepareContent(), secOps);
 
   // branch 1

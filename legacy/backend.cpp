@@ -40,7 +40,7 @@ Backend::putRecord(shared_ptr<const Data> recordData) {
     const auto &nameStr = Record::getContentName(recordData->getName()).toUri();
     leveldb::Slice key = nameStr;
     auto recordBytes = recordData->wireEncode();
-    leveldb::Slice value((const char *) recordBytes.wire(), recordBytes.size());
+    leveldb::Slice value((const char *)recordBytes.data(), recordBytes.size());
     leveldb::Status s = m_db->Put(leveldb::WriteOptions(), key, value);
     if (!s.ok()) {
         return false;

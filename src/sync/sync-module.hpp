@@ -23,6 +23,7 @@ using ndn::svs::UpdateCallback;
 using ndn::svs::MissingDataInfo;
 using ndn::svs::DataStore;
 using ndn::svs::SVSPubSub;
+using ndn::svs::SVSPubSubOptions;
 
 using YieldRecordCallback = std::function<void(const Record&)>;
 

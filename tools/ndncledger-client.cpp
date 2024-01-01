@@ -37,7 +37,7 @@ handleSignal(const boost::system::error_code& error, int signalNum)
     std::cerr << signalName;
   }
   std::cerr << std::endl;
-  face.getIoService().stop();
+  face.getIoContext().stop();
   exit(1);
 }
 
@@ -113,12 +113,12 @@ submitRecord(const Name& caPrefix, const Name& ledgerName, const std::shared_ptr
 				}
 			}
 			std::cerr << "Quit.\n";
-      face.getIoService().stop();
+      face.getIoContext().stop();
 		},
 		[errorMsg] (auto&&, auto& error) {
 			std::cerr << errorMsg << error.getInfo()
 								<< "\nQuit.\n";
-      face.getIoService().stop();
+      face.getIoContext().stop();
 		}
 	);
 }
@@ -126,7 +126,7 @@ submitRecord(const Name& caPrefix, const Name& ledgerName, const std::shared_ptr
 static int 
 main(int argc, char* argv[])
 {
-  boost::asio::signal_set terminateSignals(face.getIoService());
+  boost::asio::signal_set terminateSignals(face.getIoContext());
   terminateSignals.add(SIGINT);
   terminateSignals.add(SIGTERM);
   terminateSignals.async_wait(handleSignal);

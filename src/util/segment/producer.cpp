@@ -131,7 +131,7 @@ Producer::populateStore(const Block& block)
     int copySize = m_options.maxSegmentSize < block.size() - copyOffset?
                    m_options.maxSegmentSize : block.size() - copyOffset;
     NDN_LOG_DEBUG("SegmentProducer created No." << count << " chunk with " << copySize << " Bytes");
-    std::memcpy(buffer.data(), block.wire() + copyOffset, copySize);
+    std::memcpy(buffer.data(), block.data() + copyOffset, copySize);
     auto data = make_shared<Data>(Name(m_versionedPrefix).appendSegment(m_store.size()));
     data->setFreshnessPeriod(m_options.freshnessPeriod);
     data->setContent(make_span(buffer.data(), copySize));

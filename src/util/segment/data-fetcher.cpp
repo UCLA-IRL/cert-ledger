@@ -48,7 +48,7 @@ DataFetcher::fetch(Face& face, const Interest& interest, int maxNackRetries, int
 DataFetcher::DataFetcher(Face& face, int maxNackRetries, int maxTimeoutRetries,
                          ndn::DataCallback onData, FailureCallback onNack, FailureCallback onTimeout)
   : m_face(face)
-  , m_scheduler(m_face.getIoService())
+  , m_scheduler(m_face.getIoContext())
   , m_onData(std::move(onData))
   , m_onNack(std::move(onNack))
   , m_onTimeout(std::move(onTimeout))

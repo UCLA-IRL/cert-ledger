@@ -5,7 +5,7 @@
 
 namespace cledger::tests {
 
-using ndn::util::DummyClientFace;
+using ndn::DummyClientFace;
 using ndn::security::verifySignature;
 using dag::DagModule;
 

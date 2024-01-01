@@ -11,10 +11,12 @@ SyncModule::SyncModule(const SyncOptions &options, const SecurityOptions& secOps
   , m_storageIntf(storageIntf)
   , m_yieldCb(yield)
 {
+  SVSPubSubOptions pubSubopts;
+  pubSubopts.dataStore = std::make_shared<LedgerSVSDataStore>(m_storageIntf);
   m_ps = std::make_shared<SVSPubSub>(m_syncOptions.prefix, 
                                      m_syncOptions.id,
-                                     m_face, [] (auto&&) {}, m_secOptions,
-                                     std::make_shared<LedgerSVSDataStore>(m_storageIntf));
+                                     m_face, [] (auto&&) {},
+                                     pubSubopts, m_secOptions);
   // Subscribe to all data packets with prefix /chat (the "topic")
   m_ps->subscribe(Name("/"), [this] (const auto& subData) {
     // assume no segmentation

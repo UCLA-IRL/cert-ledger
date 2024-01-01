@@ -41,7 +41,7 @@ handleSignal(const boost::system::error_code& error, int signalNum)
     std::cerr << signalName;
   }
   std::cerr << std::endl;
-  face.getIoService().stop();
+  face.getIoContext().stop();
   exit(1);
 }
 
@@ -53,18 +53,18 @@ checkRecords(const Certificate& cert, const Name& ledgerName,
   checker->doCheck(ledgerName, cert, 
     [] (auto&&, auto& block) {
       std::cerr << "SUCCESS! " << std::endl;
-      face.getIoService().stop();
+      face.getIoContext().stop();
     },
     [] (auto&&, auto& i) {
       std::cerr << "ERROR: Failed because of: " << i << std::endl;
-      face.getIoService().stop();
+      face.getIoContext().stop();
     }
   );
 }
 static int
 main(int argc, char* argv[])
 {
-  boost::asio::signal_set terminateSignals(face.getIoService());
+  boost::asio::signal_set terminateSignals(face.getIoContext());
   terminateSignals.add(SIGINT);
   terminateSignals.add(SIGTERM);
   terminateSignals.async_wait(handleSignal);
