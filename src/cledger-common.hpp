@@ -15,7 +15,6 @@
 #include <ndn-cxx/security/certificate.hpp>
 #include <ndn-cxx/util/exception.hpp>
 #include <ndn-cxx/util/logger.hpp>
-#include <ndn-cxx/util/optional.hpp>
 #include <ndn-cxx/util/sha256.hpp>
 #include <ndn-cxx/util/time.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
